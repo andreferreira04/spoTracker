@@ -3,9 +3,11 @@ import ctypes
 from datetime import datetime
 from pathlib import Path
 import time
+import os.path
 import psutil
 
 musicListFile = Path(__file__).parent.resolve().__str__() + r"\music-list.csv"
+musicUniqueFile = Path(__file__).parent.resolve().__str__() + r"\musics.csv"
 timeSleep = 1
 
 def getProcessTitles(): 
@@ -53,7 +55,27 @@ def saveMusic(artist, music, secondsListen, date, hour):
         with open(musicListFile, "a", encoding="utf-8") as f:
             f.write(f"{artist};{music};{secondsListen};{date};{hour}\n")
     except:
-        print("Error saving music in file " + musicListFile)
+        print("Error saving music in file", musicListFile)
+    
+    try:
+        if not isMusicRegistered(artist, music):
+            with open(musicUniqueFile, "a", encoding="utf-8") as f:
+                f.write(f"{artist};{music}\n")
+    except:
+        print("Error saving unique music in file", musicUniqueFile)
+
+def isMusicRegistered(artist, music):
+    if not os.path.exists(musicUniqueFile):
+        return False
+    try:
+        with open(musicUniqueFile, "r", encoding="utf-8") as f:
+            for line in f:
+                registered_artist, registered_music = line.strip().split(";")
+                if registered_artist == artist and registered_music == music:
+                    return True
+    except:
+        print("Error reading unique music file", musicUniqueFile)
+    return False
 
 previousArtist = ""
 previousMusic = ""
@@ -66,6 +88,8 @@ while True:
     processTitle = getSpotifyTitle()
 
     if processTitle is None:
+        musicStart = None
+        pauseTime = 0
         continue
 
     if processTitle == "Spotify":
@@ -75,10 +99,9 @@ while True:
 
     titleDivided = processTitle.split(" - ")
 
-    if (len(titleDivided) == 2):
-        artist = titleDivided[0]
-        music = titleDivided[1]
-    elif (len(titleDivided) > 2):
+    if len(titleDivided) == 2:
+        artist, music = titleDivided
+    elif len(titleDivided) > 2:
         artist = titleDivided[0]
         music = " - ".join(titleDivided[1:])
     else:
