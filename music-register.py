@@ -52,6 +52,7 @@ def getSpotifyTitle():
 
 def saveMusic(artist, music, secondsListen, date, hour):
     try:
+        music = music.replace(";", ",")
         with open(musicListFile, "a", encoding="utf-8") as f:
             f.write(f"{artist};{music};{secondsListen};{date};{hour}\n")
     except:
