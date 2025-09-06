@@ -6,8 +6,12 @@ import time
 import os.path
 import psutil
 
-musicListFile = Path(__file__).parent.resolve().__str__() + r"\music-list.csv"
-musicUniqueFile = Path(__file__).parent.resolve().__str__() + r"\musics.csv"
+user_docs = Path.home() / "Documents"
+save_dir = user_docs / "SpoTracker"
+save_dir.mkdir(parents=True, exist_ok=True)
+
+musicListFile = save_dir / "music-list.csv"
+musicUniqueFile = save_dir / "musics.csv"
 timeSleep = 1
 
 def getProcessTitles(): 
