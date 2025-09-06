@@ -25,6 +25,11 @@ Follow these steps to set up SpoTracker so that it runs automatically when your 
 
 ---
 
+### Data stored
+- All the stored data can be found on `C:\Users\your-user\Documents\SpoTracker`
+
+---
+
 ### Verifying the Script is Running
 - Open **Task Manager** (`Ctrl + Shift + Esc`).
 - Look for a running process named **SpoTracker**. This confirms that the script is active.
