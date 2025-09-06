@@ -97,7 +97,7 @@ while True:
         pauseTime = 0
         continue
 
-    if processTitle == "Spotify":
+    if processTitle == "Spotify" or processTitle == "Spotify Free":
         pauseTime += timeSleep
         time.sleep(timeSleep)
         continue
