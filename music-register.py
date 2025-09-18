@@ -49,7 +49,7 @@ def getProcessTitles():
 def getSpotifyTitle():
     exesTitles = getProcessTitles()
     for title, exe in exesTitles:
-        if (exe.split("\\")[-1] == "Spotify.exe"):
+        if exe and isinstance(exe, str) and (exe.split("\\")[-1] == "Spotify.exe"):
             if (title != "None"):
                 return title
     return None
