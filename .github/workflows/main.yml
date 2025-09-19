@@ -28,11 +28,11 @@ jobs:
 
       - name: Compile EXE (folder mode)
         run: |
-          pyinstaller --noconsole music-register.py
+          pyinstaller --noconsole --name SpoTracker music-register.py
 
       - name: Zip build folder
         run: |
-          powershell Compress-Archive -Path "dist/music-register\*" -DestinationPath "SpoTracker.zip"
+          powershell Compress-Archive -Path "dist/SpoTracker\*" -DestinationPath "SpoTracker.zip"
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
