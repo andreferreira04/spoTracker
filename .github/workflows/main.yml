@@ -37,8 +37,8 @@ jobs:
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.sha }}
-          name: "Build ${{ github.sha }}"
+          tag_name: build-${{ github.run_number }}
+          name: "Build ${{ github.run_number }}"
           files: SpoTracker.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
