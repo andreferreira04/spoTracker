@@ -1,0 +1,41 @@
+name: Build & Release EXE
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12.4'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Compile EXE (folder mode)
+        run: |
+          pyinstaller --noconsole music-register.py
+
+      - name: Zip build folder
+        run: |
+          powershell Compress-Archive -Path "dist/music-register\*" -DestinationPath "SpoTracker.zip"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.sha }}
+          name: "Build ${{ github.sha }}"
+          files: SpoTracker.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
