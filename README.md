@@ -40,9 +40,3 @@ Follow these steps to set up SpoTracker so that it runs automatically when your 
 - If you need to stop the script temporarily, end the process via Task Manager.
 
 With these steps completed, SpoTracker will run seamlessly whenever your computer starts.
-
-## For developers
-
-### Generate .exe from .py
-
-Run `pyinstaller --noconsole  music-register.py`
