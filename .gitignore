@@ -6,6 +6,7 @@ musics.csv
 
 dist/
 build/
+output/
 *.spec
 
 venv/

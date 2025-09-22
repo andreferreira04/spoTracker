@@ -8,14 +8,10 @@ Follow these steps to set up SpoTracker so that it runs automatically when your 
 
 ### Steps for Configuration on Windows:
 1. **Install the .exe from GitHub Releases:**
-   - Windows Defender may exclude the file due to suspected virus
+   - Windows Defender may exclude the file due to suspected virus (the code is here, everyone can check it)
 
-1. **Locate the Startup Folder:**
-   - Press `Win + R` to open the "Run" dialog box.
-   - Type `shell:startup` and press Enter. This will open the Startup folder.
-
-2. **Create a Shortcut for the Script:**
-   - Add a shortcut to the SpoTracker.exe file
+2. **Run the Installer:**
+   - Follow the steps as a normal program
 
 ---
 

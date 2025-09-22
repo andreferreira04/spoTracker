@@ -30,15 +30,19 @@ jobs:
         run: |
           pyinstaller --noconsole --name SpoTracker music-register.py
 
-      - name: Zip build folder
-        run: |
-          powershell Compress-Archive -Path "dist/SpoTracker\*" -DestinationPath "SpoTracker.zip"
+      - name: Install Inno Setup
+        run: choco install innosetup --yes
 
-      - name: Create Release
+      - name: Build Installer
+        run: |
+          iscc SpoTracker.iss
+
+      - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: build-${{ github.run_number }}
-          name: "Build ${{ github.run_number }}"
-          files: SpoTracker.zip
+          tag_name: v${{ github.ref_name  }}
+          name: "SpoTracker Release ${{ github.ref_name  }}"
+          files: |
+            output/SpoTrackerInstaller.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
