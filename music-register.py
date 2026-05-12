@@ -5,6 +5,8 @@ from pathlib import Path
 import time
 import os.path
 import psutil
+import sys
+import os
 
 user_docs = Path.home() / "Documents"
 save_dir = user_docs / "SpoTracker"
@@ -81,6 +83,18 @@ def isMusicRegistered(artist, music):
     except:
         print("Error reading unique music file", musicUniqueFile)
     return False
+
+def isAlreadyRunning():
+    currentPid = os.getpid()
+    processName = os.path.basename(sys.argv[0])
+
+    for proc in psutil.process_iter(['pid', 'name']):
+        if proc.info['pid'] != currentPid and proc.info['name'] == processName:
+            return True
+    return False
+
+if isAlreadyRunning():
+    sys.exit(0)
 
 previousArtist = ""
 previousMusic = ""

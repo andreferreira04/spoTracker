@@ -1,4 +1,5 @@
 [Setup]
+AppId={{402327EE-B0CC-4F5E-B760-1E0860434DD0}}
 AppName=SpoTracker
 AppVersion=1.0
 DefaultDirName={pf}\SpoTracker
