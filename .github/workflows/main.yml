@@ -35,6 +35,11 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup --yes
 
+      - name: Patch version in installer script
+        run: |
+          $version = "${{ github.ref_name }}" -replace '^v', ''
+          (Get-Content SpoTracker.iss) -replace 'AppVersion=0\.0\.0', "AppVersion=$version" | Set-Content SpoTracker.iss
+
       - name: Build Installer
         run: iscc SpoTracker.iss
 
