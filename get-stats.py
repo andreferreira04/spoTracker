@@ -45,40 +45,6 @@ def resource_path(relative: str) -> Path:
     return Path(__file__).parent / relative
 
 
-# ── Embedded artists-per-day template ────────────────────────────────────────
-APD_TEMPLATE = """\
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Artists per Day</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    :root{{--card:#111827;--border:#1f2933;--text:#e5e7eb;--muted:#9ca3af}}
-    *{{box-sizing:border-box;margin:0;padding:0}}
-    body{{font-family:"Inter",sans-serif;background:linear-gradient(135deg,#020617,#0f172a);color:var(--text);display:flex;justify-content:center;padding:40px 16px}}
-    .container{{width:100%;max-width:800px}}
-    h1{{text-align:center;font-weight:700;margin-bottom:28px;background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}}
-    .card{{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.35);border:1px solid var(--border)}}
-    table{{width:100%;border-collapse:collapse}}
-    th{{text-align:left;font-weight:500;color:var(--muted);font-size:.85rem;padding:12px;border-bottom:1px solid var(--border)}}
-    td{{padding:12px;border-bottom:1px solid var(--border);font-size:.9rem}}
-    tr:last-child td{{border-bottom:none}}
-    tbody tr:hover{{background:rgba(59,130,246,.05)}}
-  </style>
-</head>
-<body>
-  <div class="container">
-    <h1>Artists per Day (last 30 days)</h1>
-    <div class="card">
-      {content}
-    </div>
-  </div>
-</body>
-</html>"""
-
-
 # ── Data model ────────────────────────────────────────────────────────────────
 class TrackEntry:
     def __init__(self, artist, track, seconds_listened, date, time):
@@ -205,40 +171,6 @@ def generate_top_artists() -> Path:
     out.write_text(html, encoding="utf-8")
     return out
 
-
-# ── Report: artists per day ───────────────────────────────────────────────────
-def generate_artists_per_day():
-    artists_per_day: dict = {}
-    today  = datetime.today()
-    window = timedelta(days=30)
-
-    for entry in data:
-        entry_date = datetime.strptime(entry.date, "%d-%m-%Y")
-        if entry_date >= today - window and entry.seconds_listened >= MIN_LISTEN_SECONDS:
-            artists_per_day.setdefault(entry.date, {})
-            artists_per_day[entry.date][entry.artist] = (
-                artists_per_day[entry.date].get(entry.artist, 0) + 1
-            )
-
-    sorted_days = OrderedDict(sorted(artists_per_day.items()))
-
-    rows_html = ""
-    for date, artists in sorted_days.items():
-        top3 = sorted(artists.items(), key=lambda x: x[1], reverse=True)[:3]
-        top_artists = "<br>".join(f"{a} ({n}x)" for a, n in top3)
-        rows_html += f"<tr><td>{date}</td><td>{top_artists}</td></tr>"
-
-    content = (
-        "<table><thead><tr><th>Date</th><th>Top 3 Artists</th></tr></thead>"
-        f"<tbody>{rows_html}</tbody></table>"
-    )
-    html = APD_TEMPLATE.format(content=content)
-
-    out = output_folder / "artists-per-day.html"
-    out.write_text(html, encoding="utf-8")
-    return out
-
-
 # ── Entry point ───────────────────────────────────────────────────────────────
 def generate_stats():
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -246,7 +178,6 @@ def generate_stats():
     load_data()
 
     report_path = generate_tracks_report()
-    generate_artists_per_day()
     generate_top_artists()
 
     msgbox(
