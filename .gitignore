@@ -3,11 +3,11 @@
 
 music-list.csv
 musics.csv
+reports
 
 dist/
 build/
 output/
-*.spec
 
 venv/
 .env/

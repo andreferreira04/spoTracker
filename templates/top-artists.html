@@ -1,0 +1,479 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Top Artists — SpoTracker</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+	<style>
+		:root{--card:#111827;--card2:#1a2332;--accent:#8b5cf6;--accent2:#6366f1;--accent-dim:rgba(139,92,246,.15);--text:#e5e7eb;--muted:#9ca3af;--border:#1f2933;--success:#22c55e;--warning:#f59e0b;--danger:#f87171;--gold:#fbbf24;--silver:#94a3b8;--bronze:#d97706}
+		*{box-sizing:border-box;margin:0;padding:0}
+		body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,#020617,#0f172a);color:var(--text);display:flex;justify-content:center;padding:40px 16px 80px;min-height:100vh}
+		.container{width:100%;max-width:1060px}
+
+		/* ── Navigation ─────────────────────────────────────────── */
+		.nav-bar{display:flex;justify-content:center;gap:8px;margin-bottom:28px}
+		.nav-link{padding:10px 22px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:inherit;font-size:.875rem;font-weight:500;text-decoration:none;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:8px}
+		.nav-link:hover{border-color:var(--accent);color:var(--text);transform:translateY(-1px)}
+		.nav-link.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 18px rgba(139,92,246,.35)}
+		.nav-link svg{width:16px;height:16px}
+
+		/* ── Header ─────────────────────────────────────────────── */
+		.page-header{text-align:center;margin-bottom:32px}
+		.page-header h1{font-size:1.75rem;font-weight:700;background:linear-gradient(90deg,#a78bfa,#818cf8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+		.page-header p{color:var(--muted);font-size:.875rem;margin-top:6px}
+
+		/* ── Filter panel ───────────────────────────────────────── */
+		.filter-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+		.filter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+		.filter-label{font-size:.85rem;color:var(--muted);white-space:nowrap;font-weight:500}
+		.date-input{background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.9rem;padding:10px 14px;outline:none;cursor:pointer;transition:border-color .2s,box-shadow .2s}
+		.date-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+		.date-input::-webkit-calendar-picker-indicator{filter:invert(.7)}
+		.date-separator{color:var(--muted);font-size:.9rem}
+		.btn-preset{border:1px solid var(--border);padding:8px 16px;border-radius:999px;background:var(--card2);color:var(--text);font-weight:500;font-size:.82rem;cursor:pointer;transition:all .22s;white-space:nowrap;font-family:inherit}
+		.btn-preset:hover{background:var(--accent);border-color:var(--accent);transform:translateY(-1px)}
+		.btn-preset.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 12px rgba(139,92,246,.4)}
+		.btn-reset{border:1px solid var(--border);padding:7px 14px;border-radius:8px;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;transition:all .2s;font-family:inherit}
+		.btn-reset:hover{border-color:var(--danger);color:var(--danger)}
+
+		/* ── Stats cards ────────────────────────────────────────── */
+		.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:20px}
+		.stat-card{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:18px 20px;text-align:center;box-shadow:0 4px 16px rgba(0,0,0,.2);transition:transform .2s,box-shadow .2s}
+		.stat-card:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+		.stat-value{font-size:1.8rem;font-weight:700;background:linear-gradient(135deg,#a78bfa,#60a5fa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+		.stat-label{color:var(--muted);font-size:.8rem;margin-top:4px;font-weight:500}
+
+		/* ── Result bar ─────────────────────────────────────────── */
+		.result-bar{display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin-bottom:10px;flex-wrap:wrap;gap:8px}
+		#result-count{font-size:.82rem;color:var(--muted)}
+		#result-count strong{color:var(--text)}
+
+		/* ── Table ──────────────────────────────────────────────── */
+		.table-card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.35);border:1px solid var(--border);overflow-x:auto}
+		table{width:100%;border-collapse:collapse}
+		th{text-align:left;font-weight:500;color:var(--muted);font-size:.82rem;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;transition:color .2s}
+		th:hover{color:var(--text)}
+		th.sorted{color:var(--accent)}
+		.sort-icon{display:inline-block;margin-left:5px;opacity:.4;font-style:normal;font-size:.75rem;transition:opacity .2s}
+		th.sorted .sort-icon{opacity:1}
+		td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:.9rem}
+		tr:last-child td{border-bottom:none}
+		tbody tr{transition:background .15s}
+		tbody tr:hover{background:rgba(139,92,246,.05)}
+		.no-results{text-align:center;color:var(--muted);padding:40px 0;font-size:.9rem;display:none}
+
+		/* ── Rank badges ────────────────────────────────────────── */
+		.rank{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;font-size:.78rem;font-weight:700}
+		.rank-1{background:linear-gradient(135deg,#fbbf24,#f59e0b);color:#000;box-shadow:0 0 10px rgba(251,191,36,.4)}
+		.rank-2{background:linear-gradient(135deg,#94a3b8,#64748b);color:#fff;box-shadow:0 0 8px rgba(148,163,184,.3)}
+		.rank-3{background:linear-gradient(135deg,#d97706,#b45309);color:#fff;box-shadow:0 0 8px rgba(217,119,6,.3)}
+		.rank-other{background:var(--card2);color:var(--muted)}
+
+		/* ── Bar inside table ───────────────────────────────────── */
+		.bar-cell{position:relative;min-width:120px}
+		.bar-bg{position:absolute;left:0;top:50%;transform:translateY(-50%);height:6px;border-radius:999px;background:linear-gradient(90deg,var(--accent),var(--accent2));opacity:.85;transition:width .4s ease}
+		.bar-value{position:relative;z-index:1;font-weight:600;font-size:.85rem}
+
+		/* ── Pagination ─────────────────────────────────────────── */
+		.pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px}
+		.btn-page{border:1px solid var(--border);padding:7px 16px;border-radius:8px;background:var(--card2);color:var(--text);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:inherit}
+		.btn-page:hover:not(:disabled){background:var(--accent);border-color:var(--accent)}
+		.btn-page:disabled{opacity:.35;cursor:not-allowed}
+		#page-info{font-size:.82rem;color:var(--muted);min-width:100px;text-align:center}
+
+		/* ── Search ──────────────────────────────────────────────── */
+		.search-wrapper{position:relative;flex:1;min-width:200px}
+		.search-wrapper svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+		#search-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.9rem;padding:10px 12px 10px 38px;outline:none;transition:border-color .2s,box-shadow .2s}
+		#search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+		#search-input::placeholder{color:var(--muted)}
+
+		.page-size-select{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:inherit;font-size:.8rem;padding:4px 8px;outline:none;cursor:pointer}
+		.page-size-select:focus{border-color:var(--accent)}
+
+		/* ── Animations ─────────────────────────────────────────── */
+		@keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+		.table-card{animation:fadeInUp .5s ease}
+		.stat-card{animation:fadeInUp .4s ease both}
+		.stat-card:nth-child(2){animation-delay:.07s}
+		.stat-card:nth-child(3){animation-delay:.14s}
+		.stat-card:nth-child(4){animation-delay:.21s}
+
+		/* ── Responsive ─────────────────────────────────────────── */
+		@media(max-width:700px){
+			.filter-row{flex-direction:column;align-items:stretch}
+			.stats-row{grid-template-columns:1fr 1fr}
+			.nav-bar{flex-wrap:wrap}
+			td:nth-child(5),th:nth-child(5){display:none}
+		}
+	</style>
+</head>
+<body>
+<div class="container">
+
+	<!-- Navigation -->
+	<div class="nav-bar">
+		<a class="nav-link" href="tracks-by-artist.html">
+			<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/></svg>
+			Tracks
+		</a>
+		<a class="nav-link active" href="top-artists.html">
+			<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+			Top Artists
+		</a>
+	</div>
+
+	<div class="page-header">
+		<h1>Top Artists</h1>
+		<p>Discover your most listened artists over any period</p>
+	</div>
+
+	<!-- Date Range Filter -->
+	<div class="filter-panel">
+		<div class="filter-row">
+			<span class="filter-label">Period:</span>
+			<input type="date" class="date-input" id="date-start" />
+			<span class="date-separator">→</span>
+			<input type="date" class="date-input" id="date-end" />
+			<div style="display:flex;gap:6px;flex-wrap:wrap">
+				<button class="btn-preset" onclick="setPreset(7)">7 days</button>
+				<button class="btn-preset" onclick="setPreset(30)" id="preset-30">30 days</button>
+				<button class="btn-preset" onclick="setPreset(90)">90 days</button>
+				<button class="btn-preset" onclick="setPreset(365)">1 year</button>
+				<button class="btn-preset" onclick="setPreset(0)">All time</button>
+			</div>
+			<button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
+		</div>
+		<div class="filter-row">
+			<div class="search-wrapper">
+				<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+				<input id="search-input" type="text" placeholder="Search artist…" />
+			</div>
+		</div>
+	</div>
+
+	<!-- Stats Summary -->
+	<div class="stats-row">
+		<div class="stat-card">
+			<div class="stat-value" id="stat-artists">0</div>
+			<div class="stat-label">Artists</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-value" id="stat-plays">0</div>
+			<div class="stat-label">Total Plays</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-value" id="stat-tracks">0</div>
+			<div class="stat-label">Unique Tracks</div>
+		</div>
+		<div class="stat-card">
+			<div class="stat-value" id="stat-hours">0</div>
+			<div class="stat-label">Hours Listened</div>
+		</div>
+	</div>
+
+	<!-- Result bar -->
+	<div class="result-bar">
+		<span id="result-count">Showing <strong id="count-range">0</strong> of <strong id="count-filtered">0</strong> artists</span>
+		<select class="page-size-select" id="page-size-select" onchange="onPageSizeChange(this.value)">
+			<option value="25">25 / page</option>
+			<option value="50" selected>50 / page</option>
+			<option value="100">100 / page</option>
+			<option value="9999">All</option>
+		</select>
+	</div>
+
+	<!-- Table -->
+	<div class="table-card">
+		<table>
+			<thead>
+				<tr>
+					<th onclick="sortBy(0)" id="th-0" style="width:50px"># <em class="sort-icon">↕</em></th>
+					<th onclick="sortBy(1)" id="th-1">Artist <em class="sort-icon">↕</em></th>
+					<th onclick="sortBy(2)" id="th-2">Plays <em class="sort-icon">↕</em></th>
+					<th onclick="sortBy(3)" id="th-3">Tracks <em class="sort-icon">↕</em></th>
+					<th onclick="sortBy(4)" id="th-4">Time <em class="sort-icon">↕</em></th>
+					<th style="min-width:140px"></th>
+				</tr>
+			</thead>
+			<tbody id="tbody"></tbody>
+		</table>
+		<div class="no-results" id="no-results">😕 No artists match the applied filters.</div>
+		<div class="pagination">
+			<button class="btn-page" id="btn-prev" onclick="changePage(-1)" disabled>← Prev</button>
+			<span id="page-info">Page 1 of 1</span>
+			<button class="btn-page" id="btn-next" onclick="changePage(1)" disabled>Next →</button>
+		</div>
+	</div>
+
+</div>
+<script>
+// ── Data injected by Python ───────────────────────────────────────────────────
+const ALL_ENTRIES = {{ entries_json }};
+
+// ── Parse dates ───────────────────────────────────────────────────────────────
+// Each entry: { artist, track, seconds, date: "dd-mm-yyyy" }
+function parseDate(str) {
+	const [d, m, y] = str.split("-").map(Number);
+	return new Date(y, m - 1, d);
+}
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let dateStart = null;
+let dateEnd   = null;
+let searchQuery = "";
+let artistsData = [];
+let filteredArtists = [];
+let currentPage = 0;
+let pageSize    = 50;
+let lastSortCol = 2;  // default sort by plays
+let sortAsc     = false;
+let activePreset = null;
+
+// ── Compute date bounds from data ─────────────────────────────────────────────
+// Using reduce instead of Math.min/max(...) to avoid call stack overflow with large datasets
+const globalMinDate = ALL_ENTRIES.reduce((min, e) => { const d = parseDate(e.date); return d < min ? d : min; }, parseDate(ALL_ENTRIES[0].date));
+const globalMaxDate = ALL_ENTRIES.reduce((max, e) => { const d = parseDate(e.date); return d > max ? d : max; }, parseDate(ALL_ENTRIES[0].date));
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+function init() {
+	const startInput = document.getElementById("date-start");
+	const endInput   = document.getElementById("date-end");
+
+	startInput.min = fmt(globalMinDate);
+	startInput.max = fmt(globalMaxDate);
+	endInput.min   = fmt(globalMinDate);
+	endInput.max   = fmt(globalMaxDate);
+
+	startInput.value = fmt(globalMinDate);
+	endInput.value   = fmt(globalMaxDate);
+
+	dateStart = globalMinDate;
+	dateEnd   = globalMaxDate;
+
+	startInput.addEventListener("change", function() {
+		dateStart = this.value ? new Date(this.value) : globalMinDate;
+		clearActivePreset();
+		computeArtists();
+	});
+	endInput.addEventListener("change", function() {
+		dateEnd = this.value ? new Date(this.value) : globalMaxDate;
+		clearActivePreset();
+		computeArtists();
+	});
+
+	computeArtists();
+}
+
+function fmt(d) {
+	return d.toISOString().split("T")[0];
+}
+
+// ── Aggregate artists within date range ───────────────────────────────────────
+function computeArtists() {
+	const map = {};
+	let totalPlays    = 0;
+	let totalSeconds  = 0;
+	const trackSet    = new Set();
+
+	const startTime = dateStart ? dateStart.getTime() : 0;
+	const endTime   = dateEnd   ? dateEnd.getTime() + 86400000 : Infinity;
+
+	ALL_ENTRIES.forEach(e => {
+		const d = parseDate(e.date).getTime();
+		if (d < startTime || d >= endTime) return;
+
+		if (!map[e.artist]) {
+			map[e.artist] = { artist: e.artist, plays: 0, tracks: new Set(), seconds: 0 };
+		}
+		map[e.artist].plays++;
+		map[e.artist].tracks.add(e.track);
+		map[e.artist].seconds += e.seconds;
+		totalPlays++;
+		totalSeconds += e.seconds;
+		trackSet.add(e.artist + "||" + e.track);
+	});
+
+	artistsData = Object.values(map).map(a => ({
+		artist:  a.artist,
+		plays:   a.plays,
+		tracks:  a.tracks.size,
+		seconds: a.seconds
+	}));
+
+	// Default sort by plays desc
+	artistsData.sort((a, b) => b.plays - a.plays);
+
+	// Update stat cards
+	document.getElementById("stat-artists").textContent = Object.keys(map).length.toLocaleString();
+	document.getElementById("stat-plays").textContent   = totalPlays.toLocaleString();
+	document.getElementById("stat-tracks").textContent  = trackSet.size.toLocaleString();
+	document.getElementById("stat-hours").textContent   = Math.round(totalSeconds / 3600).toLocaleString();
+
+	applySearch();
+}
+
+// ── Search filter ─────────────────────────────────────────────────────────────
+function applySearch() {
+	const q = searchQuery.toLowerCase();
+	if (q) {
+		filteredArtists = artistsData.filter(a => a.artist.toLowerCase().includes(q));
+	} else {
+		filteredArtists = [...artistsData];
+	}
+	applySort();
+	currentPage = 0;
+	renderPage();
+}
+
+// ── Sorting ───────────────────────────────────────────────────────────────────
+const SORT_KEYS = ["_rank", "artist", "plays", "tracks", "seconds"];
+function applySort() {
+	if (lastSortCol < 0) return;
+	const key = SORT_KEYS[lastSortCol];
+	if (key === "_rank") {
+		// rank is based on current order index
+		return;
+	}
+	filteredArtists.sort((a, b) => {
+		const va = a[key], vb = b[key];
+		return va < vb ? (sortAsc ? -1 : 1) : va > vb ? (sortAsc ? 1 : -1) : 0;
+	});
+}
+
+function sortBy(col) {
+	if (lastSortCol === col) { sortAsc = !sortAsc; }
+	else {
+		if (lastSortCol >= 0) {
+			document.getElementById("th-" + lastSortCol).classList.remove("sorted");
+			document.getElementById("th-" + lastSortCol).querySelector(".sort-icon").textContent = "↕";
+		}
+		sortAsc = (col <= 1); // asc for rank/name, desc for numbers
+		lastSortCol = col;
+	}
+	const th = document.getElementById("th-" + col);
+	th.classList.add("sorted");
+	th.querySelector(".sort-icon").textContent = sortAsc ? "↑" : "↓";
+	applySort();
+	currentPage = 0;
+	renderPage();
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderPage() {
+	const maxPlays = filteredArtists.reduce((m, a) => a.plays > m ? a.plays : m, 1);
+	const start    = currentPage * pageSize;
+	const slice    = filteredArtists.slice(start, Math.min(start + pageSize, filteredArtists.length));
+	const frag     = document.createDocumentFragment();
+
+	slice.forEach((a, i) => {
+		const globalIdx = start + i + 1;
+		const rankClass = globalIdx === 1 ? "rank-1" : globalIdx === 2 ? "rank-2" : globalIdx === 3 ? "rank-3" : "rank-other";
+		const barW      = Math.max(2, (a.plays / maxPlays) * 100);
+		const tr        = document.createElement("tr");
+		tr.innerHTML =
+			`<td><span class="rank ${rankClass}">${globalIdx}</span></td>` +
+			`<td style="font-weight:600">${a.artist}</td>` +
+			`<td>${a.plays.toLocaleString()}</td>` +
+			`<td>${a.tracks}</td>` +
+			`<td>${formatTime(a.seconds)}</td>` +
+			`<td class="bar-cell"><div class="bar-bg" style="width:${barW}%"></div></td>`;
+		frag.appendChild(tr);
+	});
+
+	const tbody = document.getElementById("tbody");
+	tbody.innerHTML = "";
+	tbody.appendChild(frag);
+
+	const totalPages = Math.max(1, Math.ceil(filteredArtists.length / pageSize));
+	const rangeEnd   = Math.min(start + pageSize, filteredArtists.length);
+	const rangeStart = filteredArtists.length > 0 ? start + 1 : 0;
+
+	document.getElementById("count-range").textContent    = `${rangeStart}–${rangeEnd}`;
+	document.getElementById("count-filtered").textContent = filteredArtists.length;
+	document.getElementById("page-info").textContent      = `Page ${currentPage + 1} of ${totalPages}`;
+	document.getElementById("btn-prev").disabled          = currentPage === 0;
+	document.getElementById("btn-next").disabled          = currentPage >= totalPages - 1;
+	document.getElementById("no-results").style.display   = filteredArtists.length === 0 ? "block" : "none";
+}
+
+function formatTime(sec) {
+	const h = Math.floor(sec / 3600);
+	const m = Math.floor((sec % 3600) / 60);
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
+}
+
+// ── Pagination ────────────────────────────────────────────────────────────────
+function changePage(dir) {
+	const totalPages = Math.ceil(filteredArtists.length / pageSize);
+	currentPage = Math.max(0, Math.min(currentPage + dir, totalPages - 1));
+	renderPage();
+	window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function onPageSizeChange(val) {
+	pageSize    = parseInt(val);
+	currentPage = 0;
+	renderPage();
+}
+
+// ── Presets ───────────────────────────────────────────────────────────────────
+function setPreset(days) {
+	clearActivePreset();
+	const btn = event.target;
+	btn.classList.add("active");
+	activePreset = btn;
+
+	if (days === 0) {
+		dateStart = globalMinDate;
+		dateEnd   = globalMaxDate;
+	} else {
+		dateEnd   = globalMaxDate;
+		dateStart = new Date(globalMaxDate);
+		dateStart.setDate(dateStart.getDate() - days);
+		if (dateStart < globalMinDate) dateStart = globalMinDate;
+	}
+
+	document.getElementById("date-start").value = fmt(dateStart);
+	document.getElementById("date-end").value   = fmt(dateEnd);
+	computeArtists();
+}
+
+function clearActivePreset() {
+	if (activePreset) {
+		activePreset.classList.remove("active");
+		activePreset = null;
+	}
+}
+
+// ── Search (debounced) ────────────────────────────────────────────────────────
+let searchTimer;
+document.getElementById("search-input").addEventListener("input", function () {
+	clearTimeout(searchTimer);
+	searchTimer = setTimeout(() => { searchQuery = this.value; applySearch(); }, 200);
+});
+
+// ── Reset ─────────────────────────────────────────────────────────────────────
+function resetFilters() {
+	searchQuery = "";
+	dateStart   = globalMinDate;
+	dateEnd     = globalMaxDate;
+	document.getElementById("search-input").value  = "";
+	document.getElementById("date-start").value    = fmt(globalMinDate);
+	document.getElementById("date-end").value      = fmt(globalMaxDate);
+	clearActivePreset();
+	if (lastSortCol >= 0) {
+		document.getElementById("th-" + lastSortCol).classList.remove("sorted");
+		document.getElementById("th-" + lastSortCol).querySelector(".sort-icon").textContent = "↕";
+	}
+	lastSortCol = 2;
+	sortAsc     = false;
+	computeArtists();
+}
+
+init();
+</script>
+</body>
+</html>
