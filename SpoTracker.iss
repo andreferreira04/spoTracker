@@ -10,7 +10,16 @@ Compression=lzma
 SolidCompression=yes
 
 [Files]
+; Main tracker (onedir build)
 Source: "dist\SpoTracker\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
+; Stats report generator (onefile build)
+Source: "dist\SpoTracker-Stats.exe"; DestDir: "{app}"; Flags: ignoreversion
+
+[Icons]
+; Start Menu shortcuts
+Name: "{group}\SpoTracker";       Filename: "{app}\SpoTracker.exe"
+Name: "{group}\Generate Report";  Filename: "{app}\SpoTracker-Stats.exe"
+Name: "{group}\Uninstall";      Filename: "{uninstallexe}"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
@@ -18,4 +27,5 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
     ValueData: """{app}\SpoTracker.exe"""; Flags: uninsdeletevalue
 
 [Run]
-Filename: "{app}\SpoTracker.exe"; Flags: nowait postinstall
+Filename: "{app}\SpoTracker.exe"; Flags: nowait postinstall skipifsilent; \
+    Description: "Start SpoTracker"

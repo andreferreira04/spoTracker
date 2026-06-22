@@ -13,7 +13,6 @@ save_dir = user_docs / "SpoTracker"
 save_dir.mkdir(parents=True, exist_ok=True)
 
 musicListFile = save_dir / "music-list.csv"
-musicUniqueFile = save_dir / "musics.csv"
 timeSleep = 1
 
 def getProcessTitles(): 
@@ -63,26 +62,6 @@ def saveMusic(artist, music, secondsListen, date, hour):
             f.write(f"{artist};{music};{secondsListen};{date};{hour}\n")
     except:
         print("Error saving music in file", musicListFile)
-    
-    try:
-        if not isMusicRegistered(artist, music):
-            with open(musicUniqueFile, "a", encoding="utf-8") as f:
-                f.write(f"{artist};{music}\n")
-    except:
-        print("Error saving unique music in file", musicUniqueFile)
-
-def isMusicRegistered(artist, music):
-    if not os.path.exists(musicUniqueFile):
-        return False
-    try:
-        with open(musicUniqueFile, "r", encoding="utf-8") as f:
-            for line in f:
-                registered_artist, registered_music = line.strip().split(";")
-                if registered_artist == artist and registered_music == music:
-                    return True
-    except:
-        print("Error reading unique music file", musicUniqueFile)
-    return False
 
 def isAlreadyRunning():
     currentPid = os.getpid()
