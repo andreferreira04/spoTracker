@@ -7,6 +7,7 @@ a = Analysis(
     datas=[
         ('templates/report.html', 'templates'),  # bundled into the exe
         ('templates/top-artists.html', 'templates'),
+        ('templates/overview.html', 'templates'),
     ],
     hiddenimports=[],
     hookspath=[],

@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Overview — SpoTracker</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet" />
+	<style>
+		:root {
+			--ps-bg: #f6efe6;
+			--ps-surface: #fffaf3;
+			--ps-surface-2: #f0e6d8;
+			--ps-ink: #2c2620;
+			--ps-ink-soft: #7a6f60;
+			--ps-accent: #c4561e;
+			--ps-accent-soft: #e8a06b;
+			--ps-up: #4f7a3f;
+			--ps-down: #b0492f;
+			--ps-border: #e4d8c6;
+			--ps-radius: 16px;
+			--ps-shadow: 0 1px 2px rgba(44,38,32,.04), 0 8px 24px rgba(44,38,32,.06);
+		}
+		* { box-sizing: border-box; margin: 0; padding: 0 }
+		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+
+		/* ── Header / Nav ──────────────────────────────── */
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.brand { display: flex; align-items: center; gap: 14px }
+		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
+		.brand-title { font-family: "Fraunces", Georgia, serif; font-size: 22px; font-weight: 700 }
+		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
+		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
+		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
+		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+
+		/* ── Intro ─────────────────────────────────────── */
+		.intro { margin-bottom: 28px }
+		.intro-title { font-family: "Fraunces", Georgia, serif; font-size: 30px; font-weight: 600 }
+		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+
+		/* ── Stats Grid ────────────────────────────────── */
+		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px }
+		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
+		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
+		.stat-value { font-family: "Fraunces", Georgia, serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
+		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
+
+		/* ── Content Grid ──────────────────────────────── */
+		.content-grid { display: grid; grid-template-columns: 1fr; gap: 16px }
+
+		/* ── Panel ─────────────────────────────────────── */
+		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 22px; box-shadow: var(--ps-shadow) }
+		.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px }
+		.panel-title { font-family: "Fraunces", Georgia, serif; font-size: 18px; font-weight: 600 }
+		.panel-tag { font-size: 12px; font-weight: 500; color: var(--ps-accent); background-color: var(--ps-surface-2); padding: 4px 10px; border-radius: 999px }
+
+		/* ── Track List ────────────────────────────────── */
+		.track-list { list-style: none; display: flex; flex-direction: column; gap: 4px }
+		.track { display: flex; align-items: center; gap: 14px; padding: 10px 8px; border-radius: 10px }
+		.track:hover { background-color: var(--ps-surface-2) }
+		.track-rank { font-family: "Fraunces", Georgia, serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); width: 20px; text-align: center }
+		.track-info { display: flex; flex-direction: column; flex: 1 }
+		.track-name { font-weight: 500; font-size: 15px }
+		.track-artist { font-size: 13px; color: var(--ps-ink-soft) }
+		.track-plays { font-size: 13px; color: var(--ps-ink-soft) }
+
+		/* ── Bar Chart ─────────────────────────────────── */
+		.chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 180px }
+		.bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end }
+		.bar { width: 100%; max-width: 36px; height: var(--h); background: linear-gradient(180deg, var(--ps-accent-soft), var(--ps-accent)); border-radius: 8px 8px 4px 4px; transition: opacity .2s }
+		.bar:hover { opacity: .8 }
+		.bar-label { font-size: 12px; color: var(--ps-ink-soft) }
+		.bar-value { font-size: 11px; font-weight: 500; color: var(--ps-ink-soft) }
+
+		/* ── Highlight Panel (Artist Spotlight) ─────────── */
+		.panel.highlight { background-color: var(--ps-ink); border-color: var(--ps-ink); color: var(--ps-surface) }
+		.panel.highlight .panel-title { color: var(--ps-surface) }
+		.panel.highlight .panel-tag { color: var(--ps-ink); background-color: var(--ps-accent-soft) }
+		.artist-spotlight { display: flex; align-items: center; gap: 18px }
+		.artist-photo { width: 72px; height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: "Fraunces", Georgia, serif; font-size: 24px; font-weight: 700; color: var(--ps-ink); background-color: var(--ps-accent-soft); border-radius: 16px }
+		.artist-meta { display: flex; flex-direction: column; gap: 4px }
+		.artist-name { font-family: "Fraunces", Georgia, serif; font-size: 20px; font-weight: 600 }
+		.artist-stat { font-size: 13px; color: var(--ps-accent-soft) }
+		.artist-note { font-size: 13px; color: #d9cfc2; margin-top: 4px }
+
+		/* ── Genre / meter bars ─────────────────────────── */
+		.genre-list { list-style: none; display: flex; flex-direction: column; gap: 16px }
+		.genre-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px }
+		.genre-name { font-weight: 500 }
+		.genre-pct { color: var(--ps-ink-soft) }
+		.meter { height: 8px; background-color: var(--ps-surface-2); border-radius: 999px; overflow: hidden }
+		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent); border-radius: 999px }
+
+		/* ── Footer ────────────────────────────────────── */
+		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+
+		/* ── Responsive ────────────────────────────────── */
+		@media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr) } }
+		@media (min-width: 860px) { .content-grid { grid-template-columns: 1fr 1fr } }
+		@media (max-width: 700px) { .header { flex-direction: column; align-items: flex-start } }
+	</style>
+</head>
+<body>
+<div class="page">
+
+	<!-- Header -->
+	<header class="header">
+		<div class="brand">
+			<div class="brand-mark" aria-hidden="true">♪</div>
+			<div>
+				<h1 class="brand-title">SpoTracker</h1>
+				<p class="brand-subtitle">Your listening statistics</p>
+			</div>
+		</div>
+		<nav class="main-nav" aria-label="Main navigation">
+			<a class="nav-link active" href="overview.html">Overview</a>
+			<a class="nav-link" href="tracks-by-artist.html">Tracks</a>
+			<a class="nav-link" href="top-artists.html">Top Artists</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="intro">
+			<h2 class="intro-title">Listening Overview</h2>
+			<p class="intro-text">Your activity summary, computed from your full listening history.</p>
+		</section>
+
+		<!-- Stats Cards -->
+		<section class="stats-grid" aria-label="Key metrics">
+			<article class="stat-card">
+				<span class="stat-label">Minutes Listened</span>
+				<strong class="stat-value" id="stat-minutes">0</strong>
+				<span class="stat-trend" id="stat-duration">0h 0m total</span>
+			</article>
+			<article class="stat-card">
+				<span class="stat-label">Plays</span>
+				<strong class="stat-value" id="stat-plays">0</strong>
+				<span class="stat-trend">tracks played</span>
+			</article>
+			<article class="stat-card">
+				<span class="stat-label">Distinct Artists</span>
+				<strong class="stat-value" id="stat-artists">0</strong>
+				<span class="stat-trend">in your library</span>
+			</article>
+			<article class="stat-card">
+				<span class="stat-label">Distinct Tracks</span>
+				<strong class="stat-value" id="stat-tracks">0</strong>
+				<span class="stat-trend">unique songs</span>
+			</article>
+		</section>
+
+		<!-- Content Grid -->
+		<div class="content-grid">
+
+			<!-- Top Tracks -->
+			<section class="panel">
+				<div class="panel-head">
+					<h3 class="panel-title">Most Played Tracks</h3>
+					<span class="panel-tag">Top 5</span>
+				</div>
+				<ol class="track-list" id="top-tracks"></ol>
+			</section>
+
+			<!-- Activity by Weekday -->
+			<section class="panel">
+				<div class="panel-head">
+					<h3 class="panel-title">Activity by Day</h3>
+					<span class="panel-tag">Minutes / weekday</span>
+				</div>
+				<div class="chart" id="weekday-chart" role="img" aria-label="Bar chart of minutes listened by day of the week"></div>
+			</section>
+
+			<!-- Top Artists -->
+			<section class="panel">
+				<div class="panel-head">
+					<h3 class="panel-title">Top Artists</h3>
+					<span class="panel-tag">By plays</span>
+				</div>
+				<ol class="track-list" id="top-artists"></ol>
+			</section>
+
+			<!-- Artist Spotlight -->
+			<section class="panel highlight" id="spotlight-panel">
+				<div class="panel-head">
+					<h3 class="panel-title">Artist Spotlight</h3>
+					<span class="panel-tag">Most played</span>
+				</div>
+				<div class="artist-spotlight" id="spotlight-content"></div>
+			</section>
+
+			<!-- Top Artists by Time -->
+			<section class="panel" style="grid-column: 1 / -1">
+				<div class="panel-head">
+					<h3 class="panel-title">Top Artists by Listening Time</h3>
+					<span class="panel-tag">Top 8</span>
+				</div>
+				<ul class="genre-list" id="artist-time-bars"></ul>
+			</section>
+
+		</div>
+	</main>
+
+	<footer class="footer">
+		<p>SpoTracker · Generated from your listening data</p>
+	</footer>
+
+</div>
+<script>
+// ── Data injected by Python ───────────────────────────────────────────────────
+const OVERVIEW = {{ overview_json }};
+
+function formatNumber(n) { return n.toLocaleString(); }
+function formatDuration(sec) {
+	const h = Math.floor(sec / 3600);
+	const m = Math.floor((sec % 3600) / 60);
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
+}
+
+function init() {
+	// ── Stats cards ───────────────────────────────────────────────
+	document.getElementById("stat-minutes").textContent = formatNumber(OVERVIEW.totalMinutes);
+	document.getElementById("stat-duration").textContent = formatDuration(OVERVIEW.totalSeconds) + " total";
+	document.getElementById("stat-plays").textContent    = formatNumber(OVERVIEW.totalPlays);
+	document.getElementById("stat-artists").textContent  = formatNumber(OVERVIEW.distinctArtists);
+	document.getElementById("stat-tracks").textContent   = formatNumber(OVERVIEW.distinctTracks);
+
+	// ── Top 5 Tracks ─────────────────────────────────────────────
+	const tracksList = document.getElementById("top-tracks");
+	OVERVIEW.topTracks.forEach((t, i) => {
+		const li = document.createElement("li");
+		li.className = "track";
+		li.innerHTML =
+			`<span class="track-rank">${i + 1}</span>` +
+			`<div class="track-info"><span class="track-name">${t.track}</span><span class="track-artist">${t.artist}</span></div>` +
+			`<span class="track-plays">${formatNumber(t.plays)} plays</span>`;
+		tracksList.appendChild(li);
+	});
+
+	// ── Activity by Weekday ──────────────────────────────────────
+	const chart = document.getElementById("weekday-chart");
+	const maxMin = OVERVIEW.weekdayActivity.reduce((m, d) => d.minutes > m ? d.minutes : m, 1);
+	const minMin = OVERVIEW.weekdayActivity.reduce((m, d) => d.minutes < m ? d.minutes : m, maxMin);
+	const range  = maxMin - minMin;
+
+	OVERVIEW.weekdayActivity.forEach(d => {
+		// Normalize between 20% (min) and 100% (max) so differences are always visible
+		const h = range > 0 ? 20 + ((d.minutes - minMin) / range) * 80 : 60;
+		const div = document.createElement("div");
+		div.className = "bar-group";
+		div.innerHTML =
+			`<span class="bar-value">${formatNumber(d.minutes)}</span>` +
+			`<div class="bar" style="--h:${h}%"></div>` +
+			`<span class="bar-label">${d.day}</span>`;
+		chart.appendChild(div);
+	});
+
+	// ── Top 5 Artists ────────────────────────────────────────────
+	const artistsList = document.getElementById("top-artists");
+	OVERVIEW.topArtists.forEach((a, i) => {
+		const li = document.createElement("li");
+		li.className = "track";
+		li.innerHTML =
+			`<span class="track-rank">${i + 1}</span>` +
+			`<div class="track-info"><span class="track-name">${a.artist}</span><span class="track-artist">${a.tracks} tracks · ${formatDuration(a.seconds)}</span></div>` +
+			`<span class="track-plays">${formatNumber(a.plays)} plays</span>`;
+		artistsList.appendChild(li);
+	});
+
+	// ── Artist Spotlight ─────────────────────────────────────────
+	const top = OVERVIEW.topArtists[0];
+	if (top) {
+		const initials = top.artist.split(" ").map(w => w[0]).slice(0, 2).join("");
+		document.getElementById("spotlight-content").innerHTML =
+			`<div class="artist-photo" aria-hidden="true">${initials}</div>` +
+			`<div class="artist-meta">` +
+				`<span class="artist-name">${top.artist}</span>` +
+				`<span class="artist-stat">${formatDuration(top.seconds)} · ${formatNumber(top.plays)} plays</span>` +
+				`<p class="artist-note">Your most played artist, with ${top.tracks} unique tracks.</p>` +
+			`</div>`;
+	}
+
+	// ── Top Artists by Time (meter bars) ─────────────────────────
+	const timeList = document.getElementById("artist-time-bars");
+	const topByTime = [...OVERVIEW.topArtists].sort((a, b) => b.seconds - a.seconds).slice(0, 8);
+	const maxSec = topByTime.length > 0 ? topByTime[0].seconds : 1;
+	topByTime.forEach(a => {
+		const pct = Math.round((a.seconds / maxSec) * 100);
+		const li = document.createElement("li");
+		li.innerHTML =
+			`<div class="genre-top"><span class="genre-name">${a.artist}</span><span class="genre-pct">${formatDuration(a.seconds)}</span></div>` +
+			`<div class="meter"><span class="meter-fill" style="--w:${pct}%"></span></div>`;
+		timeList.appendChild(li);
+	});
+}
+
+init();
+</script>
+</body>
+</html>

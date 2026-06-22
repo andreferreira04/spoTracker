@@ -3,148 +3,214 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Music Statistics</title>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+	<title>Tracks — SpoTracker</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet" />
 	<style>
-		:root{--card:#111827;--card2:#1a2332;--accent:#3b82f6;--accent-dim:rgba(59,130,246,.15);--text:#e5e7eb;--muted:#9ca3af;--border:#1f2933;--success:#22c55e;--warning:#f59e0b;--danger:#f87171}
-		*{box-sizing:border-box;margin:0;padding:0}
-		body{font-family:"Inter",sans-serif;background:linear-gradient(135deg,#020617,#0f172a);color:var(--text);display:flex;justify-content:center;padding:40px 16px 80px;min-height:100vh}
-		.container{width:100%;max-width:1060px}
-		.page-header{text-align:center;margin-bottom:32px}
-		.page-header h1{font-size:1.75rem;font-weight:700;background:linear-gradient(90deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-		.page-header p{color:var(--muted);font-size:.875rem;margin-top:6px}
-		.filter-panel{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;flex-direction:column;gap:16px;box-shadow:0 8px 24px rgba(0,0,0,.3)}
-		.filter-row{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
-		.search-wrapper{position:relative;flex:1;min-width:200px}
-		.search-wrapper svg{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
-		#search-input{width:100%;background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.9rem;padding:10px 12px 10px 38px;outline:none;transition:border-color .2s,box-shadow .2s}
-		#search-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-		#search-input::placeholder{color:var(--muted)}
-		#artist-select{background:var(--card2);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:inherit;font-size:.9rem;padding:10px 14px;outline:none;cursor:pointer;min-width:180px;transition:border-color .2s}
-		#artist-select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-		#artist-select option{background:#1a2332}
-		.btn-filter{border:1px solid var(--border);padding:9px 18px;border-radius:999px;background:var(--card2);color:var(--text);font-weight:500;font-size:.875rem;cursor:pointer;transition:all .22s;white-space:nowrap;display:flex;align-items:center;gap:6px;font-family:inherit}
-		.btn-filter:hover{background:var(--accent);border-color:var(--accent);transform:translateY(-1px)}
-		.btn-filter.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 12px rgba(59,130,246,.4)}
-		.btn-filter .dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.5);transition:background .2s}
-		.btn-filter.active .dot{background:#fff}
-		.btn-reset{border:1px solid var(--border);padding:7px 14px;border-radius:8px;background:transparent;color:var(--muted);font-size:.8rem;cursor:pointer;transition:all .2s;font-family:inherit}
-		.btn-reset:hover{border-color:var(--danger);color:var(--danger)}
-		.sliders-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-		.slider-group{display:flex;align-items:center;gap:14px}
-		.slider-label{font-size:.85rem;color:var(--muted);white-space:nowrap}
-		.slider-label span{color:var(--accent);font-weight:600}
-		input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:5px;border-radius:999px;background:var(--border);outline:none;cursor:pointer}
-		input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:var(--accent);box-shadow:0 0 8px rgba(59,130,246,.5);cursor:pointer;transition:transform .15s}
-		input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.2)}
-		input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);border:none;cursor:pointer}
-		.result-bar{display:flex;justify-content:space-between;align-items:center;padding:0 4px;margin-bottom:10px;flex-wrap:wrap;gap:8px}
-		#result-count{font-size:.82rem;color:var(--muted)}
-		#result-count strong{color:var(--text)}
-		.page-size-select{background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--muted);font-family:inherit;font-size:.8rem;padding:4px 8px;outline:none;cursor:pointer}
-		.page-size-select:focus{border-color:var(--accent)}
-		.table-card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 10px 25px rgba(0,0,0,.35);border:1px solid var(--border);overflow-x:auto}
-		table{width:100%;border-collapse:collapse}
-		th{text-align:left;font-weight:500;color:var(--muted);font-size:.82rem;padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;user-select:none;white-space:nowrap;transition:color .2s}
-		th:hover{color:var(--text)}
-		th.sorted{color:var(--accent)}
-		.sort-icon{display:inline-block;margin-left:5px;opacity:.4;font-style:normal;font-size:.75rem;transition:opacity .2s}
-		th.sorted .sort-icon{opacity:1}
-		td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:.9rem}
-		tr:last-child td{border-bottom:none}
-		tbody tr{transition:background .15s}
-		tbody tr:hover{background:rgba(59,130,246,.05)}
-		.badge-recent{display:inline-block;background:rgba(34,197,94,.15);color:var(--success);font-size:.7rem;font-weight:600;padding:2px 7px;border-radius:999px;margin-left:6px;vertical-align:middle}
-		.perc-cell{font-weight:500}
-		.perc-high{color:var(--success)}
-		.perc-mid{color:var(--warning)}
-		.perc-low{color:var(--danger)}
-		.no-results{text-align:center;color:var(--muted);padding:40px 0;font-size:.9rem;display:none}
-		.pagination{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:18px}
-		.btn-page{border:1px solid var(--border);padding:7px 16px;border-radius:8px;background:var(--card2);color:var(--text);font-size:.85rem;cursor:pointer;transition:all .2s;font-family:inherit}
-		.btn-page:hover:not(:disabled){background:var(--accent);border-color:var(--accent)}
-		.btn-page:disabled{opacity:.35;cursor:not-allowed}
-		#page-info{font-size:.82rem;color:var(--muted);min-width:100px;text-align:center}
-		@media(max-width:700px){th:nth-child(3),td:nth-child(3){display:none}.filter-row{flex-direction:column;align-items:stretch}#artist-select{min-width:unset;width:100%}.sliders-row{grid-template-columns:1fr}.nav-bar{flex-wrap:wrap}}
-		.nav-bar{display:flex;justify-content:center;gap:8px;margin-bottom:28px}
-		.nav-link{padding:10px 22px;border-radius:999px;border:1px solid var(--border);background:var(--card);color:var(--muted);font-family:inherit;font-size:.875rem;font-weight:500;text-decoration:none;cursor:pointer;transition:all .25s;display:flex;align-items:center;gap:8px}
-		.nav-link:hover{border-color:var(--accent);color:var(--text);transform:translateY(-1px)}
-		.nav-link.active{background:var(--accent);border-color:var(--accent);color:#fff;box-shadow:0 0 18px rgba(59,130,246,.35)}
-		.nav-link svg{width:16px;height:16px}
+		:root {
+			--ps-bg: #f6efe6;
+			--ps-surface: #fffaf3;
+			--ps-surface-2: #f0e6d8;
+			--ps-ink: #2c2620;
+			--ps-ink-soft: #7a6f60;
+			--ps-accent: #c4561e;
+			--ps-accent-soft: #e8a06b;
+			--ps-up: #4f7a3f;
+			--ps-down: #b0492f;
+			--ps-warn: #b8860b;
+			--ps-border: #e4d8c6;
+			--ps-radius: 16px;
+			--ps-shadow: 0 1px 2px rgba(44,38,32,.04), 0 8px 24px rgba(44,38,32,.06);
+		}
+		* { box-sizing: border-box; margin: 0; padding: 0 }
+		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+
+		/* ── Header / Nav ──────────────────────────────── */
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.brand { display: flex; align-items: center; gap: 14px }
+		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
+		.brand-title { font-family: "Fraunces", Georgia, serif; font-size: 22px; font-weight: 700 }
+		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
+		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
+		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
+		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+
+		/* ── Intro ─────────────────────────────────────── */
+		.intro { margin-bottom: 28px }
+		.intro-title { font-family: "Fraunces", Georgia, serif; font-size: 30px; font-weight: 600 }
+		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+
+		/* ── Filter bar ────────────────────────────────── */
+		.filter-bar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--ps-shadow) }
+		.filter-group { display: flex; flex-direction: column; gap: 6px }
+		.filter-group.grow { flex: 1; min-width: 180px }
+		.filter-label { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
+		.filter-input, .filter-select { font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 10px; padding: 9px 12px; outline: none }
+		.filter-input:focus, .filter-select:focus { border-color: var(--ps-accent) }
+		.search-field { position: relative; flex: 1; min-width: 220px }
+		.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--ps-ink-soft) }
+		.search-input { width: 100%; font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 11px 16px 11px 38px; outline: none }
+		.search-input:focus { border-color: var(--ps-accent) }
+
+		/* ── Pill buttons ──────────────────────────────── */
+		.btn-pill { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
+		.btn-pill:hover { color: var(--ps-ink); background-color: var(--ps-surface-2) }
+		.btn-pill.active { color: var(--ps-surface); background-color: var(--ps-accent); border-color: var(--ps-accent) }
+
+		/* ── Sliders ───────────────────────────────────── */
+		.sliders-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px }
+		.slider-group { display: flex; align-items: center; gap: 14px }
+		.slider-label { font-size: 13px; color: var(--ps-ink-soft); white-space: nowrap }
+		.slider-label span { color: var(--ps-accent); font-weight: 600 }
+		input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 999px; background: var(--ps-border); outline: none; cursor: pointer }
+		input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ps-accent); cursor: pointer; transition: transform .15s }
+		input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15) }
+		input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--ps-accent); border: none; cursor: pointer }
+
+		/* ── Reset button ──────────────────────────────── */
+		.clear-btn { align-self: flex-end }
+		.page-btn { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 10px; padding: 9px 16px; cursor: pointer; transition: background-color .15s, opacity .15s }
+		.page-btn:hover:not(:disabled) { background-color: var(--ps-surface-2) }
+		.page-btn:disabled { opacity: .45; cursor: not-allowed }
+
+		/* ── Toolbar ───────────────────────────────────── */
+		.toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px }
+		.result-count { font-size: 13px; color: var(--ps-ink-soft) }
+		.result-count strong { color: var(--ps-ink) }
+		.page-size-select { font-family: inherit; font-size: 13px; color: var(--ps-ink-soft); background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 8px; padding: 4px 8px; outline: none; cursor: pointer }
+		.page-size-select:focus { border-color: var(--ps-accent) }
+
+		/* ── Table ─────────────────────────────────────── */
+		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); box-shadow: var(--ps-shadow); overflow: hidden }
+		.table-wrap { width: 100%; overflow-x: auto }
+		.data-table { width: 100%; border-collapse: collapse; font-size: 14px }
+		.data-table thead th { text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ps-ink-soft); background-color: var(--ps-surface-2); padding: 14px 18px; white-space: nowrap; cursor: pointer; user-select: none; transition: color .15s }
+		.data-table thead th:hover { color: var(--ps-ink) }
+		.data-table thead th.sorted { color: var(--ps-accent) }
+		.sort-icon { display: inline-block; margin-left: 4px; opacity: .4; font-style: normal; font-size: 11px; transition: opacity .2s }
+		th.sorted .sort-icon { opacity: 1 }
+		.data-table th.num, .data-table td.num { text-align: right }
+		.data-table tbody td { padding: 13px 18px; border-top: 1px solid var(--ps-border) }
+		.data-table tbody tr:hover { background-color: var(--ps-surface-2) }
+		.cell-strong { font-weight: 500; color: var(--ps-ink) }
+		.badge-recent { display: inline-block; background-color: rgba(79,122,63,.12); color: var(--ps-up); font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle }
+		.perc-cell { font-weight: 500 }
+		.perc-high { color: var(--ps-up) }
+		.perc-mid { color: var(--ps-warn) }
+		.perc-low { color: var(--ps-down) }
+		.empty-cell { text-align: center; color: var(--ps-ink-soft); padding: 32px 18px }
+
+		/* ── Pagination ────────────────────────────────── */
+		.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px }
+		.page-status { font-size: 13px; color: var(--ps-ink-soft); min-width: 100px; text-align: center }
+
+		/* ── Footer ────────────────────────────────────── */
+		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+
+		/* ── Responsive ────────────────────────────────── */
+		@media (max-width: 700px) {
+			.data-table th:nth-child(3), .data-table td:nth-child(3) { display: none }
+			.filter-bar { flex-direction: column; align-items: stretch }
+			.sliders-row { grid-template-columns: 1fr }
+			.header { flex-direction: column; align-items: flex-start }
+		}
 	</style>
 </head>
 <body>
-<div class="container">
+<div class="page">
 
-	<!-- Navigation -->
-	<div class="nav-bar">
-		<a class="nav-link active" href="tracks-by-artist.html">
-			<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 19V6l12-3v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="15" r="3"/></svg>
-			Tracks
-		</a>
-		<a class="nav-link" href="top-artists.html">
-			<svg fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-			Top Artists
-		</a>
-	</div>
-
-	<div class="page-header">
-		<h1>Playback Statistics</h1>
-		<p>Detailed analysis of your Spotify listening history</p>
-	</div>
-
-	<div class="filter-panel">
-		<div class="filter-row">
-			<div class="search-wrapper">
-				<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-				<input id="search-input" type="text" placeholder="Search artist or track…" />
-			</div>
-			<select id="artist-select"><option value="">All artists</option></select>
-			<button class="btn-filter" id="btn-recent" onclick="toggleFilter('recent')"><span class="dot"></span> Recent</button>
-			<button class="btn-filter" id="btn-lowperc" onclick="toggleFilter('lowperc')"><span class="dot"></span> Low %</button>
-			<button class="btn-reset" onclick="resetFilters()">↺ Reset</button>
-		</div>
-		<div class="sliders-row">
-			<div class="slider-group">
-				<span class="slider-label">Min. percentage: <span id="perc-value">0</span>%</span>
-				<input id="perc-slider" type="range" min="0" max="100" value="0" step="5" oninput="onPercSlider(this.value)" />
-			</div>
-			<div class="slider-group">
-				<span class="slider-label">Min. plays: <span id="plays-value">0</span></span>
-				<input id="plays-slider" type="range" min="0" max="100" value="0" step="1" oninput="onPlaysSlider(this.value)" />
+	<!-- Header -->
+	<header class="header">
+		<div class="brand">
+			<div class="brand-mark" aria-hidden="true">♪</div>
+			<div>
+				<h1 class="brand-title">SpoTracker</h1>
+				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
-	</div>
+		<nav class="main-nav" aria-label="Main navigation">
+			<a class="nav-link" href="overview.html">Overview</a>
+			<a class="nav-link active" href="tracks-by-artist.html">Tracks</a>
+			<a class="nav-link" href="top-artists.html">Top Artists</a>
+		</nav>
+	</header>
 
-	<div class="result-bar">
-		<span id="result-count">Showing <strong id="count-range">0</strong> of <strong id="count-filtered">0</strong> tracks (<strong id="count-total">0</strong> total)</span>
-		<select class="page-size-select" id="page-size-select" onchange="onPageSizeChange(this.value)">
-			<option value="50">50 / page</option>
-			<option value="100">100 / page</option>
-			<option value="250">250 / page</option>
-			<option value="9999">All</option>
-		</select>
-	</div>
+	<main>
+		<section class="intro">
+			<h2 class="intro-title">Tracks</h2>
+			<p class="intro-text">Detailed analysis of your Spotify listening history, sorted by plays.</p>
+		</section>
 
-	<div class="table-card">
-		<table>
-			<thead>
-				<tr>
-					<th onclick="sortBy(0)" id="th-0">Artist <em class="sort-icon">↕</em></th>
-					<th onclick="sortBy(1)" id="th-1">Track <em class="sort-icon">↕</em></th>
-					<th onclick="sortBy(2)" id="th-2">Plays <em class="sort-icon">↕</em></th>
-					<th onclick="sortBy(3)" id="th-3">% <em class="sort-icon">↕</em></th>
-				</tr>
-			</thead>
-			<tbody id="tbody"></tbody>
-		</table>
-		<div class="no-results" id="no-results">😕 No tracks match the applied filters.</div>
-		<div class="pagination">
-			<button class="btn-page" id="btn-prev" onclick="changePage(-1)" disabled>← Prev</button>
-			<span id="page-info">Page 1 of 1</span>
-			<button class="btn-page" id="btn-next" onclick="changePage(1)" disabled>Next →</button>
+		<!-- Filters -->
+		<div class="filter-bar">
+			<div class="filter-group grow">
+				<label class="filter-label" for="search-input">Search</label>
+				<div class="search-field">
+					<span class="search-icon" aria-hidden="true">⌕</span>
+					<input id="search-input" type="search" class="search-input" placeholder="Search artist or track…" />
+				</div>
+			</div>
+			<div class="filter-group">
+				<label class="filter-label" for="artist-select">Artist</label>
+				<select id="artist-select" class="filter-input filter-select"><option value="">All artists</option></select>
+			</div>
+			<button class="btn-pill" id="btn-recent" onclick="toggleFilter('recent')">Recent</button>
+			<button class="btn-pill" id="btn-lowperc" onclick="toggleFilter('lowperc')">Low %</button>
+			<button class="page-btn clear-btn" onclick="resetFilters()">Clear</button>
 		</div>
-	</div>
+
+		<div class="filter-bar" style="padding: 12px 16px">
+			<div class="sliders-row" style="width:100%">
+				<div class="slider-group">
+					<span class="slider-label">Min. percentage: <span id="perc-value">0</span>%</span>
+					<input id="perc-slider" type="range" min="0" max="100" value="0" step="5" oninput="onPercSlider(this.value)" />
+				</div>
+				<div class="slider-group">
+					<span class="slider-label">Min. plays: <span id="plays-value">0</span></span>
+					<input id="plays-slider" type="range" min="0" max="100" value="0" step="1" oninput="onPlaysSlider(this.value)" />
+				</div>
+			</div>
+		</div>
+
+		<!-- Toolbar -->
+		<div class="toolbar">
+			<span class="result-count">Showing <strong id="count-range">0</strong> of <strong id="count-filtered">0</strong> tracks (<strong id="count-total">0</strong> total)</span>
+			<select class="page-size-select" id="page-size-select" onchange="onPageSizeChange(this.value)">
+				<option value="50">50 / page</option>
+				<option value="100">100 / page</option>
+				<option value="250">250 / page</option>
+				<option value="9999">All</option>
+			</select>
+		</div>
+
+		<!-- Table -->
+		<div class="panel" style="padding:0; overflow:hidden">
+			<div class="table-wrap">
+				<table class="data-table">
+					<thead>
+						<tr>
+							<th onclick="sortBy(0)" id="th-0">Artist <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(1)" id="th-1">Track <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(2)" id="th-2" class="num">Plays <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(3)" id="th-3" class="num">% <em class="sort-icon">↕</em></th>
+						</tr>
+					</thead>
+					<tbody id="tbody"></tbody>
+				</table>
+				<div class="empty-cell" id="no-results" style="display:none">No tracks match the applied filters.</div>
+			</div>
+			<div class="pagination">
+				<button class="page-btn" id="btn-prev" onclick="changePage(-1)" disabled>← Prev</button>
+				<span class="page-status" id="page-info">Page 1 of 1</span>
+				<button class="page-btn" id="btn-next" onclick="changePage(1)" disabled>Next →</button>
+			</div>
+		</div>
+	</main>
+
+	<footer class="footer">
+		<p>SpoTracker · Generated from your listening data</p>
+	</footer>
 
 </div>
 <script>
@@ -162,22 +228,17 @@ let sortAsc      = true;
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
-	// Artist dropdown from data
 	const artists = [...new Set(ALL_TRACKS.map(t => t.artist))].sort();
 	const sel = document.getElementById("artist-select");
 	artists.forEach(a => { const o = document.createElement("option"); o.value = a; o.textContent = a; sel.appendChild(o); });
 
-	// Plays slider max
-	const maxPlays = Math.max(0, ...ALL_TRACKS.map(t => t.validPlays));
+	const maxPlays = ALL_TRACKS.reduce((m, t) => t.validPlays > m ? t.validPlays : m, 0);
 	document.getElementById("plays-slider").max = maxPlays || 100;
-
-	// Total count
 	document.getElementById("count-total").textContent = ALL_TRACKS.length;
-
 	applyFilters();
 }
 
-// ── Filtering (operates on JS array, never touches DOM) ───────────────────────
+// ── Filtering ─────────────────────────────────────────────────────────────────
 function applyFilters() {
 	const q = state.search.toLowerCase();
 	filteredData = ALL_TRACKS.filter(t => {
@@ -194,7 +255,7 @@ function applyFilters() {
 	renderPage();
 }
 
-// ── Sorting (on filteredData array) ──────────────────────────────────────────
+// ── Sorting ───────────────────────────────────────────────────────────────────
 const SORT_KEYS = ["artist", "track", "validPlays", "perc"];
 function applySort() {
 	if (lastSortCol < 0) return;
@@ -222,7 +283,7 @@ function sortBy(col) {
 	renderPage();
 }
 
-// ── Render (only current page slice → DocumentFragment) ───────────────────────
+// ── Render ─────────────────────────────────────────────────────────────────────
 function renderPage() {
 	const start  = currentPage * pageSize;
 	const slice  = filteredData.slice(start, Math.min(start + pageSize, filteredData.length));
@@ -233,10 +294,10 @@ function renderPage() {
 		const badge     = t.recent ? '<span class="badge-recent">Recent</span>' : "";
 		const tr        = document.createElement("tr");
 		tr.innerHTML =
-			`<td>${t.artist}</td>` +
+			`<td class="cell-strong">${t.artist}</td>` +
 			`<td>${t.track}${badge}</td>` +
-			`<td>${t.validPlays}/${t.totalPlays}</td>` +
-			`<td class="perc-cell ${percClass}">${t.perc}%</td>`;
+			`<td class="num">${t.validPlays}/${t.totalPlays}</td>` +
+			`<td class="num perc-cell ${percClass}">${t.perc}%</td>`;
 		frag.appendChild(tr);
 	});
 
@@ -244,7 +305,6 @@ function renderPage() {
 	tbody.innerHTML = "";
 	tbody.appendChild(frag);
 
-	// Update UI counters & pagination
 	const totalPages = Math.max(1, Math.ceil(filteredData.length / pageSize));
 	const rangeEnd   = Math.min(start + pageSize, filteredData.length);
 	const rangeStart = filteredData.length > 0 ? start + 1 : 0;

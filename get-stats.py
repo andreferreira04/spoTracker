@@ -171,21 +171,113 @@ def generate_top_artists() -> Path:
     out.write_text(html, encoding="utf-8")
     return out
 
+# ── Report: overview dashboard ────────────────────────────────────────────────
+def generate_overview() -> Path:
+    template_path = resource_path("templates/overview.html")
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        msgbox(
+            "SpoTracker — Error",
+            f"Template not found:\n{template_path}",
+            0x10,
+        )
+        raise SystemExit(1)
+
+    total_seconds = 0
+    total_plays   = 0
+    artist_set    = set()
+    track_set     = set()
+
+    # Aggregation maps
+    track_plays: dict   = {}   # (artist, track) -> plays
+    artist_agg: dict    = {}   # artist -> {plays, tracks: set, seconds}
+    weekday_seconds     = [0] * 7  # Mon=0, Sun=6
+
+    for entry in data:
+        sec = entry.seconds_listened
+        total_plays += 1
+        total_seconds += sec
+        artist_set.add(entry.artist)
+        track_set.add((entry.artist, entry.track))
+
+        # Track plays (only valid plays)
+        key = (entry.artist, entry.track)
+        if sec > MIN_LISTEN_SECONDS:
+            track_plays[key] = track_plays.get(key, 0) + 1
+
+        # Artist aggregation
+        if entry.artist not in artist_agg:
+            artist_agg[entry.artist] = {"plays": 0, "tracks": set(), "seconds": 0}
+        artist_agg[entry.artist]["plays"] += 1
+        artist_agg[entry.artist]["tracks"].add(entry.track)
+        artist_agg[entry.artist]["seconds"] += sec
+
+        # Weekday activity
+        try:
+            d = datetime.strptime(entry.date, "%d-%m-%Y")
+            weekday_seconds[d.weekday()] += sec
+        except ValueError:
+            pass
+
+    # Top 5 tracks by valid plays
+    top_tracks = sorted(track_plays.items(), key=lambda x: x[1], reverse=True)[:5]
+    top_tracks_list = [
+        {"artist": k[0], "track": k[1], "plays": v}
+        for k, v in top_tracks
+    ]
+
+    # Top 5 artists by plays
+    top_artists = sorted(
+        [
+            {"artist": a, "plays": d["plays"], "tracks": len(d["tracks"]), "seconds": d["seconds"]}
+            for a, d in artist_agg.items()
+        ],
+        key=lambda x: x["plays"],
+        reverse=True,
+    )[:5]
+
+    # Weekday activity (minutes)
+    day_names = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+    weekday_activity = [
+        {"day": day_names[i], "minutes": round(weekday_seconds[i] / 60)}
+        for i in range(7)
+    ]
+
+    overview = {
+        "totalMinutes":   round(total_seconds / 60),
+        "totalSeconds":   total_seconds,
+        "totalPlays":     total_plays,
+        "distinctArtists": len(artist_set),
+        "distinctTracks":  len(track_set),
+        "topTracks":      top_tracks_list,
+        "topArtists":     top_artists,
+        "weekdayActivity": weekday_activity,
+    }
+
+    html = template.replace("{{ overview_json }}", json.dumps(overview, ensure_ascii=False))
+
+    out = output_folder / "overview.html"
+    out.write_text(html, encoding="utf-8")
+    return out
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 def generate_stats():
     output_folder.mkdir(parents=True, exist_ok=True)
 
     load_data()
 
-    report_path = generate_tracks_report()
+    overview_path = generate_overview()
+    generate_tracks_report()
     generate_top_artists()
 
     msgbox(
         "SpoTracker — Report generated",
-        f"Report created successfully!\n\n{report_path}\n\nOpening in browser…",
+        f"Report created successfully!\n\n{overview_path}\n\nOpening in browser…",
         0x40,  # MB_ICONINFORMATION
     )
-    webbrowser.open(report_path.as_uri())
+    webbrowser.open(overview_path.as_uri())
 
 
 generate_stats()
