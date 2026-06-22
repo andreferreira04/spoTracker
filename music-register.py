@@ -127,6 +127,21 @@ def generate_report(_=None):
         )
 
 
+def open_report(_=None):
+    """Open the existing report in the browser (if it exists)."""
+    import webbrowser
+    report = save_dir / "reports" / "tracks-by-artist.html"
+    if report.exists():
+        webbrowser.open(report.as_uri())
+    else:
+        ctypes.windll.user32.MessageBoxW(
+            0,
+            "No report found.\n\nUse 'Generate New Report' to create one first.",
+            "SpoTracker",
+            0x30,  # MB_ICONWARNING
+        )
+
+
 def quit_app(icon):
     """Stop the tray icon and exit."""
     icon.stop()
@@ -222,7 +237,8 @@ def run_tray():
     icon_image = create_tray_icon()
 
     menu = pystray.Menu(
-        pystray.MenuItem("Generate Report", generate_report, default=True),
+        pystray.MenuItem("Open Report", open_report, default=True),
+        pystray.MenuItem("Generate New Report", generate_report),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Exit", quit_app),
     )

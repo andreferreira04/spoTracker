@@ -17,9 +17,10 @@ Source: "dist\SpoTracker-Stats.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 ; Start Menu shortcuts
-Name: "{group}\SpoTracker";       Filename: "{app}\SpoTracker.exe"
-Name: "{group}\Generate Report";  Filename: "{app}\SpoTracker-Stats.exe"
-Name: "{group}\Uninstall";      Filename: "{uninstallexe}"
+Name: "{group}\SpoTracker";            Filename: "{app}\SpoTracker.exe"
+Name: "{group}\Open Report";           Filename: "{userdocs}\SpoTracker\reports\tracks-by-artist.html"
+Name: "{group}\Generate New Report";   Filename: "{app}\SpoTracker-Stats.exe"
+Name: "{group}\Uninstall";             Filename: "{uninstallexe}"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
