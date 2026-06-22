@@ -7,7 +7,7 @@ on:
 
 permissions:
   contents: write
-  
+
 jobs:
   build:
     runs-on: windows-latest
@@ -26,22 +26,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Compile EXE (folder mode)
-        run: |
-          pyinstaller --noconsole --name SpoTracker music-register.py
+      - name: Build SpoTracker (tracker + tray icon)
+        run: pyinstaller music-register.spec --noconfirm
+
+      - name: Build SpoTracker-Stats (report generator)
+        run: pyinstaller get-stats.spec --noconfirm
 
       - name: Install Inno Setup
         run: choco install innosetup --yes
 
       - name: Build Installer
-        run: |
-          iscc SpoTracker.iss
+        run: iscc SpoTracker.iss
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v${{ github.ref_name  }}
-          name: "SpoTracker Release ${{ github.ref_name  }}"
+          tag_name: ${{ github.ref_name }}
+          name: "SpoTracker ${{ github.ref_name }}"
           files: |
             output/SpoTrackerInstaller.exe
         env:
