@@ -93,6 +93,16 @@
 		.meter { height: 8px; background-color: var(--ps-surface-2); border-radius: 999px; overflow: hidden }
 		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent); border-radius: 999px }
 
+		/* ── Recent Activity ────────────────────────────── */
+		.recent-table { width: 100%; border-collapse: collapse; font-size: 14px }
+		.recent-table thead th { text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ps-ink-soft); background-color: var(--ps-surface-2); padding: 12px 16px; white-space: nowrap }
+		.recent-table th.num, .recent-table td.num { text-align: right }
+		.recent-table tbody td { padding: 11px 16px; border-top: 1px solid var(--ps-border); vertical-align: middle }
+		.recent-table tbody tr:hover { background-color: var(--ps-surface-2) }
+		.recent-date { font-size: 13px; color: var(--ps-ink-soft); white-space: nowrap }
+		.recent-artist { font-weight: 500 }
+		.recent-duration { font-size: 13px; color: var(--ps-ink-soft); white-space: nowrap }
+
 		/* ── Footer ────────────────────────────────────── */
 		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
 
@@ -199,6 +209,27 @@
 				<ul class="genre-list" id="artist-time-bars"></ul>
 			</section>
 
+			<!-- Recent Activity -->
+			<section class="panel" style="grid-column: 1 / -1; padding: 0; overflow: hidden">
+				<div class="panel-head" style="padding: 18px 22px 0">
+					<h3 class="panel-title">Recent Activity</h3>
+					<span class="panel-tag">Last 10</span>
+				</div>
+				<div style="overflow-x: auto">
+					<table class="recent-table">
+						<thead>
+							<tr>
+								<th>Date / Time</th>
+								<th>Artist</th>
+								<th>Track</th>
+								<th class="num">Duration</th>
+							</tr>
+						</thead>
+						<tbody id="recent-tbody"></tbody>
+					</table>
+				</div>
+			</section>
+
 		</div>
 	</main>
 
@@ -293,6 +324,18 @@ function init() {
 			`<div class="genre-top"><span class="genre-name">${a.artist}</span><span class="genre-pct">${formatDuration(a.seconds)}</span></div>` +
 			`<div class="meter"><span class="meter-fill" style="--w:${pct}%"></span></div>`;
 		timeList.appendChild(li);
+	});
+
+	// ── Recent Activity ──────────────────────────────────────────
+	const recentTbody = document.getElementById("recent-tbody");
+	OVERVIEW.recentActivity.forEach(e => {
+		const tr = document.createElement("tr");
+		tr.innerHTML =
+			`<td class="recent-date">${e.date} ${e.time}</td>` +
+			`<td class="recent-artist">${e.artist}</td>` +
+			`<td>${e.track}</td>` +
+			`<td class="num recent-duration">${e.seconds}s</td>`;
+		recentTbody.appendChild(tr);
 	});
 }
 

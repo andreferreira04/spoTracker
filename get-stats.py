@@ -244,6 +244,19 @@ def generate_overview() -> Path:
         for i in range(7)
     ]
 
+    # Recent activity (last 10 entries, most recent first)
+    recent_entries = data[-10:][::-1]
+    recent_activity = [
+        {
+            "artist":  e.artist,
+            "track":   e.track,
+            "seconds": e.seconds_listened,
+            "date":    e.date,
+            "time":    e.time,
+        }
+        for e in recent_entries
+    ]
+
     overview = {
         "totalMinutes":   round(total_seconds / 60),
         "totalSeconds":   total_seconds,
@@ -253,6 +266,7 @@ def generate_overview() -> Path:
         "topTracks":      top_tracks_list,
         "topArtists":     top_artists,
         "weekdayActivity": weekday_activity,
+        "recentActivity":  recent_activity,
     }
 
     html = template.replace("{{ overview_json }}", json.dumps(overview, ensure_ascii=False))
