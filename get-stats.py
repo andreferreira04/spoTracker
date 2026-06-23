@@ -58,12 +58,12 @@ class TrackEntry:
 def load_data():
     if not csv_file.exists():
         msgbox(
-            "SpoTracker — Error",
-            f"Data file not found:\n{csv_file}\n\n"
-            "Make sure SpoTracker has already recorded some tracks.",
-            0x10,  # MB_ICONERROR
+            "SpoTracker — Warning",
+            "No recorded tracks yet.\n\n"
+            "Listen to some music on Spotify and try again.",
+            0x30,  # MB_ICONWARNING
         )
-        raise SystemExit(1)
+        return False
 
     try:
         with open(csv_file, mode="r", encoding="utf-8") as f:
@@ -72,8 +72,19 @@ def load_data():
                 if len(parts) >= 5:
                     data.append(TrackEntry(*parts[:5]))
     except Exception as e:
-        msgbox("SpoTracker — Error", f"Failed to read the data file:\n{e}", 0x10)
-        raise SystemExit(1)
+        msgbox("SpoTracker — Warning", f"Failed to read the data file:\n{e}", 0x30)
+        return False
+
+    if not data:
+        msgbox(
+            "SpoTracker — Warning",
+            "No recorded tracks yet.\n\n"
+            "Listen to some music on Spotify and try again.",
+            0x30,  # MB_ICONWARNING
+        )
+        return False
+
+    return True
 
 
 # ── Report: tracks by artist ──────────────────────────────────────────────────
@@ -280,7 +291,8 @@ def generate_overview() -> Path:
 def generate_stats():
     output_folder.mkdir(parents=True, exist_ok=True)
 
-    load_data()
+    if not load_data():
+        return
 
     overview_path = generate_overview()
     generate_tracks_report()

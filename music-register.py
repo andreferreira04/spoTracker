@@ -130,7 +130,7 @@ def generate_report(_=None):
 def open_report(_=None):
     """Open the existing report in the browser (if it exists)."""
     import webbrowser
-    report = save_dir / "reports" / "tracks-by-artist.html"
+    report = save_dir / "reports" / "overview.html"
     if report.exists():
         webbrowser.open(report.as_uri())
     else:
