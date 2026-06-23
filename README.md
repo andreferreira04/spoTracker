@@ -27,12 +27,9 @@ Follow these steps to set up SpoTracker so that it runs automatically when your 
 ---
 
 ### Verifying the Script is Running
-- Open **Task Manager** (`Ctrl + Shift + Esc`).
-- Look for a running process named **SpoTracker**. This confirms that the script is active.
+- It should show an icon on your hidden tray (Bottom-Right Corner).
 
 ---
 
 ### Additional Notes
-- If you need to stop the script temporarily, end the process via Task Manager.
-
-With these steps completed, SpoTracker will run seamlessly whenever your computer starts.
+- You can stop SpoTracker by right-clicking on the icon and selecting "Exit".
