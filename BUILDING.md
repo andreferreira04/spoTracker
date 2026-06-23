@@ -34,9 +34,13 @@ Output:
 Output:
 - `output/SpoTrackerInstaller.exe`
 
-### 3. Test without installing
+### 3. Test before releasing
 
-Run `dist/SpoTracker/SpoTracker.exe` directly from that folder.
+```bash
+.\smoke-test.ps1
+```
+
+This verifies the executable starts correctly and can generate reports without missing modules.
 
 ---
 
@@ -65,7 +69,7 @@ Use [Semantic Versioning](https://semver.org/):
 ### 3. Push with the tag
 
 ```bash
-git push origin main --tags
+git push origin main v1.2.0
 ```
 
 This triggers the workflow which:

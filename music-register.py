@@ -85,26 +85,13 @@ if isAlreadyRunning():
     sys.exit(0)
 
 
-# ── Resolve path to the stats generator ──────────────────────────────────────
-def _import_get_stats():
-    """Import the get-stats module (filename contains a hyphen)."""
-    import importlib.util
-    if hasattr(sys, "_MEIPASS"):
-        module_path = Path(sys._MEIPASS) / "get-stats.py"
-    else:
-        module_path = Path(__file__).parent / "get-stats.py"
-    spec = importlib.util.spec_from_file_location("get_stats", module_path)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
-
-
+# ── Report generation ────────────────────────────────────────────────────────
 def generate_report(_=None):
     """Launch the stats report generator in a background thread."""
     def _run():
         try:
-            mod = _import_get_stats()
-            mod.generate_stats()
+            import get_stats
+            get_stats.generate_stats()
         except Exception as e:
             ctypes.windll.user32.MessageBoxW(
                 0, f"Failed to generate report:\n{e}", "SpoTracker", 0x10
@@ -140,48 +127,61 @@ def tracking_loop():
     previousDate = None
     previousHour = None
     musicStart = None
-    pauseTime = 0
+    totalPauseTime = 0
+    pauseStart = None        # timestamp when pause began (None = not paused)
 
     while True:
         processTitle = getSpotifyTitle()
 
+        # Spotify not running
         if processTitle is None:
+            # Save the song that was playing before Spotify closed
+            if musicStart is not None and previousArtist and previousMusic:
+                secondsListened = int(time.time() - musicStart - totalPauseTime)
+                saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
             musicStart = None
-            pauseTime = 0
-            continue
-
-        if processTitle == "Spotify" or processTitle == "Spotify Free":
-            pauseTime += timeSleep
+            totalPauseTime = 0
+            pauseStart = None
+            previousArtist = ""
+            previousMusic = ""
             time.sleep(timeSleep)
             continue
+
+        # Paused / Ads
+        if " - " not in processTitle:
+            if pauseStart is None:
+                pauseStart = time.time()
+            time.sleep(timeSleep)
+            continue
+
+        # Music Playing
+        if pauseStart is not None:
+            totalPauseTime += time.time() - pauseStart
+            pauseStart = None
 
         titleDivided = processTitle.split(" - ")
 
         if len(titleDivided) == 2:
             artist, music = titleDivided
-        elif len(titleDivided) > 2:
+        else:
             artist = titleDivided[0]
             music = " - ".join(titleDivided[1:])
-        else:
-            artist = None
-            music = None
 
-        if (artist != None and music != None):
-            if not (artist == previousArtist and music == previousMusic):
-                if musicStart is not None:
-                    secondsListened = int(time.time() - musicStart - pauseTime)
-                    if previousArtist and previousMusic:
-                        saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
+        # Song changed
+        if not (artist == previousArtist and music == previousMusic):
+            if musicStart is not None and previousArtist and previousMusic:
+                secondsListened = int(time.time() - musicStart - totalPauseTime)
+                saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
 
-                previousArtist = artist
-                previousMusic = music
-                previousDate = datetime.today().strftime('%d-%m-%Y')
-                previousHour = datetime.today().strftime("%H:%M:%S")
-                musicStart = time.time()
-                pauseTime = 0
-                print("Artist: " + artist)
-                print("Music: " + music)
-                print("-" * 40)
+            previousArtist = artist
+            previousMusic = music
+            previousDate = datetime.today().strftime('%d-%m-%Y')
+            previousHour = datetime.today().strftime("%H:%M:%S")
+            musicStart = time.time()
+            totalPauseTime = 0
+            print("Artist: " + artist)
+            print("Music: " + music)
+            print("-" * 40)
         time.sleep(timeSleep)
 
 
@@ -241,7 +241,7 @@ def run_tray():
 # ── Entry point ──────────────────────────────────────────────────────────────
 if "--generate-report" in sys.argv:
     # Called from Start Menu shortcut — just generate the report and exit
-    mod = _import_get_stats()
-    mod.generate_stats()
+    import get_stats
+    get_stats.generate_stats()
 else:
     run_tray()
