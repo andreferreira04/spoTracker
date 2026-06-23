@@ -12,14 +12,12 @@ SolidCompression=yes
 [Files]
 ; Main tracker (onedir build)
 Source: "dist\SpoTracker\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs
-; Stats report generator (onefile build)
-Source: "dist\SpoTracker-Stats.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
 ; Start Menu shortcuts
 Name: "{group}\SpoTracker";            Filename: "{app}\SpoTracker.exe"
 Name: "{group}\Open Report";           Filename: "{userdocs}\SpoTracker\reports\overview.html"
-Name: "{group}\Generate New Report";   Filename: "{app}\SpoTracker-Stats.exe"
+Name: "{group}\Generate New Report";   Filename: "{app}\SpoTracker.exe"; Parameters: "--generate-report"
 Name: "{group}\Uninstall";             Filename: "{uninstallexe}"
 
 [Registry]

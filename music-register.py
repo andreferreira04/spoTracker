@@ -8,7 +8,6 @@ import os.path
 import psutil
 import sys
 import os
-import subprocess
 import threading
 
 
@@ -87,44 +86,30 @@ if isAlreadyRunning():
 
 
 # ── Resolve path to the stats generator ──────────────────────────────────────
-def get_stats_exe_path():
-    """Find SpoTracker-Stats.exe next to this exe (compiled), or get-stats.py (dev)."""
+def _import_get_stats():
+    """Import the get-stats module (filename contains a hyphen)."""
+    import importlib.util
     if hasattr(sys, "_MEIPASS"):
-        # Running as compiled exe — look for SpoTracker-Stats.exe in same dir
-        app_dir = Path(sys.executable).parent
-        stats_exe = app_dir / "SpoTracker-Stats.exe"
-        if stats_exe.exists():
-            return str(stats_exe)
-    # Development mode — run get-stats.py with python
-    script = Path(__file__).parent / "get-stats.py"
-    if script.exists():
-        return str(script)
-    return None
+        module_path = Path(sys._MEIPASS) / "get-stats.py"
+    else:
+        module_path = Path(__file__).parent / "get-stats.py"
+    spec = importlib.util.spec_from_file_location("get_stats", module_path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
 
 
 def generate_report(_=None):
-    """Launch the stats report generator."""
-    path = get_stats_exe_path()
-    if path is None:
-        ctypes.windll.user32.MessageBoxW(
-            0, "Stats generator not found.", "SpoTracker", 0x10
-        )
-        return
-    try:
-        if path.endswith(".py"):
-            subprocess.Popen(
-                [sys.executable, path],
-                creationflags=subprocess.CREATE_NO_WINDOW,
+    """Launch the stats report generator in a background thread."""
+    def _run():
+        try:
+            mod = _import_get_stats()
+            mod.generate_stats()
+        except Exception as e:
+            ctypes.windll.user32.MessageBoxW(
+                0, f"Failed to generate report:\n{e}", "SpoTracker", 0x10
             )
-        else:
-            subprocess.Popen(
-                [path],
-                creationflags=subprocess.CREATE_NO_WINDOW,
-            )
-    except Exception as e:
-        ctypes.windll.user32.MessageBoxW(
-            0, f"Failed to launch report:\n{e}", "SpoTracker", 0x10
-        )
+    threading.Thread(target=_run, daemon=True).start()
 
 
 def open_report(_=None):
@@ -254,4 +239,9 @@ def run_tray():
 
 
 # ── Entry point ──────────────────────────────────────────────────────────────
-run_tray()
+if "--generate-report" in sys.argv:
+    # Called from Start Menu shortcut — just generate the report and exit
+    mod = _import_get_stats()
+    mod.generate_stats()
+else:
+    run_tray()

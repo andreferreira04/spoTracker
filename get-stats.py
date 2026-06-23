@@ -306,4 +306,5 @@ def generate_stats():
     webbrowser.open(overview_path.as_uri())
 
 
-generate_stats()
+if __name__ == "__main__":
+    generate_stats()

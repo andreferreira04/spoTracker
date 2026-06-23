@@ -5,7 +5,12 @@ a = Analysis(
     ['music-register.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[
+        ('get-stats.py', '.'),
+        ('templates/report.html', 'templates'),
+        ('templates/top-artists.html', 'templates'),
+        ('templates/overview.html', 'templates'),
+    ],
     hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw'],
     hookspath=[],
     hooksconfig={},

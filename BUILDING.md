@@ -16,19 +16,14 @@ pip install -r requirements.txt
 
 ## Build Locally
 
-### 1. Compile the executables
+### 1. Compile the executable
 
 ```bash
-# SpoTracker (tracker + system tray) — onedir build
 pyinstaller music-register.spec --noconfirm
-
-# SpoTracker-Stats (report generator) — onefile build
-pyinstaller get-stats.spec --noconfirm
 ```
 
 Output:
 - `dist/SpoTracker/SpoTracker.exe` (+ `_internal/`)
-- `dist/SpoTracker-Stats.exe`
 
 ### 2. Build the installer
 
@@ -41,7 +36,7 @@ Output:
 
 ### 3. Test without installing
 
-Copy `dist/SpoTracker-Stats.exe` into `dist/SpoTracker/` and run `SpoTracker.exe` from that folder.
+Run `dist/SpoTracker/SpoTracker.exe` directly from that folder.
 
 ---
 
@@ -74,7 +69,7 @@ git push origin main --tags
 ```
 
 This triggers the workflow which:
-1. Compiles `SpoTracker.exe` and `SpoTracker-Stats.exe`
+1. Compiles `SpoTracker.exe`
 2. Builds the installer with Inno Setup
 3. Creates a GitHub Release with `SpoTrackerInstaller.exe` attached
 
@@ -87,9 +82,8 @@ The release will appear at: `https://github.com/<user>/<repo>/releases`
 | File | Description |
 |------|-------------|
 | `music-register.py` | Main tracker + system tray icon |
-| `music-register.spec` | PyInstaller config for the tracker |
-| `get-stats.py` | Report generator |
-| `get-stats.spec` | PyInstaller config for the report generator |
-| `templates/report.html` | Tracks report template |
-| `templates/top-artists.html` | Top artists report template |
+| `music-register.spec` | PyInstaller config (builds everything) |
+| `get-stats.py` | Report generator (bundled into the exe, also runnable standalone) |
+| `generate-stats.vbs` | Standalone wrapper to run `get-stats.py` without the exe |
+| `templates/*.html` | Report HTML templates |
 | `SpoTracker.iss` | Inno Setup installer script |

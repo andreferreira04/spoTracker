@@ -26,11 +26,8 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Build SpoTracker (tracker + tray icon)
+      - name: Build SpoTracker
         run: pyinstaller music-register.spec --noconfirm
-
-      - name: Build SpoTracker-Stats (report generator)
-        run: pyinstaller get-stats.spec --noconfirm
 
       - name: Install Inno Setup
         run: choco install innosetup --yes
