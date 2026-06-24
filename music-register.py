@@ -81,22 +81,23 @@ def isAlreadyRunning():
             return True
     return False
 
-if isAlreadyRunning():
+if "--generate-report" not in sys.argv and isAlreadyRunning():
     sys.exit(0)
 
 
 # ── Report generation ────────────────────────────────────────────────────────
 def generate_report(_=None):
-    """Launch the stats report generator in a background thread."""
-    def _run():
-        try:
-            import get_stats
-            get_stats.generate_stats()
-        except Exception as e:
-            ctypes.windll.user32.MessageBoxW(
-                0, f"Failed to generate report:\n{e}", "SpoTracker", 0x10
-            )
-    threading.Thread(target=_run, daemon=True).start()
+    """Launch the stats report generator as a subprocess."""
+    import subprocess
+    try:
+        subprocess.Popen(
+            [sys.executable, "--generate-report"],
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+    except Exception as e:
+        ctypes.windll.user32.MessageBoxW(
+            0, f"Failed to generate report:\n{e}", "SpoTracker", 0x10
+        )
 
 
 def open_report(_=None):
