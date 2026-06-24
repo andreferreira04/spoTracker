@@ -4,22 +4,22 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Tracks — SpoTracker</title>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 	<style>
 		:root {
-			--ps-bg: #f6efe6;
-			--ps-surface: #fffaf3;
-			--ps-surface-2: #f0e6d8;
-			--ps-ink: #2c2620;
-			--ps-ink-soft: #7a6f60;
-			--ps-accent: #c4561e;
-			--ps-accent-soft: #e8a06b;
-			--ps-up: #4f7a3f;
-			--ps-down: #b0492f;
-			--ps-warn: #b8860b;
-			--ps-border: #e4d8c6;
+			--ps-bg: #121212;
+			--ps-surface: #1c1b19;
+			--ps-surface-2: #2a2825;
+			--ps-ink: #f4efe9;
+			--ps-ink-soft: #a39b90;
+			--ps-accent: #f0712c;
+			--ps-accent-soft: #f7a96b;
+			--ps-up: #5fc46b;
+			--ps-down: #ef6f4d;
+			--ps-warn: #d4a017;
+			--ps-border: #312e2a;
 			--ps-radius: 16px;
-			--ps-shadow: 0 1px 2px rgba(44,38,32,.04), 0 8px 24px rgba(44,38,32,.06);
+			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
 		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
@@ -29,7 +29,7 @@
 		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
 		.brand { display: flex; align-items: center; gap: 14px }
 		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
-		.brand-title { font-family: "Fraunces", Georgia, serif; font-size: 22px; font-weight: 700 }
+		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
 		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
 		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
 		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
@@ -38,7 +38,7 @@
 
 		/* ── Intro ─────────────────────────────────────── */
 		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Fraunces", Georgia, serif; font-size: 30px; font-weight: 600 }
+		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
 		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
 
 		/* ── Filter bar ────────────────────────────────── */

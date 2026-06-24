@@ -4,21 +4,21 @@
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Top Artists — SpoTracker</title>
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Fraunces:wght@400;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 	<style>
 		:root {
-			--ps-bg: #f6efe6;
-			--ps-surface: #fffaf3;
-			--ps-surface-2: #f0e6d8;
-			--ps-ink: #2c2620;
-			--ps-ink-soft: #7a6f60;
-			--ps-accent: #c4561e;
-			--ps-accent-soft: #e8a06b;
-			--ps-up: #4f7a3f;
-			--ps-down: #b0492f;
-			--ps-border: #e4d8c6;
+			--ps-bg: #121212;
+			--ps-surface: #1c1b19;
+			--ps-surface-2: #2a2825;
+			--ps-ink: #f4efe9;
+			--ps-ink-soft: #a39b90;
+			--ps-accent: #f0712c;
+			--ps-accent-soft: #f7a96b;
+			--ps-up: #5fc46b;
+			--ps-down: #ef6f4d;
+			--ps-border: #312e2a;
 			--ps-radius: 16px;
-			--ps-shadow: 0 1px 2px rgba(44,38,32,.04), 0 8px 24px rgba(44,38,32,.06);
+			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
 		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
@@ -28,7 +28,7 @@
 		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
 		.brand { display: flex; align-items: center; gap: 14px }
 		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
-		.brand-title { font-family: "Fraunces", Georgia, serif; font-size: 22px; font-weight: 700 }
+		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
 		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
 		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
 		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
@@ -37,14 +37,14 @@
 
 		/* ── Intro ─────────────────────────────────────── */
 		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Fraunces", Georgia, serif; font-size: 30px; font-weight: 600 }
+		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
 		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
 
 		/* ── Stats grid ────────────────────────────────── */
 		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px }
 		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
 		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
-		.stat-value { font-family: "Fraunces", Georgia, serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
+		.stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
 		.stat-value.sm { font-size: 22px }
 		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
 
@@ -95,7 +95,7 @@
 		.empty-cell { text-align: center; color: var(--ps-ink-soft); padding: 32px 18px }
 
 		/* ── Rank ──────────────────────────────────────── */
-		.rank { font-family: "Fraunces", Georgia, serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); width: 20px; display: inline-block; text-align: center }
+		.rank { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); width: 20px; display: inline-block; text-align: center }
 
 		/* ── Bar in table ──────────────────────────────── */
 		.bar-cell { position: relative; min-width: 120px }
