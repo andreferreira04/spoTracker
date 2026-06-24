@@ -16,7 +16,13 @@ pip install -r requirements.txt
 
 ## Build Locally
 
-### 1. Compile the executable
+### 1. Enter on venv
+
+```bash
+.\venv\Scripts\Activate.ps1
+```
+
+### 2. Compile the executable
 
 ```bash
 pyinstaller music-register.spec --noconfirm
@@ -25,7 +31,7 @@ pyinstaller music-register.spec --noconfirm
 Output:
 - `dist/SpoTracker/SpoTracker.exe` (+ `_internal/`)
 
-### 2. Build the installer
+### 3. Build the installer
 
 ```bash
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" SpoTracker.iss
@@ -34,7 +40,7 @@ Output:
 Output:
 - `output/SpoTrackerInstaller.exe`
 
-### 3. Test before releasing
+### 4. Test before releasing
 
 ```bash
 .\smoke-test.ps1
