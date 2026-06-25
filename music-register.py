@@ -101,18 +101,13 @@ def generate_report(_=None):
 
 
 def open_report(_=None):
-    """Open the existing report in the browser (if it exists)."""
+    """Open the existing report in the browser, or generate it first if missing."""
     import webbrowser
     report = save_dir / "reports" / "overview.html"
     if report.exists():
         webbrowser.open(report.as_uri())
     else:
-        ctypes.windll.user32.MessageBoxW(
-            0,
-            "No report found.\n\nUse 'Generate New Report' to create one first.",
-            "SpoTracker",
-            0x30,  # MB_ICONWARNING
-        )
+        generate_report()
 
 
 def quit_app(icon):
