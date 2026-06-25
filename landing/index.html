@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<title>SpoTracker - Your Spotify Wrapped, Every Day | Free Listening Stats Tracker</title>
+	<meta name="description" content="SpoTracker tracks your Spotify listening habits offline, giving you detailed reports with top artists, top tracks, and listening patterns - whenever you want, not just once a year. Free, open-source, and private." />
+	<meta name="keywords" content="Spotify tracker, Spotify stats, Spotify Wrapped daily, listening history, top artists, top tracks, Spotify statistics, music tracker, offline Spotify tracker, open source Spotify tool, SpoTracker" />
+	<meta name="author" content="André Ferreira" />
+	<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
+	<meta name="theme-color" content="#1DB954" />
+
+	<link rel="canonical" href="https://andreferreira04.github.io/spoTracker/" />
+
+	<meta property="og:type" content="website" />
+	<meta property="og:url" content="https://andreferreira04.github.io/spoTracker/" />
+	<meta property="og:title" content="SpoTracker - Your Spotify Wrapped, Every Day" />
+	<meta property="og:description" content="Track every song you play on Spotify. Get detailed reports with top artists, top tracks, and listening patterns - free, offline, and open source." />
+	<meta property="og:image" content="https://andreferreira04.github.io/spoTracker/screenshots/overview.png" />
+	<meta property="og:image:width" content="1200" />
+	<meta property="og:image:height" content="630" />
+	<meta property="og:image:alt" content="SpoTracker overview report showing listening statistics, top tracks, and top artists" />
+	<meta property="og:site_name" content="SpoTracker" />
+	<meta property="og:locale" content="en_US" />
+	<meta property="og:locale:alternate" content="pt_PT" />
+
+	<meta name="twitter:card" content="summary_large_image" />
+	<meta name="twitter:title" content="SpoTracker - Your Spotify Wrapped, Every Day" />
+	<meta name="twitter:description" content="Track every song you play on Spotify. Free, offline, open source listening stats." />
+	<meta name="twitter:image" content="https://andreferreira04.github.io/spoTracker/screenshots/overview.png" />
+	<meta name="twitter:image:alt" content="SpoTracker overview report showing listening statistics" />
+
+	<link rel="preconnect" href="https://fonts.googleapis.com" />
+	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<link rel="stylesheet" href="style.css" />
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "SoftwareApplication",
+		"name": "SpoTracker",
+		"description": "A tiny desktop app that tracks every song you play on Spotify, stores data locally, and generates beautiful reports with top artists, top tracks, and listening patterns - whenever you want.",
+		"url": "https://andreferreira04.github.io/spoTracker/",
+		"downloadUrl": "https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe",
+		"operatingSystem": "Windows 10, Windows 11",
+		"applicationCategory": "MultimediaApplication",
+		"applicationSubCategory": "Music Statistics Tracker",
+		"offers": {
+			"@type": "Offer",
+			"price": "0",
+			"priceCurrency": "USD"
+		},
+		"author": {
+			"@type": "Person",
+			"name": "André Ferreira",
+			"url": "https://github.com/andreferreira04"
+		},
+		"softwareVersion": "latest",
+		"license": "https://github.com/andreferreira04/spoTracker/blob/main/LICENSE",
+		"screenshot": "https://andreferreira04.github.io/spoTracker/screenshots/overview.png",
+		"featureList": [
+			"Automatic Spotify listening tracking",
+			"Visual HTML reports with top tracks and artists",
+			"100% offline - data stored locally as CSV",
+			"Lightweight - ~15 MB RAM, 0% CPU",
+			"Auto-starts with Windows",
+			"Exportable CSV data"
+		],
+		"isAccessibleForFree": true,
+		"memoryRequirements": "15 MB",
+		"installUrl": "https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe"
+	}
+	</script>
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "FAQPage",
+		"mainEntity": [
+			{
+				"@type": "Question",
+				"name": "Where is my SpoTracker data stored?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "In your Documents folder at C:\\Users\\<you>\\Documents\\SpoTracker\\. The listening history is music-list.csv and reports go into the reports subfolder."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Does SpoTracker track accurately when I pause Spotify?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Yes. SpoTracker detects when Spotify is paused and subtracts the paused time automatically. It also filters short plays (under 20 seconds) in reports."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Does SpoTracker work on Mac or Linux?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Currently Windows-only (10 and 11). It uses Windows APIs to read window titles and display the tray icon."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Can I uninstall SpoTracker completely?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Yes, uninstall like any Windows app through Settings → Apps. Your listening data in Documents is preserved so you don't lose your history."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "How do I generate a SpoTracker report?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Right-click the SpoTracker icon in your system tray (bottom-right corner) and select 'Generate New Report'. Your browser will open with the results."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Is SpoTracker safe? Windows Defender flagged it.",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "That warning appears for any unsigned open-source app. The full source code is on GitHub - every line is inspectable. SpoTracker doesn't connect to the internet and doesn't modify Spotify."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Why not just wait for Spotify Wrapped?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "Wrapped gives you a fun summary once a year. SpoTracker gives you detailed, track-level data every single day - how many minutes per artist, which songs you skip, your listening patterns by weekday."
+				}
+			},
+			{
+				"@type": "Question",
+				"name": "Does SpoTracker need my Spotify login?",
+				"acceptedAnswer": {
+					"@type": "Answer",
+					"text": "No. SpoTracker reads the Spotify window title to detect what's playing. No API keys, no OAuth, no passwords. It works with both Free and Premium accounts."
+				}
+			}
+		]
+	}
+	</script>
+
+	<script type="application/ld+json">
+	{
+		"@context": "https://schema.org",
+		"@type": "BreadcrumbList",
+		"itemListElement": [
+			{
+				"@type": "ListItem",
+				"position": 1,
+				"name": "SpoTracker",
+				"item": "https://andreferreira04.github.io/spoTracker/"
+			}
+		]
+	}
+	</script>
+</head>
+<body>
+
+<header>
+	<nav class="navbar" aria-label="Main navigation">
+		<div class="page">
+			<a href="/" class="nav-title" aria-label="SpoTracker - Home">SpoTracker</a>
+			<button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" onclick="var links=document.querySelector('.nav-links');var expanded=this.getAttribute('aria-expanded')==='true';this.setAttribute('aria-expanded',!expanded);links.classList.toggle('open')">&#9776;</button>
+			<ul class="nav-links" role="menubar">
+				<li role="none"><a href="#features" role="menuitem" data-i18n="navFeatures">Features</a></li>
+				<li role="none"><a href="#objections" role="menuitem" data-i18n="navObjections">Objections</a></li>
+				<li role="none"><a href="#faq" role="menuitem" data-i18n="navFaq">FAQ</a></li>
+				<li role="none"><a href="#founder" role="menuitem" data-i18n="navAbout">About</a></li>
+				<li role="none"><a href="https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe" class="nav-cta" role="menuitem" data-i18n="navDownload">Download Free</a></li>
+				<li class="lang-switcher" role="none">
+					<button class="lang-btn active" data-lang="en" onclick="setLang('en')" aria-label="Switch to English">EN</button>
+					<button class="lang-btn" data-lang="pt" onclick="setLang('pt')" aria-label="Mudar para Português">PT</button>
+				</li>
+			</ul>
+		</div>
+	</nav>
+</header>
+
+<main>
+	<section class="hero" aria-labelledby="hero-heading">
+		<div class="page">
+			<div class="hero-layout">
+				<div class="hero-content">
+					<div class="hero-proof" data-i18n="heroProof">Open source · 100% free · No account needed</div>
+
+					<h1 id="hero-heading"><span data-i18n="heroTitle1">Your Spotify Wrapped.</span><br/><span class="accent" data-i18n="heroTitle2">Every single day.</span></h1>
+
+					<p class="hero-sub" data-i18n="heroSub">A tiny app that tracks every song you play on Spotify, and generates beautiful reports you can explore anytime - not just in December.</p>
+					<div class="hero-actions">
+						<a href="https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe" class="btn btn-primary" id="cta-download-hero" aria-label="Download SpoTracker for free">
+							<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span data-i18n="heroCta">See your listening stats - free</span>
+						</a>
+						<a href="https://github.com/andreferreira04/spoTracker" class="btn btn-secondary" target="_blank" rel="noopener noreferrer" aria-label="View SpoTracker source code on GitHub">
+							<span data-i18n="heroSource">View source code</span>
+						</a>
+					</div>
+					<p class="hero-note" data-i18n="heroNote">Windows 10/11 · Installs in 30 seconds</p>
+				</div>
+
+				<div class="hero-visual" role="img" aria-label="SpoTracker application mockup showing an overview report with total listening time, distinct artists count, and top 3 most played tracks">
+					<div class="mock-header">
+						<span class="mock-dot" aria-hidden="true"></span>
+						<span class="mock-dot" aria-hidden="true"></span>
+						<span class="mock-dot" aria-hidden="true"></span>
+						<span class="mock-title-bar" data-i18n="mockTitle">SpoTracker - Overview Report</span>
+					</div>
+					<div class="mock-body">
+						<div class="mock-stats-row">
+							<div class="mock-stat-card">
+								<div class="mock-stat-label" data-i18n="mockListening">Total listening</div>
+								<div class="mock-stat-value">1,247 min</div>
+							</div>
+							<div class="mock-stat-card">
+								<div class="mock-stat-label" data-i18n="mockArtists">Distinct artists</div>
+								<div class="mock-stat-value">84</div>
+							</div>
+						</div>
+						<div class="mock-track-list">
+							<div class="mock-track">
+								<span class="mock-rank">1</span>
+								<div class="mock-track-info">
+									<div class="mock-track-name">Blinding Lights</div>
+									<div class="mock-track-artist">The Weeknd</div>
+								</div>
+								<span class="mock-track-time" data-i18n="mockPlays1">47 plays</span>
+							</div>
+							<div class="mock-track">
+								<span class="mock-rank">2</span>
+								<div class="mock-track-info">
+									<div class="mock-track-name">Levitating</div>
+									<div class="mock-track-artist">Dua Lipa</div>
+								</div>
+								<span class="mock-track-time" data-i18n="mockPlays2">38 plays</span>
+							</div>
+							<div class="mock-track">
+								<span class="mock-rank">3</span>
+								<div class="mock-track-info">
+									<div class="mock-track-name">As It Was</div>
+									<div class="mock-track-artist">Harry Styles</div>
+								</div>
+								<span class="mock-track-time" data-i18n="mockPlays3">31 plays</span>
+							</div>
+						</div>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</section>
+
+	<section id="features" aria-labelledby="features-heading">
+		<div class="page">
+			<div class="section-header">
+				<h2 id="features-heading" data-i18n="featuresTitle">How it works</h2>
+				<p data-i18n="featuresSub">Install it once. SpoTracker handles the rest.</p>
+			</div>
+			<div class="features-grid">
+				<article class="feature-card">
+					<div class="feature-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg></div>
+					<h3 data-i18n="feat1Title">Tracks automatically</h3>
+					<p data-i18n="feat1Desc">Detects what's playing on Spotify in real time. No manual input - just listen to music as you normally do.</p>
+				</article>
+				<article class="feature-card">
+					<div class="feature-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+					<h3 data-i18n="feat2Title">Generates visual reports</h3>
+					<p data-i18n="feat2Desc">One click generates an HTML report with your top tracks, top artists, plays per weekday, and recent activity.</p>
+				</article>
+				<article class="feature-card">
+					<div class="feature-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+					<h3 data-i18n="feat3Title">Stays on your computer</h3>
+					<p data-i18n="feat3Desc">All data is stored locally as a CSV file. No accounts, no servers, no cloud sync. Your music habits are yours alone.</p>
+				</article>
+				<article class="feature-card">
+					<div class="feature-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg></div>
+					<h3 data-i18n="feat4Title">Uses almost no resources</h3>
+					<p data-i18n="feat4Desc">~15 MB of RAM. 0% CPU. Lighter than a browser tab. You'll forget it's there.</p>
+				</article>
+				<article class="feature-card">
+					<div class="feature-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+					<h3 data-i18n="feat5Title">Starts with Windows</h3>
+					<p data-i18n="feat5Desc">Runs at startup automatically. Install once, then check your stats whenever you're curious.</p>
+				</article>
+				<article class="feature-card">
+					<div class="feature-icon" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><polyline points="13 2 13 9 20 9"/></svg></div>
+					<h3 data-i18n="feat6Title">Data you can export</h3>
+					<p data-i18n="feat6Desc">Your listening history is a plain CSV file. Open it in Excel, import it into Python, or build your own dashboards.</p>
+				</article>
+			</div>
+		</div>
+	</section>
+
+	<section id="screenshots" aria-labelledby="screenshots-heading">
+		<div class="page">
+			<div class="section-header">
+				<h2 id="screenshots-heading" data-i18n="screenshotsTitle">See it in action</h2>
+				<p data-i18n="screenshotsSub">Real reports generated by SpoTracker. This is what your data looks like.</p>
+			</div>
+			<div class="gallery">
+				<figure class="gallery-item">
+					<img src="screenshots/overview.png" alt="SpoTracker overview report showing total listening time, distinct artists count, and top played tracks with play counts" loading="lazy" width="800" height="500" />
+					<figcaption class="gallery-caption" data-i18n="screenshotCap1">Overview - your listening stats at a glance</figcaption>
+				</figure>
+				<figure class="gallery-item">
+					<img src="screenshots/tracks.png" alt="SpoTracker tracks report displaying a detailed list of every song listened to with play count and total listening time" loading="lazy" width="800" height="500" />
+					<figcaption class="gallery-caption" data-i18n="screenshotCap2">Tracks - every song you've listened to</figcaption>
+				</figure>
+				<figure class="gallery-item">
+					<img src="screenshots/top-artists.png" alt="SpoTracker top artists report ranking artists by total listening time with visual bar charts" loading="lazy" width="800" height="500" />
+					<figcaption class="gallery-caption" data-i18n="screenshotCap3">Top Artists - ranked by listening time</figcaption>
+				</figure>
+			</div>
+		</div>
+	</section>
+
+	<section id="objections" aria-labelledby="objections-heading">
+		<div class="page">
+			<div class="objections">
+				<div class="section-header">
+					<h2 id="objections-heading" data-i18n="objTitle">You might be thinking&#8230;</h2>
+					<p data-i18n="objSub">Fair questions. Here are honest answers.</p>
+				</div>
+				<div class="obj-grid">
+					<article class="obj-card">
+						<h3 class="obj-q" data-i18n="objQ1">"Is it safe? Windows Defender flagged it."</h3>
+						<p class="obj-a" data-i18n="objA1">That warning appears for any unsigned open-source app. The full source code is on GitHub - every line is inspectable. SpoTracker doesn't connect to the internet and doesn't modify Spotify.</p>
+					</article>
+					<article class="obj-card">
+						<h3 class="obj-q" data-i18n="objQ2">"Why not just wait for Spotify Wrapped?"</h3>
+						<p class="obj-a" data-i18n="objA2">Wrapped gives you a fun summary once a year. SpoTracker gives you detailed, track-level data every single day - how many minutes per artist, which songs you skip, your listening patterns by weekday.</p>
+					</article>
+					<article class="obj-card">
+						<h3 class="obj-q" data-i18n="objQ3">"Does it need my Spotify login?"</h3>
+						<p class="obj-a" data-i18n="objA3">No. SpoTracker reads the Spotify window title to detect what's playing. No API keys, no OAuth, no passwords. It works with both Free and Premium accounts.</p>
+					</article>
+					<article class="obj-card">
+						<h3 class="obj-q" data-i18n="objQ4">"Will it slow down my PC?"</h3>
+						<p class="obj-a" data-i18n="objA4">It uses ~15 MB RAM and 0% CPU. For comparison, a single Chrome tab uses 5-10x more. You won't notice it's running.</p>
+					</article>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="proof-section" aria-labelledby="proof-heading">
+		<div class="page">
+			<div class="section-header">
+				<h2 id="proof-heading" data-i18n="proofTitle">Built in the open</h2>
+				<p data-i18n="proofSub">Everything about SpoTracker is transparent and free.</p>
+			</div>
+			<div class="proof-grid">
+				<div class="proof-card">
+					<div class="proof-number">100%</div>
+					<p class="proof-label" data-i18n="proofLabel1">Open source code</p>
+				</div>
+				<div class="proof-card">
+					<div class="proof-number">0</div>
+					<p class="proof-label" data-i18n="proofLabel2">Data sent to the cloud</p>
+				</div>
+				<div class="proof-card">
+					<div class="proof-number" data-i18n="proofValue3">Free</div>
+					<p class="proof-label" data-i18n="proofLabel3">Forever, no premium tiers</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section id="faq" aria-labelledby="faq-heading">
+		<div class="page">
+			<div class="section-header">
+				<h2 id="faq-heading" data-i18n="faqTitle">Frequently asked</h2>
+				<p data-i18n="faqSub">Quick answers to the remaining questions.</p>
+			</div>
+			<div class="faq-list" role="list">
+				<div class="faq-item" role="listitem">
+					<button class="faq-q" aria-expanded="false" aria-controls="faq-answer-1" onclick="var open=this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',open)">
+						<span data-i18n="faqQ1">Where is my data stored?</span>
+						<span class="faq-chevron" aria-hidden="true">&#9662;</span>
+					</button>
+					<div class="faq-a" id="faq-answer-1" role="region" aria-labelledby="faq-q-1"><div class="faq-a-inner" data-i18n="faqA1" data-i18n-html>
+						In your Documents folder at <code>C:\Users\&lt;you&gt;\Documents\SpoTracker\</code>. The listening history is <code>music-list.csv</code> and reports go into the <code>reports</code> subfolder.
+					</div></div>
+				</div>
+				<div class="faq-item" role="listitem">
+					<button class="faq-q" aria-expanded="false" aria-controls="faq-answer-2" onclick="var open=this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',open)">
+						<span data-i18n="faqQ2">Does it track accurately when I pause?</span>
+						<span class="faq-chevron" aria-hidden="true">&#9662;</span>
+					</button>
+					<div class="faq-a" id="faq-answer-2" role="region" aria-labelledby="faq-q-2"><div class="faq-a-inner" data-i18n="faqA2">
+						Yes. SpoTracker detects when Spotify is paused and subtracts the paused time automatically. It also filters short plays (under 20 seconds) in reports.
+					</div></div>
+				</div>
+				<div class="faq-item" role="listitem">
+					<button class="faq-q" aria-expanded="false" aria-controls="faq-answer-3" onclick="var open=this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',open)">
+						<span data-i18n="faqQ3">Does it work on Mac or Linux?</span>
+						<span class="faq-chevron" aria-hidden="true">&#9662;</span>
+					</button>
+					<div class="faq-a" id="faq-answer-3" role="region" aria-labelledby="faq-q-3"><div class="faq-a-inner" data-i18n="faqA3">
+						Currently Windows-only (10 and 11). It uses Windows APIs to read window titles and display the tray icon.
+					</div></div>
+				</div>
+				<div class="faq-item" role="listitem">
+					<button class="faq-q" aria-expanded="false" aria-controls="faq-answer-4" onclick="var open=this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',open)">
+						<span data-i18n="faqQ4">Can I uninstall it completely?</span>
+						<span class="faq-chevron" aria-hidden="true">&#9662;</span>
+					</button>
+					<div class="faq-a" id="faq-answer-4" role="region" aria-labelledby="faq-q-4"><div class="faq-a-inner" data-i18n="faqA4">
+						Yes, uninstall like any Windows app through Settings &#8594; Apps. Your listening data in Documents is preserved so you don't lose your history.
+					</div></div>
+				</div>
+				<div class="faq-item" role="listitem">
+					<button class="faq-q" aria-expanded="false" aria-controls="faq-answer-5" onclick="var open=this.parentElement.classList.toggle('open');this.setAttribute('aria-expanded',open)">
+						<span data-i18n="faqQ5">How do I generate a report?</span>
+						<span class="faq-chevron" aria-hidden="true">&#9662;</span>
+					</button>
+					<div class="faq-a" id="faq-answer-5" role="region" aria-labelledby="faq-q-5"><div class="faq-a-inner" data-i18n="faqA5">
+						Right-click the SpoTracker icon in your system tray (bottom-right corner) and select "Generate New Report". Your browser will open with the results.
+					</div></div>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section aria-labelledby="cta-heading">
+		<div class="page">
+			<div class="cta-section">
+				<h2 id="cta-heading" data-i18n="ctaTitle">Your listening stats are waiting</h2>
+				<p data-i18n="ctaSub">Find out what your music says about you.</p>
+				<ul class="cta-checklist">
+					<li><span class="check-mark" aria-hidden="true">&#10003;</span> <span data-i18n="ctaCheck1">Installs in 30 seconds</span></li>
+					<li><span class="check-mark" aria-hidden="true">&#10003;</span> <span data-i18n="ctaCheck2">No account required</span></li>
+					<li><span class="check-mark" aria-hidden="true">&#10003;</span> <span data-i18n="ctaCheck3">Free forever</span></li>
+				</ul>
+				<a href="https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe" class="btn btn-primary" id="cta-download-bottom" aria-label="Download SpoTracker for free - installs in 30 seconds">
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> <span data-i18n="ctaBtn">Download SpoTracker - it's free</span>
+				</a>
+			</div>
+		</div>
+	</section>
+
+	<section id="founder" aria-labelledby="founder-heading">
+		<div class="page">
+			<div class="section-header">
+				<h2 id="founder-heading" data-i18n="founderTitle">Why I built this</h2>
+			</div>
+			<article class="founder-note">
+				<blockquote cite="https://github.com/andreferreira04">
+					<p data-i18n="founderP1">I love music. I listen to Spotify for hours every day. But I had no idea what I actually listened to - until Wrapped came out in December, and even then it was just a highlight reel.</p>
+					<p data-i18n="founderP2">I wanted to know the real numbers. How many minutes did I spend with each artist? Which songs did I skip? What days do I listen the most? And I wanted to check whenever I felt like it, not once a year.</p>
+					<p data-i18n="founderP3">So I built SpoTracker. A tiny app that runs in the background, tracks everything locally, and gives me beautiful reports on demand. No cloud, no accounts, no data leaving my computer.</p>
+					<p data-i18n="founderP4">If you're the kind of person who checks their Wrapped screenshots months later, this is for you.</p>
+				</blockquote>
+				<div class="founder-sig">
+					<div class="founder-avatar" aria-hidden="true">AF</div>
+					<div>
+						<div class="founder-name">Andr&eacute; Ferreira</div>
+						<div class="founder-role" data-i18n="founderRole">Developer &amp; music enthusiast</div>
+						<div class="founder-links">
+							<a href="https://github.com/andreferreira04" target="_blank" rel="noopener noreferrer" aria-label="André Ferreira's GitHub profile">GitHub</a>
+							<a href="https://github.com/andreferreira04/spoTracker" target="_blank" rel="noopener noreferrer" aria-label="SpoTracker source code on GitHub">Source Code</a>
+						</div>
+					</div>
+				</div>
+			</article>
+		</div>
+	</section>
+</main>
+
+<footer class="footer" role="contentinfo">
+	<div class="page">
+		<p data-i18n="footer" data-i18n-html>SpoTracker - Open source on <a href="https://github.com/andreferreira04/spoTracker" target="_blank" rel="noopener noreferrer">GitHub</a>. Made with &#9834; by Andr&eacute; Ferreira.</p>
+	</div>
+</footer>
+
+<script src="locals.js"></script>
+</body>
+</html>
