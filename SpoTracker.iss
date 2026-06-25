@@ -8,6 +8,8 @@ OutputDir=output
 OutputBaseFilename=SpoTrackerInstaller
 Compression=lzma
 SolidCompression=yes
+CloseApplications=force
+CloseApplicationsFilter=SpoTracker.exe
 
 [Files]
 ; Main tracker (onedir build)
