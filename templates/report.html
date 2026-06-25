@@ -294,8 +294,8 @@ function renderPage() {
 		const badge     = t.recent ? '<span class="badge-recent">Recent</span>' : "";
 		const tr        = document.createElement("tr");
 		tr.innerHTML =
-			`<td class="cell-strong">${t.artist}</td>` +
-			`<td>${t.track}${badge}</td>` +
+			`<td class="cell-strong" translate="no">${t.artist}</td>` +
+			`<td translate="no">${t.track}${badge}</td>` +
 			`<td class="num">${t.validPlays}/${t.totalPlays}</td>` +
 			`<td class="num perc-cell ${percClass}">${t.perc}%</td>`;
 		frag.appendChild(tr);

@@ -265,7 +265,7 @@ function init() {
 		li.className = "track";
 		li.innerHTML =
 			`<span class="track-rank">${i + 1}</span>` +
-			`<div class="track-info"><span class="track-name">${t.track}</span><span class="track-artist">${t.artist}</span></div>` +
+			`<div class="track-info"><span class="track-name" translate="no">${t.track}</span><span class="track-artist" translate="no">${t.artist}</span></div>` +
 			`<span class="track-plays">${formatNumber(t.plays)} plays</span>`;
 		tracksList.appendChild(li);
 	});
@@ -295,7 +295,7 @@ function init() {
 		li.className = "track";
 		li.innerHTML =
 			`<span class="track-rank">${i + 1}</span>` +
-			`<div class="track-info"><span class="track-name">${a.artist}</span><span class="track-artist">${a.tracks} tracks · ${formatDuration(a.seconds)}</span></div>` +
+			`<div class="track-info"><span class="track-name" translate="no">${a.artist}</span><span class="track-artist">${a.tracks} tracks · ${formatDuration(a.seconds)}</span></div>` +
 			`<span class="track-plays">${formatNumber(a.plays)} plays</span>`;
 		artistsList.appendChild(li);
 	});
@@ -307,7 +307,7 @@ function init() {
 		document.getElementById("spotlight-content").innerHTML =
 			`<div class="artist-photo" aria-hidden="true">${initials}</div>` +
 			`<div class="artist-meta">` +
-				`<span class="artist-name">${top.artist}</span>` +
+				`<span class="artist-name" translate="no">${top.artist}</span>` +
 				`<span class="artist-stat">${formatDuration(top.seconds)} · ${formatNumber(top.plays)} plays</span>` +
 				`<p class="artist-note">Your most played artist, with ${top.tracks} unique tracks.</p>` +
 			`</div>`;
@@ -321,7 +321,7 @@ function init() {
 		const pct = Math.round((a.seconds / maxSec) * 100);
 		const li = document.createElement("li");
 		li.innerHTML =
-			`<div class="genre-top"><span class="genre-name">${a.artist}</span><span class="genre-pct">${formatDuration(a.seconds)}</span></div>` +
+			`<div class="genre-top"><span class="genre-name" translate="no">${a.artist}</span><span class="genre-pct">${formatDuration(a.seconds)}</span></div>` +
 			`<div class="meter"><span class="meter-fill" style="--w:${pct}%"></span></div>`;
 		timeList.appendChild(li);
 	});
@@ -332,8 +332,8 @@ function init() {
 		const tr = document.createElement("tr");
 		tr.innerHTML =
 			`<td class="recent-date">${e.date} ${e.time}</td>` +
-			`<td class="recent-artist">${e.artist}</td>` +
-			`<td>${e.track}</td>` +
+			`<td class="recent-artist" translate="no">${e.artist}</td>` +
+			`<td translate="no">${e.track}</td>` +
 			`<td class="num recent-duration">${e.seconds}s</td>`;
 		recentTbody.appendChild(tr);
 	});
