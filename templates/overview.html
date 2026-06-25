@@ -67,7 +67,7 @@
 		.track-plays { font-size: 13px; color: var(--ps-ink-soft) }
 
 		/* ── Bar Chart ─────────────────────────────────── */
-		.chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 180px }
+		.chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 240px }
 		.bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end }
 		.bar { width: 100%; max-width: 36px; height: var(--h); background: linear-gradient(180deg, var(--ps-accent-soft), var(--ps-accent)); border-radius: 8px 8px 4px 4px; transition: opacity .2s }
 		.bar:hover { opacity: .8 }
@@ -277,8 +277,7 @@ function init() {
 	const range  = maxMin - minMin;
 
 	OVERVIEW.weekdayActivity.forEach(d => {
-		// Normalize between 20% (min) and 100% (max) so differences are always visible
-		const h = range > 0 ? 20 + ((d.minutes - minMin) / range) * 80 : 60;
+		const h = range > 0 ? 10 + ((d.minutes - minMin) / range) * 90 : 60;
 		const div = document.createElement("div");
 		div.className = "bar-group";
 		div.innerHTML =
