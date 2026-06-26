@@ -40,6 +40,14 @@
 		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
 		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
 
+		/* ── Stats Grid ────────────────────────────────── */
+		.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px }
+		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
+		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
+		.stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
+		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
+		.stat-value .accent { color: var(--ps-accent) }
+
 		/* ── Content Grid ──────────────────────────────── */
 		.content-grid { display: grid; grid-template-columns: 1fr; gap: 16px }
 
@@ -76,12 +84,19 @@
 		.hm-cell[data-v="0"] { background-color: transparent; color: transparent }
 		.hm-cell[data-v="0"]:hover { color: var(--ps-ink-soft); background-color: var(--ps-surface-2) }
 
+		/* ── Monthly Trend (SVG chart) ─────────────────── */
+		.trend-chart { width: 100%; overflow-x: auto }
+		.trend-chart svg { display: block }
+
 		/* ── Footer ────────────────────────────────────── */
 		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (min-width: 860px) { .content-grid { grid-template-columns: 1fr 1fr } }
-		@media (max-width: 700px) { .header { flex-direction: column; align-items: flex-start } }
+		@media (max-width: 700px) {
+			.header { flex-direction: column; align-items: flex-start }
+			.stats-grid { grid-template-columns: 1fr }
+		}
 	</style>
 </head>
 <body>
@@ -108,6 +123,25 @@
 			<p class="intro-text">Charts and patterns from your listening history.</p>
 		</section>
 
+		<!-- Streak Cards -->
+		<section class="stats-grid" aria-label="Streak metrics">
+			<article class="stat-card">
+				<span class="stat-label">Current Streak</span>
+				<strong class="stat-value" id="stat-streak">0 <span class="accent">days</span></strong>
+				<span class="stat-trend">consecutive days listening</span>
+			</article>
+			<article class="stat-card">
+				<span class="stat-label">Best Streak</span>
+				<strong class="stat-value" id="stat-best-streak">0 <span class="accent">days</span></strong>
+				<span class="stat-trend">personal record</span>
+			</article>
+			<article class="stat-card">
+				<span class="stat-label">Days Tracked</span>
+				<strong class="stat-value" id="stat-days-tracked">0</strong>
+				<span class="stat-trend">total active days</span>
+			</article>
+		</section>
+
 		<div class="content-grid">
 			<section class="panel">
 				<div class="panel-head">
@@ -125,6 +159,16 @@
 				<ul class="genre-list" id="artist-time-bars"></ul>
 			</section>
 
+			<!-- Monthly Trend -->
+			<section class="panel" style="grid-column: 1 / -1">
+				<div class="panel-head">
+					<h3 class="panel-title">Monthly Trend</h3>
+					<span class="panel-tag">Minutes / month</span>
+				</div>
+				<div class="trend-chart" id="monthly-trend"></div>
+			</section>
+
+			<!-- Listening Heatmap -->
 			<section class="panel" style="grid-column: 1 / -1">
 				<div class="panel-head">
 					<h3 class="panel-title">Listening Heatmap</h3>
@@ -143,7 +187,6 @@
 
 </div>
 <script>
-// ── Data injected by Python ───────────────────────────────────────────────────
 const STATS = {{ stats_json }};
 
 function formatNumber(n) { return n.toLocaleString(); }
@@ -155,6 +198,11 @@ function formatDuration(sec) {
 }
 
 function init() {
+	// ── Streak Cards ─────────────────────────────────────────────
+	document.getElementById("stat-streak").innerHTML = `${STATS.currentStreak} <span class="accent">days</span>`;
+	document.getElementById("stat-best-streak").innerHTML = `${STATS.bestStreak} <span class="accent">days</span>`;
+	document.getElementById("stat-days-tracked").textContent = formatNumber(STATS.totalDaysTracked);
+
 	// ── Activity by Weekday ──────────────────────────────────────
 	const chart = document.getElementById("weekday-chart");
 	const maxMin = STATS.weekdayActivity.reduce((m, d) => d.minutes > m ? d.minutes : m, 1);
@@ -185,30 +233,83 @@ function init() {
 		timeList.appendChild(li);
 	});
 
+	// ── Monthly Trend (SVG line chart) ───────────────────────────
+	if (STATS.monthlyTrend && STATS.monthlyTrend.length > 1) {
+		const trend = STATS.monthlyTrend;
+		const container = document.getElementById("monthly-trend");
+		const pad = { top: 20, right: 20, bottom: 40, left: 55 };
+		const w = Math.max(trend.length * 80, 700);
+		const h = 220;
+		const plotW = w - pad.left - pad.right;
+		const plotH = h - pad.top - pad.bottom;
+		const maxV = trend.reduce((m, d) => d.minutes > m ? d.minutes : m, 1);
+
+		const x = (i) => pad.left + (i / (trend.length - 1)) * plotW;
+		const y = (v) => pad.top + plotH - (v / maxV) * plotH;
+
+		// Area fill (starts at first data point, not at 0)
+		let area = `M${x(0)},${y(trend[0].minutes)}`;
+		trend.forEach((d, i) => { if (i > 0) area += ` L${x(i)},${y(d.minutes)}`; });
+		area += ` L${x(trend.length-1)},${h - pad.bottom} L${x(0)},${h - pad.bottom} Z`;
+
+		// Line path
+		let line = `M${x(0)},${y(trend[0].minutes)}`;
+		trend.forEach((d, i) => { if (i > 0) line += ` L${x(i)},${y(d.minutes)}`; });
+
+		// Dots + labels
+		let dots = "";
+		let labels = "";
+		trend.forEach((d, i) => {
+			const cx = x(i), cy = y(d.minutes);
+			dots += `<circle cx="${cx}" cy="${cy}" r="4" fill="var(--ps-accent)" stroke="var(--ps-surface)" stroke-width="2"/>`;
+			dots += `<text x="${cx}" y="${cy - 10}" text-anchor="middle" font-size="10" fill="var(--ps-ink-soft)" font-weight="500">${formatNumber(d.minutes)}</text>`;
+			const [yr, mo] = d.month.split("-");
+			const monthNames = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+			const label = `${monthNames[parseInt(mo, 10) - 1]} ${yr.substring(2)}`;
+			labels += `<text x="${cx}" y="${h - pad.bottom + 18}" text-anchor="middle" font-size="10" fill="var(--ps-ink-soft)">${label}</text>`;
+		});
+
+		// Y-axis grid lines
+		let grid = "";
+		const steps = 4;
+		for (let s = 0; s <= steps; s++) {
+			const val = Math.round((maxV / steps) * s);
+			const yPos = y(val);
+			grid += `<line x1="${pad.left}" y1="${yPos}" x2="${w - pad.right}" y2="${yPos}" stroke="var(--ps-border)" stroke-dasharray="4,4"/>`;
+			grid += `<text x="${pad.left - 8}" y="${yPos + 4}" text-anchor="end" font-size="10" fill="var(--ps-ink-soft)">${formatNumber(val)}</text>`;
+		}
+
+		container.innerHTML =
+			`<svg width="100%" height="${h}" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none">` +
+			grid +
+			`<path d="${area}" fill="var(--ps-accent)" opacity="0.12"/>` +
+			`<path d="${line}" fill="none" stroke="var(--ps-accent)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>` +
+			dots + labels +
+			`</svg>`;
+	} else {
+		document.getElementById("monthly-trend").innerHTML = '<p class="empty-state">Not enough data for a monthly trend yet.</p>';
+	}
+
 	// ── Listening Heatmap ────────────────────────────────────────
 	if (STATS.heatmap) {
-		const hm = STATS.heatmap; // [7][24]
+		const hm = STATS.heatmap;
 		const dayLabels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 		const table = document.getElementById("heatmap-table");
 
-		// Find max value for colour scaling
 		let maxVal = 0;
 		hm.forEach(row => row.forEach(v => { if (v > maxVal) maxVal = v; }));
 		if (maxVal === 0) maxVal = 1;
 
-		// Header row (hours)
 		let thead = "<thead><tr><th></th>";
 		for (let h = 0; h < 24; h++) thead += `<th>${String(h).padStart(2, "0")}h</th>`;
 		thead += "</tr></thead>";
 
-		// Body rows (days)
 		let tbody = "<tbody>";
 		for (let d = 0; d < 7; d++) {
 			tbody += `<tr><th class="hm-day">${dayLabels[d]}</th>`;
 			for (let h = 0; h < 24; h++) {
 				const v = hm[d][h];
 				const intensity = v / maxVal;
-				// Orange gradient matching the theme accent
 				const bg = v === 0
 					? "transparent"
 					: `rgba(240, 113, 44, ${0.15 + intensity * 0.85})`;
@@ -217,7 +318,6 @@ function init() {
 			tbody += "</tr>";
 		}
 		tbody += "</tbody>";
-
 		table.innerHTML = thead + tbody;
 	}
 }

@@ -350,10 +350,64 @@ def generate_stats_page(overview_data: dict) -> Path:
         )
         raise SystemExit(1)
 
+    today = datetime.today()
+
+    # ── Listening Streak ──────────────────────────────────────────
+    listening_dates = set()
+    for entry in data:
+        try:
+            d = datetime.strptime(entry.date, "%d-%m-%Y").date()
+            if entry.seconds_listened > MIN_LISTEN_SECONDS:
+                listening_dates.add(d)
+        except ValueError:
+            pass
+
+    sorted_dates = sorted(listening_dates)
+    current_streak = 0
+    best_streak = 0
+
+    if sorted_dates:
+        # Current streak (counting back from today)
+        check = today.date()
+        while check in listening_dates:
+            current_streak += 1
+            check -= timedelta(days=1)
+
+        # Best streak ever
+        streak = 1
+        for i in range(1, len(sorted_dates)):
+            if (sorted_dates[i] - sorted_dates[i - 1]).days == 1:
+                streak += 1
+            else:
+                if streak > best_streak:
+                    best_streak = streak
+                streak = 1
+        best_streak = max(best_streak, streak)
+
+    # ── Monthly Trend (last 12 months) ──────────────────────────────
+    month_seconds: dict = {}
+    for entry in data:
+        try:
+            d = datetime.strptime(entry.date, "%d-%m-%Y")
+        except ValueError:
+            continue
+        key = d.strftime("%Y-%m")
+        month_seconds[key] = month_seconds.get(key, 0) + entry.seconds_listened
+
+    sorted_months = sorted(month_seconds.keys())[-12:]
+    monthly_trend = [
+        {"month": m, "minutes": round(month_seconds[m] / 60)}
+        for m in sorted_months
+    ]
+
     stats_data = {
-        "weekdayActivity": overview_data["weekdayActivity"],
-        "topArtists":      overview_data["topArtists"],
-        "heatmap":         overview_data["heatmap"],
+        "weekdayActivity":  overview_data["weekdayActivity"],
+        "topArtists":       overview_data["topArtists"],
+        "heatmap":          overview_data["heatmap"],
+        "currentStreak":    current_streak,
+        "bestStreak":       best_streak,
+        "totalDaysTracked": len(sorted_dates),
+        "monthlyTrend":     monthly_trend,
     }
 
     html = template.replace("{{ stats_json }}", json.dumps(stats_data, ensure_ascii=False))
