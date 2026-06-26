@@ -10,6 +10,8 @@ import sys
 import os
 import threading
 
+VERSION = "0.0.0"
+
 
 def get_documents_folder() -> Path:
     """Return the real Documents folder using the Windows Shell API."""
@@ -114,6 +116,51 @@ def quit_app(icon):
     """Stop the tray icon and exit."""
     icon.stop()
     os._exit(0)
+
+
+_update_available = False
+_tray_icon = None
+
+def check_for_updates():
+    """Check GitHub releases for a newer version and set the update flag."""
+    global _update_available
+    import json
+    from urllib.request import urlopen, Request
+    from urllib.error import URLError
+
+    REPO = "andreferreira04/spotify-tracker"
+    API_URL = f"https://api.github.com/repos/{REPO}/releases/latest"
+
+    try:
+        req = Request(API_URL, headers={"Accept": "application/vnd.github.v3+json"})
+        with urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode())
+
+        latest_tag = data.get("tag_name", "")
+        latest_version = latest_tag.lstrip("v")
+
+        if not latest_version or latest_version == VERSION:
+            return
+
+        def parse_ver(v):
+            try:
+                return tuple(int(x) for x in v.split("."))
+            except ValueError:
+                return (0,)
+
+        if parse_ver(latest_version) > parse_ver(VERSION):
+            _update_available = True
+            if _tray_icon:
+                _tray_icon.update_menu()
+            download_url = "https://www.spotracker.eu"
+            msg = (
+                f"New version available: v{latest_version}\n"
+                f"Current version: v{VERSION}\n\n"
+                f"Download at:\n{download_url}"
+            )
+            ctypes.windll.user32.MessageBoxW(0, msg, "SpoTracker - Update", 0x40)
+    except (URLError, OSError, json.JSONDecodeError, KeyError):
+        pass
 
 
 # ── Tracking loop (runs in background thread) ────────────────────────────────
@@ -221,14 +268,21 @@ def run_tray():
         pystray.MenuItem("Open Report", open_report, default=True),
         pystray.MenuItem("Generate New Report", generate_report),
         pystray.Menu.SEPARATOR,
+        pystray.MenuItem("Update", lambda _: __import__('webbrowser').open("https://www.spotracker.eu/"), visible=lambda _: _update_available),
         pystray.MenuItem("Exit", quit_app),
     )
 
+    global _tray_icon
     icon = pystray.Icon("SpoTracker", icon_image, "SpoTracker", menu)
+    _tray_icon = icon
 
     # Start the tracking loop in a daemon thread
     tracker_thread = threading.Thread(target=tracking_loop, daemon=True)
     tracker_thread.start()
+
+    # Check for updates in a background thread (non-blocking)
+    update_thread = threading.Thread(target=check_for_updates, daemon=True)
+    update_thread.start()
 
     # Run the tray icon on the main thread (blocks until icon.stop())
     icon.run()

@@ -32,10 +32,11 @@ jobs:
       - name: Install Inno Setup
         run: choco install innosetup --yes
 
-      - name: Patch version in installer script
+      - name: Patch version in installer script and Python source
         run: |
           $version = "${{ github.ref_name }}" -replace '^v', ''
           (Get-Content SpoTracker.iss) -replace 'AppVersion=0\.0\.0', "AppVersion=$version" | Set-Content SpoTracker.iss
+          (Get-Content music-register.py) -replace 'VERSION = "0\.0\.0"', "VERSION = `"$version`"" | Set-Content music-register.py
 
       - name: Build Installer
         run: iscc SpoTracker.iss

@@ -19,8 +19,6 @@ Source: "dist\SpoTracker\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdi
 ; Start Menu shortcuts
 Name: "{group}\SpoTracker";            Filename: "{app}\SpoTracker.exe"
 Name: "{group}\Open Report";           Filename: "{userdocs}\SpoTracker\reports\overview.html"
-Name: "{group}\Generate New Report";   Filename: "{app}\SpoTracker.exe"; Parameters: "--generate-report"
-Name: "{group}\Uninstall";             Filename: "{uninstallexe}"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
@@ -30,3 +28,13 @@ Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \
 [Run]
 Filename: "{app}\SpoTracker.exe"; Flags: nowait postinstall skipifsilent; \
     Description: "Start SpoTracker"
+
+[Code]
+function PrepareToInstall(var NeedsRestart: Boolean): String;
+var
+  ResultCode: Integer;
+begin
+  Exec('taskkill.exe', '/F /IM SpoTracker.exe', '', SW_HIDE, ewWaitUntilTerminated, ResultCode);
+  Sleep(500);
+  Result := '';
+end;
