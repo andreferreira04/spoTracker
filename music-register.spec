@@ -9,6 +9,7 @@ a = Analysis(
         ('templates/report.html', 'templates'),
         ('templates/top-artists.html', 'templates'),
         ('templates/overview.html', 'templates'),
+        ('templates/stats.html', 'templates'),
     ],
     hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats'],
     hookspath=[],

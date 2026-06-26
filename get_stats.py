@@ -268,6 +268,56 @@ def generate_overview() -> Path:
         for e in recent_entries
     ]
 
+    today = datetime.today()
+    window = timedelta(days=30)
+    heatmap_seconds = [[0] * 24 for _ in range(7)]
+
+    for entry in data:
+        try:
+            d = datetime.strptime(entry.date, "%d-%m-%Y")
+        except ValueError:
+            continue
+        if d < today - window:
+            continue
+
+        try:
+            time_parts = entry.time.split(":")
+            start_hour = int(time_parts[0])
+            start_min  = int(time_parts[1]) if len(time_parts) > 1 else 0
+            start_sec  = int(time_parts[2]) if len(time_parts) > 2 else 0
+        except (ValueError, IndexError):
+            continue
+
+        remaining = entry.seconds_listened
+        current_hour = start_hour
+        current_wd = d.weekday()
+        offset_in_hour = start_min * 60 + start_sec
+
+        while remaining > 0 and current_hour < 24 + start_hour:
+            left_in_hour = 3600 - offset_in_hour
+            chunk = min(remaining, left_in_hour)
+            h = current_hour % 24
+            wd = current_wd if current_hour < 24 else (current_wd + 1) % 7
+            heatmap_seconds[wd][h] += chunk
+            remaining -= chunk
+            offset_in_hour = 0
+            current_hour += 1
+
+    weekday_count = [0] * 7
+    for i in range(31):
+        d = today - timedelta(days=i)
+        weekday_count[d.weekday()] += 1
+
+    heatmap = []
+    for wd in range(7):
+        row = []
+        for hr in range(24):
+            total_sec = heatmap_seconds[wd][hr]
+            divisor = weekday_count[wd] if weekday_count[wd] > 0 else 1
+            avg_min = round(total_sec / 60 / divisor)
+            row.append(avg_min)
+        heatmap.append(row)
+
     overview = {
         "totalMinutes":   round(total_seconds / 60),
         "totalSeconds":   total_seconds,
@@ -278,11 +328,37 @@ def generate_overview() -> Path:
         "topArtists":     top_artists,
         "weekdayActivity": weekday_activity,
         "recentActivity":  recent_activity,
+        "heatmap":         heatmap,
     }
 
     html = template.replace("{{ overview_json }}", json.dumps(overview, ensure_ascii=False))
 
     out = output_folder / "overview.html"
+    out.write_text(html, encoding="utf-8")
+    return out, overview
+
+
+def generate_stats_page(overview_data: dict) -> Path:
+    template_path = resource_path("templates/stats.html")
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        msgbox(
+            "SpoTracker — Error",
+            f"Template not found:\n{template_path}",
+            0x10,
+        )
+        raise SystemExit(1)
+
+    stats_data = {
+        "weekdayActivity": overview_data["weekdayActivity"],
+        "topArtists":      overview_data["topArtists"],
+        "heatmap":         overview_data["heatmap"],
+    }
+
+    html = template.replace("{{ stats_json }}", json.dumps(stats_data, ensure_ascii=False))
+
+    out = output_folder / "stats.html"
     out.write_text(html, encoding="utf-8")
     return out
 
@@ -294,9 +370,10 @@ def generate_stats():
     if not load_data():
         return
 
-    overview_path = generate_overview()
+    overview_path, overview_data = generate_overview()
     generate_tracks_report()
     generate_top_artists()
+    generate_stats_page(overview_data)
 
     msgbox(
         "SpoTracker — Report generated",

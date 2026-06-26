@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Stats — SpoTracker</title>
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<style>
+		:root {
+			--ps-bg: #121212;
+			--ps-surface: #1c1b19;
+			--ps-surface-2: #2a2825;
+			--ps-ink: #f4efe9;
+			--ps-ink-soft: #a39b90;
+			--ps-accent: #f0712c;
+			--ps-accent-soft: #f7a96b;
+			--ps-up: #5fc46b;
+			--ps-down: #ef6f4d;
+			--ps-border: #312e2a;
+			--ps-radius: 16px;
+			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+		}
+		* { box-sizing: border-box; margin: 0; padding: 0 }
+		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+
+		/* ── Header / Nav ──────────────────────────────── */
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.brand { display: flex; align-items: center; gap: 14px }
+		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
+		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
+		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
+		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
+		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
+		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+
+		/* ── Intro ─────────────────────────────────────── */
+		.intro { margin-bottom: 28px }
+		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
+		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+
+		/* ── Content Grid ──────────────────────────────── */
+		.content-grid { display: grid; grid-template-columns: 1fr; gap: 16px }
+
+		/* ── Panel ─────────────────────────────────────── */
+		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 22px; box-shadow: var(--ps-shadow) }
+		.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px }
+		.panel-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 18px; font-weight: 600 }
+		.panel-tag { font-size: 12px; font-weight: 500; color: var(--ps-accent); background-color: var(--ps-surface-2); padding: 4px 10px; border-radius: 999px }
+
+		/* ── Bar Chart ─────────────────────────────────── */
+		.chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 240px }
+		.bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end }
+		.bar { width: 100%; max-width: 36px; height: var(--h); background: linear-gradient(180deg, var(--ps-accent-soft), var(--ps-accent)); border-radius: 8px 8px 4px 4px; transition: opacity .2s }
+		.bar:hover { opacity: .8 }
+		.bar-label { font-size: 12px; color: var(--ps-ink-soft) }
+		.bar-value { font-size: 11px; font-weight: 500; color: var(--ps-ink-soft) }
+
+		/* ── Genre / meter bars ─────────────────────────── */
+		.genre-list { list-style: none; display: flex; flex-direction: column; gap: 16px }
+		.genre-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px }
+		.genre-name { font-weight: 500 }
+		.genre-pct { color: var(--ps-ink-soft) }
+		.meter { height: 8px; background-color: var(--ps-surface-2); border-radius: 999px; overflow: hidden }
+		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent); border-radius: 999px }
+
+		/* ── Heatmap ────────────────────────────────────── */
+		.heatmap-wrap { overflow-x: auto }
+		.heatmap { border-collapse: separate; border-spacing: 2px }
+		.heatmap th, .heatmap td { text-align: center; font-size: 11px; padding: 0 }
+		.heatmap th { color: var(--ps-ink-soft); font-weight: 500; padding: 2px 4px }
+		.heatmap th.hm-day { text-align: right; padding-right: 8px; white-space: nowrap }
+		.heatmap td { padding: 0; width: 35px; min-width: 35px }
+		.hm-cell { display: flex; align-items: center; justify-content: center; width: 35px; height: 26px; border-radius: 3px; font-size: 9px; font-weight: 600; color: rgba(255,255,255,.9); transition: background-color .2s, color .2s }
+		.hm-cell[data-v="0"] { background-color: transparent; color: transparent }
+		.hm-cell[data-v="0"]:hover { color: var(--ps-ink-soft); background-color: var(--ps-surface-2) }
+
+		/* ── Footer ────────────────────────────────────── */
+		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+
+		/* ── Responsive ────────────────────────────────── */
+		@media (min-width: 860px) { .content-grid { grid-template-columns: 1fr 1fr } }
+		@media (max-width: 700px) { .header { flex-direction: column; align-items: flex-start } }
+	</style>
+</head>
+<body>
+<div class="page">
+	<header class="header">
+		<div class="brand">
+			<div class="brand-mark" aria-hidden="true">♪</div>
+			<div>
+				<h1 class="brand-title">SpoTracker</h1>
+				<p class="brand-subtitle">Your listening statistics</p>
+			</div>
+		</div>
+		<nav class="main-nav" aria-label="Main navigation">
+			<a class="nav-link" href="overview.html">Overview</a>
+			<a class="nav-link" href="tracks-by-artist.html">Tracks</a>
+			<a class="nav-link" href="top-artists.html">Top Artists</a>
+			<a class="nav-link active" href="stats.html">Stats</a>
+		</nav>
+	</header>
+
+	<main>
+		<section class="intro">
+			<h2 class="intro-title">Listening Stats</h2>
+			<p class="intro-text">Charts and patterns from your listening history.</p>
+		</section>
+
+		<div class="content-grid">
+			<section class="panel">
+				<div class="panel-head">
+					<h3 class="panel-title">Activity by Day</h3>
+					<span class="panel-tag">Minutes / weekday</span>
+				</div>
+				<div class="chart" id="weekday-chart" role="img" aria-label="Bar chart of minutes listened by day of the week"></div>
+			</section>
+
+			<section class="panel">
+				<div class="panel-head">
+					<h3 class="panel-title">Top Artists by Listening Time</h3>
+					<span class="panel-tag">Top 8</span>
+				</div>
+				<ul class="genre-list" id="artist-time-bars"></ul>
+			</section>
+
+			<section class="panel" style="grid-column: 1 / -1">
+				<div class="panel-head">
+					<h3 class="panel-title">Listening Heatmap</h3>
+					<span class="panel-tag">Last 30 days · avg min/hour</span>
+				</div>
+				<div class="heatmap-wrap">
+					<table class="heatmap" id="heatmap-table" role="img" aria-label="Heatmap of average listening minutes by weekday and hour"></table>
+				</div>
+			</section>
+		</div>
+	</main>
+
+	<footer class="footer">
+		<p>SpoTracker · Generated from your listening data</p>
+	</footer>
+
+</div>
+<script>
+// ── Data injected by Python ───────────────────────────────────────────────────
+const STATS = {{ stats_json }};
+
+function formatNumber(n) { return n.toLocaleString(); }
+function formatDuration(sec) {
+	const h = Math.floor(sec / 3600);
+	const m = Math.floor((sec % 3600) / 60);
+	if (h > 0) return `${h}h ${m}m`;
+	return `${m}m`;
+}
+
+function init() {
+	// ── Activity by Weekday ──────────────────────────────────────
+	const chart = document.getElementById("weekday-chart");
+	const maxMin = STATS.weekdayActivity.reduce((m, d) => d.minutes > m ? d.minutes : m, 1);
+	const minMin = STATS.weekdayActivity.reduce((m, d) => d.minutes < m ? d.minutes : m, maxMin);
+	const range  = maxMin - minMin;
+
+	STATS.weekdayActivity.forEach(d => {
+		const h = range > 0 ? 10 + ((d.minutes - minMin) / range) * 90 : 60;
+		const div = document.createElement("div");
+		div.className = "bar-group";
+		div.innerHTML =
+			`<span class="bar-value">${formatNumber(d.minutes)}</span>` +
+			`<div class="bar" style="--h:${h}%"></div>` +
+			`<span class="bar-label">${d.day}</span>`;
+		chart.appendChild(div);
+	});
+
+	// ── Top Artists by Time (meter bars) ─────────────────────────
+	const timeList = document.getElementById("artist-time-bars");
+	const topByTime = [...STATS.topArtists].sort((a, b) => b.seconds - a.seconds).slice(0, 8);
+	const maxSec = topByTime.length > 0 ? topByTime[0].seconds : 1;
+	topByTime.forEach(a => {
+		const pct = Math.round((a.seconds / maxSec) * 100);
+		const li = document.createElement("li");
+		li.innerHTML =
+			`<div class="genre-top"><span class="genre-name" translate="no">${a.artist}</span><span class="genre-pct">${formatDuration(a.seconds)}</span></div>` +
+			`<div class="meter"><span class="meter-fill" style="--w:${pct}%"></span></div>`;
+		timeList.appendChild(li);
+	});
+
+	// ── Listening Heatmap ────────────────────────────────────────
+	if (STATS.heatmap) {
+		const hm = STATS.heatmap; // [7][24]
+		const dayLabels = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+		const table = document.getElementById("heatmap-table");
+
+		// Find max value for colour scaling
+		let maxVal = 0;
+		hm.forEach(row => row.forEach(v => { if (v > maxVal) maxVal = v; }));
+		if (maxVal === 0) maxVal = 1;
+
+		// Header row (hours)
+		let thead = "<thead><tr><th></th>";
+		for (let h = 0; h < 24; h++) thead += `<th>${String(h).padStart(2, "0")}h</th>`;
+		thead += "</tr></thead>";
+
+		// Body rows (days)
+		let tbody = "<tbody>";
+		for (let d = 0; d < 7; d++) {
+			tbody += `<tr><th class="hm-day">${dayLabels[d]}</th>`;
+			for (let h = 0; h < 24; h++) {
+				const v = hm[d][h];
+				const intensity = v / maxVal;
+				// Orange gradient matching the theme accent
+				const bg = v === 0
+					? "transparent"
+					: `rgba(240, 113, 44, ${0.15 + intensity * 0.85})`;
+				tbody += `<td><div class="hm-cell" data-v="${v}" style="background-color:${bg}" title="${dayLabels[d]} ${String(h).padStart(2,'0')}h - ${v} min">${v}</div></td>`;
+			}
+			tbody += "</tr>";
+		}
+		tbody += "</tbody>";
+
+		table.innerHTML = thead + tbody;
+	}
+}
+
+init();
+</script>
+</body>
+</html>
