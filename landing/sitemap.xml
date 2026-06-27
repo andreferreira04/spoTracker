@@ -1,13 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xhtml="http://www.w3.org/1999/xhtml">
-  <url>
-    <loc>https://www.spotracker.eu/</loc>
-    <xhtml:link rel="alternate" hreflang="en" href="https://www.spotracker.eu/" />
-    <xhtml:link rel="alternate" hreflang="pt" href="https://www.spotracker.eu/?lang=pt" />
-    <xhtml:link rel="alternate" hreflang="x-default" href="https://www.spotracker.eu/" />
-    <lastmod>2026-06-27</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>1.0</priority>
-  </url>
+<?xml-stylesheet type="text/css" href="https://www.xml-sitemaps.com/css/sitemap.css"?>
+<urlset
+      xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+      xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+      xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+  xmlns:fo="http://www.w3.org/1999/XSL/Format"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+      xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+            http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+<url>
+  <loc>https://www.spotracker.eu/</loc>
+  <lastmod>2026-06-27T14:01:24+00:00</lastmod>
+</url>
+
 </urlset>
