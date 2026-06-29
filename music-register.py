@@ -180,8 +180,12 @@ def tracking_loop():
         if processTitle is None:
             # Save the song that was playing before Spotify closed
             if musicStart is not None and previousArtist and previousMusic:
+                # If paused, account for the ongoing pause duration
+                if pauseStart is not None:
+                    totalPauseTime += time.time() - pauseStart
                 secondsListened = int(time.time() - musicStart - totalPauseTime)
-                saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
+                if secondsListened > 0:
+                    saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
             musicStart = None
             totalPauseTime = 0
             pauseStart = None

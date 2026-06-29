@@ -330,11 +330,13 @@ function init() {
 	const recentTbody = document.getElementById("recent-tbody");
 	OVERVIEW.recentActivity.forEach(e => {
 		const tr = document.createElement("tr");
+		const minutes = Math.floor(e.seconds / 60);
+		const seconds = e.seconds - minutes * 60;
 		tr.innerHTML =
 			`<td class="recent-date">${e.date} ${e.time}</td>` +
 			`<td class="recent-artist" translate="no">${e.artist}</td>` +
 			`<td translate="no">${e.track}</td>` +
-			`<td class="num recent-duration">${e.seconds}s</td>`;
+			`<td class="num recent-duration">${minutes}m ${seconds}s</td>`;
 		recentTbody.appendChild(tr);
 	});
 }
