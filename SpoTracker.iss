@@ -1,7 +1,15 @@
+; Stays 0.0.0 in the repo; the CI workflow patches it when building a release
+#define AppVersion "0.0.0"
+#if AppVersion == "0.0.0"
+  #define AppTitle "SpoTracker (Dev)"
+#else
+  #define AppTitle "SpoTracker"
+#endif
+
 [Setup]
 AppId={{402327EE-B0CC-4F5E-B760-1E0860434DD0}}
-AppName=SpoTracker
-AppVersion=0.0.0
+AppName={#AppTitle}
+AppVersion={#AppVersion}
 DefaultDirName={pf}\SpoTracker
 DefaultGroupName=SpoTracker
 OutputDir=output

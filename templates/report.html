@@ -3,7 +3,8 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Tracks — SpoTracker</title>
+	<title>Tracks — {{ app_name }}</title>
+	<link rel="icon" href="logo.png" type="image/png" />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 	<style>
 		:root {
@@ -28,7 +29,7 @@
 		/* ── Header / Nav ──────────────────────────────── */
 		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
+		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
 		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
 		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
 		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
@@ -52,6 +53,19 @@
 		.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--ps-ink-soft) }
 		.search-input { width: 100%; font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 11px 16px 11px 38px; outline: none }
 		.search-input:focus { border-color: var(--ps-accent) }
+
+		/* ── Artist combobox ───────────────────────────── */
+		.combo { position: relative; min-width: 220px }
+		.combo-input { width: 100%; padding-right: 32px }
+		.combo-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 16px; line-height: 1; color: var(--ps-ink-soft); background: none; border: none; padding: 4px 6px; cursor: pointer }
+		.combo-clear:hover { color: var(--ps-ink) }
+		.combo-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; max-height: 280px; overflow-y: auto; list-style: none; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 10px; box-shadow: var(--ps-shadow); padding: 4px }
+		.combo-option { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 8px 10px; border-radius: 6px; cursor: pointer }
+		.combo-option.active { background-color: var(--ps-surface-2) }
+		.combo-option.selected { color: var(--ps-accent) }
+		.combo-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.combo-count { font-size: 12px; color: var(--ps-ink-soft) }
+		.combo-empty { font-size: 13px; color: var(--ps-ink-soft); padding: 8px 10px }
 
 		/* ── Pill buttons ──────────────────────────────── */
 		.btn-pill { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
@@ -96,6 +110,7 @@
 		.cell-strong { font-weight: 500; color: var(--ps-ink) }
 		.badge-recent { display: inline-block; background-color: rgba(79,122,63,.12); color: var(--ps-up); font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle }
 		.perc-cell { font-weight: 500 }
+		.cell-soft { color: var(--ps-ink-soft); white-space: nowrap }
 		.perc-high { color: var(--ps-up) }
 		.perc-mid { color: var(--ps-warn) }
 		.perc-low { color: var(--ps-down) }
@@ -110,7 +125,8 @@
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (max-width: 700px) {
-			.data-table th:nth-child(3), .data-table td:nth-child(3) { display: none }
+			.data-table th:nth-child(3), .data-table td:nth-child(3),
+			.data-table th:nth-child(5), .data-table td:nth-child(5) { display: none }
 			.filter-bar { flex-direction: column; align-items: stretch }
 			.sliders-row { grid-template-columns: 1fr }
 			.header { flex-direction: column; align-items: flex-start }
@@ -123,9 +139,9 @@
 	<!-- Header -->
 	<header class="header">
 		<div class="brand">
-			<div class="brand-mark" aria-hidden="true">♪</div>
+			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
-				<h1 class="brand-title">SpoTracker</h1>
+				<h1 class="brand-title">{{ app_name }}</h1>
 				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
@@ -153,8 +169,12 @@
 				</div>
 			</div>
 			<div class="filter-group">
-				<label class="filter-label" for="artist-select">Artist</label>
-				<select id="artist-select" class="filter-input filter-select"><option value="">All artists</option></select>
+				<label class="filter-label" for="artist-input">Artist</label>
+				<div class="combo">
+					<input id="artist-input" type="text" class="filter-input combo-input" placeholder="All artists" autocomplete="off" role="combobox" aria-expanded="false" aria-controls="artist-list" aria-autocomplete="list" />
+					<button type="button" class="combo-clear" id="artist-clear" aria-label="Clear artist" hidden>×</button>
+					<ul class="combo-list" id="artist-list" role="listbox" hidden></ul>
+				</div>
 			</div>
 			<button class="btn-pill" id="btn-recent" onclick="toggleFilter('recent')">Recent</button>
 			<button class="btn-pill" id="btn-lowperc" onclick="toggleFilter('lowperc')">Low %</button>
@@ -195,6 +215,8 @@
 							<th onclick="sortBy(1)" id="th-1">Track <em class="sort-icon">↕</em></th>
 							<th onclick="sortBy(2)" id="th-2" class="num">Plays <em class="sort-icon">↕</em></th>
 							<th onclick="sortBy(3)" id="th-3" class="num">% <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(4)" id="th-4" class="num" title="Songs played between the two most recent plays of this track">Gap <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(5)" id="th-5" class="num">First Played <em class="sort-icon">↕</em></th>
 						</tr>
 					</thead>
 					<tbody id="tbody"></tbody>
@@ -226,12 +248,17 @@ let currentPage  = 0;
 let pageSize     = 50;
 let lastSortCol  = -1;
 let sortAsc      = true;
+let ARTISTS      = [];  // [{ name, count }] sorted alphabetically
+
+// ── Text helpers ──────────────────────────────────────────────────────────────
+const normalize   = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const compareText = (a, b) => a.localeCompare(b, undefined, { sensitivity: "base" });
 
 // ── Init ──────────────────────────────────────────────────────────────────────
 function init() {
-	const artists = [...new Set(ALL_TRACKS.map(t => t.artist))].sort();
-	const sel = document.getElementById("artist-select");
-	artists.forEach(a => { const o = document.createElement("option"); o.value = a; o.textContent = a; sel.appendChild(o); });
+	const counts = {};
+	ALL_TRACKS.forEach(t => { counts[t.artist] = (counts[t.artist] || 0) + 1; });
+	ARTISTS = Object.keys(counts).sort(compareText).map(name => ({ name, count: counts[name] }));
 
 	const maxPlays = ALL_TRACKS.reduce((m, t) => t.validPlays > m ? t.validPlays : m, 0);
 	document.getElementById("plays-slider").max = maxPlays || 100;
@@ -241,14 +268,14 @@ function init() {
 
 // ── Filtering ─────────────────────────────────────────────────────────────────
 function applyFilters() {
-	const q = state.search.toLowerCase();
+	const q = normalize(state.search);
 	filteredData = ALL_TRACKS.filter(t => {
 		if (state.recent  && !t.recent)                        return false;
 		if (state.lowperc && t.perc >= LOW_PERC_THRESHOLD)     return false;
 		if (state.minPerc && t.perc < state.minPerc)           return false;
 		if (state.minPlays && t.validPlays < state.minPlays)   return false;
 		if (state.artist  && t.artist !== state.artist)        return false;
-		if (q && !t.artist.toLowerCase().includes(q) && !t.track.toLowerCase().includes(q)) return false;
+		if (q && !normalize(t.artist).includes(q) && !normalize(t.track).includes(q)) return false;
 		return true;
 	});
 	applySort();
@@ -257,13 +284,16 @@ function applyFilters() {
 }
 
 // ── Sorting ───────────────────────────────────────────────────────────────────
-const SORT_KEYS = ["artist", "track", "validPlays", "perc"];
+const SORT_KEYS = ["artist", "track", "validPlays", "perc", "gap", "firstPlayed"];
 function applySort() {
 	if (lastSortCol < 0) return;
 	const key = SORT_KEYS[lastSortCol];
 	filteredData.sort((a, b) => {
 		const va = a[key], vb = b[key];
-		return va < vb ? (sortAsc ? -1 : 1) : va > vb ? (sortAsc ? 1 : -1) : 0;
+		// Tracks without a gap (played fewer than twice) always go last
+		if (va === null || vb === null) return (va === null) - (vb === null);
+		const cmp = typeof va === "string" ? compareText(va, vb) : va - vb;
+		return sortAsc ? cmp : -cmp;
 	});
 }
 
@@ -298,7 +328,9 @@ function renderPage() {
 			`<td class="cell-strong" translate="no">${t.artist}</td>` +
 			`<td translate="no">${t.track}${badge}</td>` +
 			`<td class="num">${t.validPlays}/${t.totalPlays}</td>` +
-			`<td class="num perc-cell ${percClass}">${t.perc}%</td>`;
+			`<td class="num perc-cell ${percClass}">${t.perc}%</td>` +
+			`<td class="num cell-soft">${t.gap === null ? "—" : t.gap}</td>` +
+			`<td class="num cell-soft">${t.firstPlayed.split("-").reverse().join("-")}</td>`;
 		frag.appendChild(tr);
 	});
 
@@ -368,15 +400,105 @@ document.getElementById("search-input").addEventListener("input", function () {
 	searchTimer = setTimeout(() => { state.search = this.value; applyFilters(); }, 200);
 });
 
-document.getElementById("artist-select").addEventListener("change", function () {
-	state.artist = this.value; applyFilters();
+// ── Artist combobox ───────────────────────────────────────────────────────────
+const artistInput = document.getElementById("artist-input");
+const artistList  = document.getElementById("artist-list");
+const artistClear = document.getElementById("artist-clear");
+let artistOptions = [];  // artists currently shown in the dropdown
+let activeIndex   = -1;
+
+function renderArtistList(query) {
+	const q = normalize(query.trim());
+	const prefix = [], contains = [];
+	ARTISTS.forEach(a => {
+		const n = normalize(a.name);
+		if (!q || n.startsWith(q)) prefix.push(a);
+		else if (n.includes(q))    contains.push(a);
+	});
+	artistOptions = prefix.concat(contains);
+	activeIndex   = q ? 0 : artistOptions.findIndex(a => a.name === state.artist);
+
+	artistList.innerHTML = "";
+	if (artistOptions.length === 0) {
+		artistList.innerHTML = '<li class="combo-empty">No artists found</li>';
+		activeIndex = -1;
+	}
+	artistOptions.forEach((a, i) => {
+		const li = document.createElement("li");
+		li.id        = "artist-opt-" + i;
+		li.className = "combo-option" + (a.name === state.artist ? " selected" : "");
+		li.setAttribute("role", "option");
+		li.setAttribute("translate", "no");
+		li.innerHTML = '<span class="combo-name"></span><span class="combo-count"></span>';
+		li.firstChild.textContent = a.name;
+		li.lastChild.textContent  = a.count;
+		li.addEventListener("mousedown", e => { e.preventDefault(); selectArtist(a.name); });
+		artistList.appendChild(li);
+	});
+	updateActiveOption();
+}
+
+function updateActiveOption() {
+	artistOptions.forEach((_, i) => artistList.children[i].classList.toggle("active", i === activeIndex));
+	if (activeIndex >= 0) {
+		artistList.children[activeIndex].scrollIntoView({ block: "nearest" });
+		artistInput.setAttribute("aria-activedescendant", "artist-opt-" + activeIndex);
+	} else {
+		artistInput.removeAttribute("aria-activedescendant");
+	}
+}
+
+function openArtistList(query) {
+	renderArtistList(query);
+	artistList.hidden = false;
+	artistInput.setAttribute("aria-expanded", "true");
+}
+
+function closeArtistList() {
+	artistList.hidden       = true;
+	artistInput.value       = state.artist;
+	artistInput.placeholder = "All artists";
+	artistInput.setAttribute("aria-expanded", "false");
+}
+
+function selectArtist(name) {
+	state.artist       = name;
+	artistClear.hidden = !name;
+	closeArtistList();
+	applyFilters();
+}
+
+artistInput.addEventListener("focus", () => {
+	// Start with an empty query so the full list is shown; keep the current choice as a hint
+	artistInput.placeholder = state.artist || "Search artist…";
+	artistInput.value = "";
+	openArtistList("");
 });
+artistInput.addEventListener("blur", closeArtistList);
+artistInput.addEventListener("input", () => openArtistList(artistInput.value));
+artistInput.addEventListener("keydown", e => {
+	if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+		e.preventDefault();
+		if (artistList.hidden) { openArtistList(artistInput.value); return; }
+		if (artistOptions.length === 0) return;
+		const step  = e.key === "ArrowDown" ? 1 : -1;
+		activeIndex = Math.max(0, Math.min(activeIndex + step, artistOptions.length - 1));
+		updateActiveOption();
+	} else if (e.key === "Enter") {
+		e.preventDefault();
+		if (!artistList.hidden && activeIndex >= 0) selectArtist(artistOptions[activeIndex].name);
+	} else if (e.key === "Escape") {
+		artistInput.blur();
+	}
+});
+artistClear.addEventListener("click", () => selectArtist(""));
 
 // ── Reset ─────────────────────────────────────────────────────────────────────
 function resetFilters() {
 	state = { recent: false, lowperc: false, search: "", artist: "", minPerc: 0, minPlays: 0 };
 	document.getElementById("search-input").value      = "";
-	document.getElementById("artist-select").value     = "";
+	artistInput.value                                  = "";
+	artistClear.hidden                                 = true;
 	document.getElementById("perc-slider").value       = 0;
 	document.getElementById("perc-value").textContent  = 0;
 	document.getElementById("plays-slider").value      = 0;

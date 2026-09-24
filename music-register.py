@@ -10,7 +10,7 @@ import sys
 import os
 import threading
 
-VERSION = "0.0.0"
+from version import VERSION, APP_NAME
 
 
 def get_documents_folder() -> Path:
@@ -24,6 +24,8 @@ save_dir = get_documents_folder() / "SpoTracker"
 save_dir.mkdir(parents=True, exist_ok=True)
 
 musicListFile = save_dir / "music-list.csv"
+backupDir = save_dir / "backups"
+csvLock = threading.Lock()  # serializes writes between the tracker and Clear Data
 timeSleep = 1
 
 def getProcessTitles(): 
@@ -66,11 +68,33 @@ def getSpotifyTitle():
                 return title
     return None
 
+def getLastRecord(f):
+    """Return (offset, line) of the last line in the binary file f, or (0, b"") if empty."""
+    f.seek(0, os.SEEK_END)
+    pos = f.tell()
+    chunk = b""
+    while pos > 0:
+        size = min(4096, pos)
+        pos -= size
+        f.seek(pos)
+        chunk = f.read(size) + chunk
+        idx = chunk.rstrip(b"\r\n").rfind(b"\n")
+        if idx != -1:
+            return pos + idx + 1, chunk[idx + 1:]
+    return 0, chunk
+
 def saveMusic(artist, music, secondsListen, date, hour):
     try:
         music = music.replace(";", ",")
-        with open(musicListFile, "a", encoding="utf-8") as f:
-            f.write(f"{artist};{music};{secondsListen};{date};{hour}\n")
+        with csvLock, open(musicListFile, "a+b") as f:
+            # Same song as the last record (e.g. Spotify closed and reopened mid-song): aggregate instead of adding a new record
+            offset, lastLine = getLastRecord(f)
+            parts = lastLine.decode("utf-8").strip().split(";")
+            if len(parts) >= 5 and parts[0] == artist and parts[1] == music and parts[2].isdigit():
+                secondsListen += int(parts[2])
+                date, hour = parts[3], parts[4]
+                f.truncate(offset)
+            f.write(f"{artist};{music};{secondsListen};{date};{hour}{os.linesep}".encode("utf-8"))
     except:
         print("Error saving music in file", musicListFile)
 
@@ -110,6 +134,14 @@ def open_report(_=None):
         webbrowser.open(report.as_uri())
     else:
         generate_report()
+
+
+def open_clear_data(_=None):
+    """Open the Clear Data window in its own thread so the tray stays responsive."""
+    import clear_data
+    threading.Thread(
+        target=clear_data.open_dialog, args=(musicListFile, backupDir, csvLock), daemon=True
+    ).start()
 
 
 def quit_app(icon):
@@ -158,7 +190,7 @@ def check_for_updates():
                 f"Current version: v{VERSION}\n\n"
                 f"Download at:\n{download_url}"
             )
-            ctypes.windll.user32.MessageBoxW(0, msg, "SpoTracker - Update", 0x40)
+            ctypes.windll.user32.MessageBoxW(0, msg, f"{APP_NAME} - Update", 0x40)
     except (URLError, OSError, json.JSONDecodeError, KeyError):
         pass
 
@@ -271,13 +303,14 @@ def run_tray():
     menu = pystray.Menu(
         pystray.MenuItem("Open Report", open_report, default=True),
         pystray.MenuItem("Generate New Report", generate_report),
+        pystray.MenuItem("Clear Data…", open_clear_data),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Update", lambda _: __import__('webbrowser').open("https://www.spotracker.eu/"), visible=lambda _: _update_available),
         pystray.MenuItem("Exit", quit_app),
     )
 
     global _tray_icon
-    icon = pystray.Icon("SpoTracker", icon_image, "SpoTracker", menu)
+    icon = pystray.Icon("SpoTracker", icon_image, APP_NAME, menu)
     _tray_icon = icon
 
     # Start the tracking loop in a daemon thread

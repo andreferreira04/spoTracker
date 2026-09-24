@@ -1,12 +1,16 @@
 import ctypes
 import ctypes.wintypes
 import json
+import shutil
 import sys
+import unicodedata
 import webbrowser
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
+
+from version import APP_NAME
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
 def get_documents_folder() -> Path:
@@ -34,6 +38,11 @@ def msgbox(title: str, message: str, icon: int = 0x40):
     ctypes.windll.user32.MessageBoxW(0, message, title, icon)
 
 
+def sort_key(text: str) -> str:
+    """Case- and accent-insensitive key, so "abba" and "Émilie" sort with their uppercase/plain peers."""
+    return unicodedata.normalize("NFD", text).casefold()
+
+
 def resource_path(relative: str) -> Path:
     """Resolve the path to a bundled resource.
 
@@ -58,7 +67,7 @@ class TrackEntry:
 def load_data():
     if not csv_file.exists():
         msgbox(
-            "SpoTracker — Warning",
+            f"{APP_NAME} — Warning",
             "No recorded tracks yet.\n\n"
             "Listen to some music on Spotify and try again.",
             0x30,  # MB_ICONWARNING
@@ -72,12 +81,12 @@ def load_data():
                 if len(parts) >= 5:
                     data.append(TrackEntry(*parts[:5]))
     except Exception as e:
-        msgbox("SpoTracker — Warning", f"Failed to read the data file:\n{e}", 0x30)
+        msgbox(f"{APP_NAME} — Warning", f"Failed to read the data file:\n{e}", 0x30)
         return False
 
     if not data:
         msgbox(
-            "SpoTracker — Warning",
+            f"{APP_NAME} — Warning",
             "No recorded tracks yet.\n\n"
             "Listen to some music on Spotify and try again.",
             0x30,  # MB_ICONWARNING
@@ -94,7 +103,7 @@ def generate_tracks_report() -> Path:
         template = template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         msgbox(
-            "SpoTracker — Error",
+            f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
             0x10,
         )
@@ -104,27 +113,37 @@ def generate_tracks_report() -> Path:
     today  = datetime.today()
     window = timedelta(days=30)
     recent_map: dict = {} # keeps track of recent tracks (30 days by default)
+    first_played: dict = {}  # (artist, track) -> date of the first record (ISO, for sorting)
+    last_index: dict = {}    # (artist, track) -> index of its latest valid play
+    gap_map: dict = {}       # (artist, track) -> valid plays between its two most recent plays
+    valid_index = 0          # data is chronological, so this is a running play counter
 
     for entry in data:
         artist  = entry.artist
         track   = entry.track
         seconds = entry.seconds_listened
         date    = datetime.strptime(entry.date, "%d-%m-%Y")
+        key     = (artist, track)
 
         tracks_by_artist.setdefault(artist, {})
         if track not in tracks_by_artist[artist]:
             tracks_by_artist[artist][track] = {"plays": 0, "valid_plays": 0}
-            recent_map[(artist, track)] = False
+            recent_map[key] = False
+            first_played[key] = date.strftime("%Y-%m-%d")
 
         tracks_by_artist[artist][track]["plays"] += 1
         if seconds > MIN_LISTEN_SECONDS:
             tracks_by_artist[artist][track]["valid_plays"] += 1
             if date >= today - window:
-                recent_map[(artist, track)] = True
+                recent_map[key] = True
+            if key in last_index:
+                gap_map[key] = valid_index - last_index[key] - 1
+            last_index[key] = valid_index
+            valid_index += 1
 
     sorted_artists = OrderedDict(
-        (a, OrderedDict(sorted(t.items())))
-        for a, t in sorted(tracks_by_artist.items())
+        (a, OrderedDict(sorted(t.items(), key=lambda x: sort_key(x[0]))))
+        for a, t in sorted(tracks_by_artist.items(), key=lambda x: sort_key(x[0]))
     )
 
     tracks_list = []
@@ -141,6 +160,8 @@ def generate_tracks_report() -> Path:
                 "totalPlays": stats["plays"],
                 "perc":       perc,
                 "recent":     recent,
+                "gap":        gap_map.get((artist, track)),
+                "firstPlayed": first_played[(artist, track)],
             })
 
     html = (
@@ -150,7 +171,7 @@ def generate_tracks_report() -> Path:
     )
 
     out = output_folder / "tracks-by-artist.html"
-    out.write_text(html, encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
     return out
 
 
@@ -161,7 +182,7 @@ def generate_top_artists() -> Path:
         template = template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         msgbox(
-            "SpoTracker — Error",
+            f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
             0x10,
         )
@@ -179,7 +200,7 @@ def generate_top_artists() -> Path:
     html = template.replace("{{ entries_json }}", json.dumps(entries_list, ensure_ascii=False))
 
     out = output_folder / "top-artists.html"
-    out.write_text(html, encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
     return out
 
 # ── Report: overview dashboard ────────────────────────────────────────────────
@@ -189,7 +210,7 @@ def generate_overview() -> Path:
         template = template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         msgbox(
-            "SpoTracker — Error",
+            f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
             0x10,
         )
@@ -334,7 +355,7 @@ def generate_overview() -> Path:
     html = template.replace("{{ overview_json }}", json.dumps(overview, ensure_ascii=False))
 
     out = output_folder / "overview.html"
-    out.write_text(html, encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
     return out, overview
 
 
@@ -344,7 +365,7 @@ def generate_stats_page(overview_data: dict) -> Path:
         template = template_path.read_text(encoding="utf-8")
     except FileNotFoundError:
         msgbox(
-            "SpoTracker — Error",
+            f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
             0x10,
         )
@@ -413,7 +434,7 @@ def generate_stats_page(overview_data: dict) -> Path:
     html = template.replace("{{ stats_json }}", json.dumps(stats_data, ensure_ascii=False))
 
     out = output_folder / "stats.html"
-    out.write_text(html, encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
     return out
 
 
@@ -424,13 +445,15 @@ def generate_stats():
     if not load_data():
         return
 
+    shutil.copyfile(resource_path("templates/logo.png"), output_folder / "logo.png")
+
     overview_path, overview_data = generate_overview()
     generate_tracks_report()
     generate_top_artists()
     generate_stats_page(overview_data)
 
     msgbox(
-        "SpoTracker — Report generated",
+        f"{APP_NAME} — Report generated",
         f"Report created successfully!\n\n{overview_path}\n\nOpening in browser…",
         0x40,  # MB_ICONINFORMATION
     )

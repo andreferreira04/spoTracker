@@ -48,6 +48,12 @@ Output:
 
 This verifies the executable starts correctly and can generate reports without missing modules.
 
+### 5. Execute Dev Installer
+
+1. Execute Installer on `output/SpoTrackerInstaller.exe`
+
+Local builds keep version `0.0.0` (in `version.py` and `SpoTracker.iss`), so the installer, tray icon, dialogs and reports are all labelled **SpoTracker (Dev)**. Only the CI workflow sets a real version.
+
 ---
 
 ## Release via GitHub Actions
@@ -96,4 +102,5 @@ The release will appear at: `https://github.com/<user>/<repo>/releases`
 | `get-stats.py` | Report generator (bundled into the exe, also runnable standalone) |
 | `generate-stats.vbs` | Standalone wrapper to run `get-stats.py` without the exe |
 | `templates/*.html` | Report HTML templates |
+| `templates/logo.png` | Logo shown in the reports (copied next to them) |
 | `SpoTracker.iss` | Inno Setup installer script |

@@ -3,7 +3,8 @@
 <head>
 	<meta charset="UTF-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-	<title>Stats — SpoTracker</title>
+	<title>Stats — {{ app_name }}</title>
+	<link rel="icon" href="logo.png" type="image/png" />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 	<style>
 		:root {
@@ -27,7 +28,7 @@
 		/* ── Header / Nav ──────────────────────────────── */
 		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: var(--ps-surface); background-color: var(--ps-accent); border-radius: 14px }
+		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
 		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
 		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
 		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
@@ -103,9 +104,9 @@
 <div class="page">
 	<header class="header">
 		<div class="brand">
-			<div class="brand-mark" aria-hidden="true">♪</div>
+			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
-				<h1 class="brand-title">SpoTracker</h1>
+				<h1 class="brand-title">{{ app_name }}</h1>
 				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
