@@ -438,6 +438,90 @@ def generate_stats_page(overview_data: dict) -> Path:
     return out
 
 
+# ── Report: shareable summary images ──────────────────────────────────────────
+def generate_share_page() -> Path:
+    import base64
+
+    template_path = resource_path("templates/share.html")
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        msgbox(
+            f"{APP_NAME} — Error",
+            f"Template not found:\n{template_path}",
+            0x10,
+        )
+        raise SystemExit(1)
+
+    # Each period starts on this date and ends today (inclusive); None = since the first record
+    today = datetime.today().date()
+    periods = [
+        ("7d",  "Last 7 days",     today - timedelta(days=6)),
+        ("30d", "Last 30 days",    today - timedelta(days=29)),
+        ("90d", "Last 90 days",    today - timedelta(days=89)),
+        ("1y",  "Last 12 months",  today - timedelta(days=364)),
+        ("ytd", f"{today.year} so far", today.replace(month=1, day=1)),
+        ("all", "All time",        None),
+    ]
+    agg = {key: {"seconds": 0, "artists": {}, "tracks": {}} for key, _, _ in periods}
+    dates: dict = {}   # date string -> date (strptime is the slow part, and dates repeat a lot)
+    first_date = None
+
+    for entry in data:
+        if entry.date not in dates:
+            try:
+                dates[entry.date] = datetime.strptime(entry.date, "%d-%m-%Y").date()
+            except ValueError:
+                dates[entry.date] = None
+        d = dates[entry.date]
+        if d is not None and (first_date is None or d < first_date):
+            first_date = d
+
+        key = (entry.artist, entry.track)
+        sec = entry.seconds_listened
+        valid = sec > MIN_LISTEN_SECONDS
+        for name, _, start in periods:
+            if start is not None and (d is None or d < start):
+                continue
+            a = agg[name]
+            a["seconds"] += sec
+            # Skips don't count as having listened to an artist or song
+            if valid:
+                a["artists"][entry.artist] = a["artists"].get(entry.artist, 0) + 1
+                a["tracks"][key] = a["tracks"].get(key, 0) + 1
+
+    share_data = []
+    for name, label, start in periods:
+        a = agg[name]
+        top_artists = sorted(a["artists"].items(), key=lambda x: x[1], reverse=True)[:5]
+        top_tracks  = sorted(a["tracks"].items(), key=lambda x: x[1], reverse=True)[:5]
+        start = start or first_date or today
+        share_data.append({
+            "key":        name,
+            "label":      label,
+            "from":       start.isoformat(),
+            "to":         today.isoformat(),
+            "minutes":    round(a["seconds"] / 60),
+            "artists":    len(a["artists"]),
+            "tracks":     len(a["tracks"]),
+            "topArtists": [{"artist": k, "plays": v} for k, v in top_artists],
+            "topTracks":  [{"artist": k[0], "track": k[1], "plays": v} for k, v in top_tracks],
+        })
+
+    # Embedded rather than linked: a canvas that draws a file:// image can't be exported
+    logo = base64.b64encode(resource_path("templates/logo.png").read_bytes()).decode("ascii")
+
+    html = (
+        template
+        .replace("{{ share_json }}", json.dumps(share_data, ensure_ascii=False))
+        .replace("{{ logo_data_uri }}", f"data:image/png;base64,{logo}")
+    )
+
+    out = output_folder / "share.html"
+    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
+    return out
+
+
 # ── Entry point ───────────────────────────────────────────────────────────────
 def generate_stats():
     output_folder.mkdir(parents=True, exist_ok=True)
@@ -451,6 +535,7 @@ def generate_stats():
     generate_tracks_report()
     generate_top_artists()
     generate_stats_page(overview_data)
+    generate_share_page()
 
     msgbox(
         f"{APP_NAME} — Report generated",

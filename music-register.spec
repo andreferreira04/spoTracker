@@ -10,6 +10,7 @@ a = Analysis(
         ('templates/top-artists.html', 'templates'),
         ('templates/overview.html', 'templates'),
         ('templates/stats.html', 'templates'),
+        ('templates/share.html', 'templates'),
         ('templates/logo.png', 'templates'),
     ],
     hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats', 'clear_data', 'version'],
