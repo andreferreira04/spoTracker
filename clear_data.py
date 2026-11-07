@@ -9,8 +9,6 @@ from version import APP_NAME
 
 ALL_TRACKS = "(all tracks)"
 
-_dialog_open = False
-
 
 # ── Data helpers ──────────────────────────────────────────────────────────────
 def read_lines(csv_file):
@@ -57,16 +55,17 @@ def remove_records(csv_file, backup_dir, lock, predicate) -> int:
 
 
 # ── Dialog ────────────────────────────────────────────────────────────────────
-def open_dialog(csv_file, backup_dir, lock):
-    """Show the Clear Data window (blocking; run it in its own thread)."""
-    global _dialog_open
-    if _dialog_open:
+def open_dialog(csv_file, backup_dir, lock, dialog_lock):
+    """Show the Clear Data window (blocking). It runs in its own process, launched from the tray.
+
+    lock serializes CSV writes with the tracker; dialog_lock (a FileLock) keeps a single window open.
+    """
+    if not dialog_lock.acquire(blocking=False):
         return
-    _dialog_open = True
     try:
         _run_dialog(csv_file, backup_dir, lock)
     finally:
-        _dialog_open = False
+        dialog_lock.release()
 
 
 def _run_dialog(csv_file, backup_dir, lock):

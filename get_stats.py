@@ -1,27 +1,17 @@
-import ctypes
-import ctypes.wintypes
 import json
 import shutil
 import sys
 import unicodedata
-import webbrowser
 from collections import OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
 
+import platform_utils as pu
 from version import APP_NAME
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
-def get_documents_folder() -> Path:
-    """Return the real Documents folder using the Windows Shell API."""
-    buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-    ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)  # 5 = CSIDL_PERSONAL
-    return Path(buf.value)
-
-
-save_dir      = get_documents_folder() / "SpoTracker"
-save_dir.mkdir(parents=True, exist_ok=True)
+save_dir      = pu.get_data_dir()
 
 csv_file      = save_dir / "music-list.csv"
 output_folder = save_dir / "reports"
@@ -33,9 +23,9 @@ data = []
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
-def msgbox(title: str, message: str, icon: int = 0x40):
-    """Show a native Windows MessageBox (no external dependencies)."""
-    ctypes.windll.user32.MessageBoxW(0, message, title, icon)
+def msgbox(title: str, message: str, kind: str = "info"):
+    """Show a native message box. kind: "info", "warning" or "error"."""
+    pu.show_message(title, message, kind)
 
 
 def sort_key(text: str) -> str:
@@ -70,7 +60,7 @@ def load_data():
             f"{APP_NAME} — Warning",
             "No recorded tracks yet.\n\n"
             "Listen to some music on Spotify and try again.",
-            0x30,  # MB_ICONWARNING
+            "warning",
         )
         return False
 
@@ -81,7 +71,7 @@ def load_data():
                 if len(parts) >= 5:
                     data.append(TrackEntry(*parts[:5]))
     except Exception as e:
-        msgbox(f"{APP_NAME} — Warning", f"Failed to read the data file:\n{e}", 0x30)
+        msgbox(f"{APP_NAME} — Warning", f"Failed to read the data file:\n{e}", "warning")
         return False
 
     if not data:
@@ -89,7 +79,7 @@ def load_data():
             f"{APP_NAME} — Warning",
             "No recorded tracks yet.\n\n"
             "Listen to some music on Spotify and try again.",
-            0x30,  # MB_ICONWARNING
+            "warning",
         )
         return False
 
@@ -105,7 +95,7 @@ def generate_tracks_report() -> Path:
         msgbox(
             f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
-            0x10,
+            "error",
         )
         raise SystemExit(1)
 
@@ -184,7 +174,7 @@ def generate_top_artists() -> Path:
         msgbox(
             f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
-            0x10,
+            "error",
         )
         raise SystemExit(1)
 
@@ -212,7 +202,7 @@ def generate_overview() -> Path:
         msgbox(
             f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
-            0x10,
+            "error",
         )
         raise SystemExit(1)
 
@@ -367,7 +357,7 @@ def generate_stats_page(overview_data: dict) -> Path:
         msgbox(
             f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
-            0x10,
+            "error",
         )
         raise SystemExit(1)
 
@@ -449,7 +439,7 @@ def generate_share_page() -> Path:
         msgbox(
             f"{APP_NAME} — Error",
             f"Template not found:\n{template_path}",
-            0x10,
+            "error",
         )
         raise SystemExit(1)
 
@@ -540,9 +530,9 @@ def generate_stats():
     msgbox(
         f"{APP_NAME} — Report generated",
         f"Report created successfully!\n\n{overview_path}\n\nOpening in browser…",
-        0x40,  # MB_ICONINFORMATION
+        "info",
     )
-    webbrowser.open(overview_path.as_uri())
+    pu.open_in_browser(overview_path)
 
 
 if __name__ == "__main__":

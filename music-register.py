@@ -1,151 +1,61 @@
-from __future__ import print_function
-import ctypes
-import ctypes.wintypes
-from datetime import datetime
-from pathlib import Path
-import time
-import os.path
-import psutil
-import sys
 import os
+import subprocess
+import sys
 import threading
+import time
 
+import platform_utils as pu
+import tracker
 from version import VERSION, APP_NAME
 
 
-def get_documents_folder() -> Path:
-    """Return the real Documents folder using the Windows Shell API."""
-    buf = ctypes.create_unicode_buffer(ctypes.wintypes.MAX_PATH)
-    ctypes.windll.shell32.SHGetFolderPathW(None, 5, None, 0, buf)  # 5 = CSIDL_PERSONAL
-    return Path(buf.value)
-
-
-save_dir = get_documents_folder() / "SpoTracker"
-save_dir.mkdir(parents=True, exist_ok=True)
+save_dir = pu.get_data_dir()
 
 musicListFile = save_dir / "music-list.csv"
 backupDir = save_dir / "backups"
-csvLock = threading.Lock()  # serializes writes between the tracker and Clear Data
+csvLock = pu.FileLock(save_dir / "music-list.lock")  # serializes writes between the tracker and Clear Data (another process)
+instanceLock = pu.FileLock(save_dir / "spotracker.lock")
 timeSleep = 1
 
-def getProcessTitles(): 
-    EnumWindows = ctypes.windll.user32.EnumWindows
-    EnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int))
-    GetWindowText = ctypes.windll.user32.GetWindowTextW
-    GetWindowTextLength = ctypes.windll.user32.GetWindowTextLengthW
-    IsWindowVisible = ctypes.windll.user32.IsWindowVisible
-    GetWindowThreadProcessId = ctypes.windll.user32.GetWindowThreadProcessId
-
-    results = []
-    
-    def foreach_window(hwnd, lParam):
-        if IsWindowVisible(hwnd):
-            length = GetWindowTextLength(hwnd)
-            buff = ctypes.create_unicode_buffer(length + 1)
-            GetWindowText(hwnd, buff, length + 1)
-            title = buff.value
-            
-            pid = ctypes.c_ulong()
-            GetWindowThreadProcessId(hwnd, ctypes.byref(pid))
-            
-            try:
-                process = psutil.Process(pid.value)
-                exe = process.exe()
-                results.append((title, exe))
-            except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
-                results.append((title, None))
-                
-        return True
-
-    EnumWindows(EnumWindowsProc(foreach_window), 0)
-    return results
-
-def getSpotifyTitle():
-    exesTitles = getProcessTitles()
-    for title, exe in exesTitles:
-        if exe and isinstance(exe, str) and (exe.split("\\")[-1] == "Spotify.exe"):
-            if (title != "None"):
-                return title
-    return None
-
-def getLastRecord(f):
-    """Return (offset, line) of the last line in the binary file f, or (0, b"") if empty."""
-    f.seek(0, os.SEEK_END)
-    pos = f.tell()
-    chunk = b""
-    while pos > 0:
-        size = min(4096, pos)
-        pos -= size
-        f.seek(pos)
-        chunk = f.read(size) + chunk
-        idx = chunk.rstrip(b"\r\n").rfind(b"\n")
-        if idx != -1:
-            return pos + idx + 1, chunk[idx + 1:]
-    return 0, chunk
 
 def saveMusic(artist, music, secondsListen, date, hour):
+    tracker.save_music(musicListFile, csvLock, artist, music, secondsListen, date, hour)
+
+
+# ── Actions launched from the tray ───────────────────────────────────────────
+def launch_self(flag, what):
+    """Run this app again with a flag (--generate-report, --clear-data) as a separate process."""
     try:
-        music = music.replace(";", ",")
-        with csvLock, open(musicListFile, "a+b") as f:
-            # Same song as the last record (e.g. Spotify closed and reopened mid-song): aggregate instead of adding a new record
-            offset, lastLine = getLastRecord(f)
-            parts = lastLine.decode("utf-8").strip().split(";")
-            if len(parts) >= 5 and parts[0] == artist and parts[1] == music and parts[2].isdigit():
-                secondsListen += int(parts[2])
-                date, hour = parts[3], parts[4]
-                f.truncate(offset)
-            f.write(f"{artist};{music};{secondsListen};{date};{hour}{os.linesep}".encode("utf-8"))
-    except:
-        print("Error saving music in file", musicListFile)
-
-def isAlreadyRunning():
-    currentPid = os.getpid()
-    processName = os.path.basename(sys.argv[0])
-
-    for proc in psutil.process_iter(['pid', 'name']):
-        if proc.info['pid'] != currentPid and proc.info['name'] == processName:
-            return True
-    return False
-
-if "--generate-report" not in sys.argv and isAlreadyRunning():
-    sys.exit(0)
+        subprocess.Popen(pu.get_launch_command(flag, script=__file__), **pu.background_popen_kwargs())
+    except Exception as e:
+        pu.show_message(APP_NAME, f"Failed to {what}:\n{e}", "error")
 
 
-# ── Report generation ────────────────────────────────────────────────────────
 def generate_report(_=None):
     """Launch the stats report generator as a subprocess."""
-    import subprocess
-    try:
-        subprocess.Popen(
-            [sys.executable, "--generate-report"],
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-    except Exception as e:
-        ctypes.windll.user32.MessageBoxW(
-            0, f"Failed to generate report:\n{e}", "SpoTracker", 0x10
-        )
+    launch_self("--generate-report", "generate report")
 
 
 def open_report(_=None):
     """Open the existing report in the browser, or generate it first if missing."""
-    import webbrowser
     report = save_dir / "reports" / "overview.html"
     if report.exists():
-        webbrowser.open(report.as_uri())
+        pu.open_in_browser(report)
     else:
         generate_report()
 
 
 def open_clear_data(_=None):
-    """Open the Clear Data window in its own thread so the tray stays responsive."""
-    import clear_data
-    threading.Thread(
-        target=clear_data.open_dialog, args=(musicListFile, backupDir, csvLock), daemon=True
-    ).start()
+    """Open the Clear Data window in its own process so the tray stays responsive."""
+    launch_self("--clear-data", "open Clear Data")
+
+
+_tracker = tracker.Tracker(saveMusic)
 
 
 def quit_app(icon):
-    """Stop the tray icon and exit."""
+    """Save the song being played, stop the tray icon and exit."""
+    _tracker.stop(time.time())
     icon.stop()
     os._exit(0)
 
@@ -190,76 +100,21 @@ def check_for_updates():
                 f"Current version: v{VERSION}\n\n"
                 f"Download at:\n{download_url}"
             )
-            ctypes.windll.user32.MessageBoxW(0, msg, f"{APP_NAME} - Update", 0x40)
+            pu.show_message(f"{APP_NAME} - Update", msg, "info")
     except (URLError, OSError, json.JSONDecodeError, KeyError):
         pass
 
 
 # ── Tracking loop (runs in background thread) ────────────────────────────────
 def tracking_loop():
-    previousArtist = ""
-    previousMusic = ""
-    previousDate = None
-    previousHour = None
-    musicStart = None
-    totalPauseTime = 0
-    pauseStart = None        # timestamp when pause began (None = not paused)
-
     while True:
-        processTitle = getSpotifyTitle()
-
-        # Spotify not running
-        if processTitle is None:
-            # Save the song that was playing before Spotify closed
-            if musicStart is not None and previousArtist and previousMusic:
-                # If paused, account for the ongoing pause duration
-                if pauseStart is not None:
-                    totalPauseTime += time.time() - pauseStart
-                secondsListened = int(time.time() - musicStart - totalPauseTime)
-                if secondsListened > 0:
-                    saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
-            musicStart = None
-            totalPauseTime = 0
-            pauseStart = None
-            previousArtist = ""
-            previousMusic = ""
-            time.sleep(timeSleep)
-            continue
-
-        # Paused / Ads
-        if " - " not in processTitle:
-            if pauseStart is None:
-                pauseStart = time.time()
-            time.sleep(timeSleep)
-            continue
-
-        # Music Playing
-        if pauseStart is not None:
-            totalPauseTime += time.time() - pauseStart
-            pauseStart = None
-
-        titleDivided = processTitle.split(" - ")
-
-        if len(titleDivided) == 2:
-            artist, music = titleDivided
-        else:
-            artist = titleDivided[0]
-            music = " - ".join(titleDivided[1:])
-
-        # Song changed
-        if not (artist == previousArtist and music == previousMusic):
-            if musicStart is not None and previousArtist and previousMusic:
-                secondsListened = int(time.time() - musicStart - totalPauseTime)
-                saveMusic(previousArtist, previousMusic, secondsListened, previousDate, previousHour)
-
-            previousArtist = artist
-            previousMusic = music
-            previousDate = datetime.today().strftime('%d-%m-%Y')
-            previousHour = datetime.today().strftime("%H:%M:%S")
-            musicStart = time.time()
-            totalPauseTime = 0
-            print("Artist: " + artist)
-            print("Music: " + music)
+        try:
+            state = pu.get_now_playing()
+        except Exception:
+            state = None
+        if _tracker.update(state, time.time()):
+            print("Artist: " + _tracker.artist)
+            print("Music: " + _tracker.music)
             print("-" * 40)
         time.sleep(timeSleep)
 
@@ -267,7 +122,7 @@ def tracking_loop():
 # ── System Tray Icon ─────────────────────────────────────────────────────────
 def create_tray_icon():
     """Create a green music-note icon for the system tray."""
-    from PIL import Image, ImageDraw, ImageFont
+    from PIL import Image, ImageDraw
 
     # 64x64 icon with a Spotify-green gradient circle and a music note
     size = 64
@@ -305,7 +160,7 @@ def run_tray():
         pystray.MenuItem("Generate New Report", generate_report),
         pystray.MenuItem("Clear Data…", open_clear_data),
         pystray.Menu.SEPARATOR,
-        pystray.MenuItem("Update", lambda _: __import__('webbrowser').open("https://www.spotracker.eu/"), visible=lambda _: _update_available),
+        pystray.MenuItem("Update", lambda _: pu.open_in_browser_url("https://www.spotracker.eu/"), visible=lambda _: _update_available),
         pystray.MenuItem("Exit", quit_app),
     )
 
@@ -325,10 +180,29 @@ def run_tray():
     icon.run()
 
 
-# ── Entry point ──────────────────────────────────────────────────────────────
-if "--generate-report" in sys.argv:
-    # Called from Start Menu shortcut — just generate the report and exit
+def self_test():
+    """Import everything the frozen build needs on this OS and query Spotify once (used by smoke_test.py)."""
+    import pystray  # loads the platform tray backend
+    import tkinter
     import get_stats
-    get_stats.generate_stats()
-else:
-    run_tray()
+    import clear_data
+    print("tray backend:", pystray.Icon.__module__)
+    print("now playing:", pu.get_now_playing())
+    return 0
+
+
+# ── Entry point ──────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    if "--self-test" in sys.argv:
+        sys.exit(self_test())
+    elif "--generate-report" in sys.argv:
+        # Called from the tray or a Start Menu shortcut — just generate the report and exit
+        import get_stats
+        get_stats.generate_stats()
+    elif "--clear-data" in sys.argv:
+        import clear_data
+        clear_data.open_dialog(musicListFile, backupDir, csvLock, pu.FileLock(save_dir / "clear-data.lock"))
+    else:
+        if not instanceLock.acquire(blocking=False):
+            sys.exit(0)  # another tracker is already running
+        run_tray()
