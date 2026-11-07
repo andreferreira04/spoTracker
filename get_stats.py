@@ -2,11 +2,12 @@ import json
 import shutil
 import sys
 import unicodedata
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
 import os
 
+import feats
 import platform_utils as pu
 from version import APP_NAME
 
@@ -52,6 +53,14 @@ class TrackEntry:
         self.seconds_listened = int(seconds_listened)
         self.date             = date
         self.time             = time
+        self.feats            = ()
+
+
+def merge_songs(entries):
+    """Rewrite entries to their merged artist/title and attach featured artists (see feats.py)."""
+    songs = feats.canonicalize(Counter((e.artist, e.track) for e in entries))
+    for e in entries:
+        e.artist, e.track, e.feats = songs[(e.artist, e.track)]
 
 
 def load_data():
@@ -83,6 +92,7 @@ def load_data():
         )
         return False
 
+    merge_songs(data)
     return True
 
 
@@ -180,12 +190,15 @@ def generate_top_artists() -> Path:
 
     entries_list = []
     for entry in data:
-        entries_list.append({
+        item = {
             "artist":  entry.artist,
             "track":   entry.track,
             "seconds": entry.seconds_listened,
             "date":    entry.date,
-        })
+        }
+        if entry.feats:  # omitted when empty to keep the page small
+            item["feats"] = list(entry.feats)
+        entries_list.append(item)
 
     html = template.replace("{{ entries_json }}", json.dumps(entries_list, ensure_ascii=False))
 

@@ -105,6 +105,7 @@ The release will appear at `https://github.com/<user>/<repo>/releases`.
 | `platform_utils.py` | Everything OS-specific: reading Spotify, Documents folder, dialogs, file locks |
 | `tracker.py` | Listening logic (pauses, ads, song changes) and CSV writing |
 | `get_stats.py` | Report generator (bundled into the app, also runnable standalone) |
+| `feats.py` | Featured-artist detection and merging of song variants for the reports |
 | `clear_data.py` | Clear Data window |
 | `music-register.spec` | PyInstaller config |
 | `smoke_test.py` | Checks a built app |

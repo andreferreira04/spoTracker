@@ -114,7 +114,7 @@
 		@media (max-width: 700px) {
 			.filter-bar { flex-direction: column; align-items: stretch }
 			.header { flex-direction: column; align-items: flex-start }
-			.data-table td:nth-child(5), .data-table th:nth-child(5) { display: none }
+			.data-table td:nth-child(6), .data-table th:nth-child(6) { display: none }
 		}
 	</style>
 </head>
@@ -142,7 +142,7 @@
 	<main>
 		<section class="intro">
 			<h2 class="intro-title">Top Artists</h2>
-			<p class="intro-text">Discover your most listened artists over any period.</p>
+			<p class="intro-text">Discover your most listened artists over any period. <strong>Feats</strong> counts plays where the artist is featured on someone else's track.</p>
 		</section>
 
 		<!-- Date Range Filter -->
@@ -213,8 +213,9 @@
 							<th onclick="sortBy(0)" id="th-0" style="width:50px"># <em class="sort-icon">↕</em></th>
 							<th onclick="sortBy(1)" id="th-1">Artist <em class="sort-icon">↕</em></th>
 							<th onclick="sortBy(2)" id="th-2" class="num">Plays <em class="sort-icon">↕</em></th>
-							<th onclick="sortBy(3)" id="th-3" class="num">Tracks <em class="sort-icon">↕</em></th>
-							<th onclick="sortBy(4)" id="th-4" class="num">Time <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(3)" id="th-3" class="num">Feats <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(4)" id="th-4" class="num">Tracks <em class="sort-icon">↕</em></th>
+							<th onclick="sortBy(5)" id="th-5" class="num">Time <em class="sort-icon">↕</em></th>
 							<th style="min-width:120px"></th>
 						</tr>
 					</thead>
@@ -310,9 +311,13 @@ function computeArtists() {
 		if (d < startTime || d >= endTime) return;
 
 		if (!map[e.artist]) {
-			map[e.artist] = { artist: e.artist, plays: 0, tracks: new Set(), seconds: 0 };
+			map[e.artist] = { artist: e.artist, plays: 0, featPlays: 0, tracks: new Set(), seconds: 0 };
 		}
 		map[e.artist].plays++;
+		(e.feats || []).forEach(f => {
+			if (!map[f]) map[f] = { artist: f, plays: 0, featPlays: 0, tracks: new Set(), seconds: 0 };
+			map[f].featPlays++;
+		});
 		map[e.artist].tracks.add(e.track);
 		map[e.artist].seconds += e.seconds;
 		totalPlays++;
@@ -323,13 +328,15 @@ function computeArtists() {
 	artistsData = Object.values(map).map(a => ({
 		artist:  a.artist,
 		plays:   a.plays,
+		featPlays: a.featPlays,
 		tracks:  a.tracks.size,
 		seconds: a.seconds
 	}));
 
-	artistsData.sort((a, b) => b.plays - a.plays);
+	artistsData.sort((a, b) => b.plays - a.plays || b.featPlays - a.featPlays);
 
-	document.getElementById("stat-artists").textContent = Object.keys(map).length.toLocaleString();
+	// Artists only seen as guests are listed, but not counted as artists listened to
+	document.getElementById("stat-artists").textContent = artistsData.filter(a => a.plays > 0).length.toLocaleString();
 	document.getElementById("stat-plays").textContent   = totalPlays.toLocaleString();
 	document.getElementById("stat-tracks").textContent  = trackSet.size.toLocaleString();
 	document.getElementById("stat-hours").textContent   = Math.round(totalSeconds / 3600).toLocaleString();
@@ -351,7 +358,7 @@ function applySearch() {
 }
 
 // ── Sorting ───────────────────────────────────────────────────────────────────
-const SORT_KEYS = ["_rank", "artist", "plays", "tracks", "seconds"];
+const SORT_KEYS = ["_rank", "artist", "plays", "featPlays", "tracks", "seconds"];
 function applySort() {
 	if (lastSortCol < 0) return;
 	const key = SORT_KEYS[lastSortCol];
@@ -396,6 +403,7 @@ function renderPage() {
 			`<td><span class="rank">${globalIdx}</span></td>` +
 			`<td class="cell-strong" translate="no">${a.artist}</td>` +
 			`<td class="num">${a.plays.toLocaleString()}</td>` +
+			`<td class="num muted-cell">${a.featPlays ? a.featPlays.toLocaleString() : "–"}</td>` +
 			`<td class="num">${a.tracks}</td>` +
 			`<td class="num muted-cell">${formatTime(a.seconds)}</td>` +
 			`<td class="bar-cell"><div class="bar-bg" style="width:${barW}%"></div></td>`;
