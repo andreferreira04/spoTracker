@@ -1,45 +1,77 @@
-name: Build & Release EXE
+name: Test, Build & Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
+    tags: ['v*']
+  pull_request:
 
 permissions:
   contents: write
 
+env:
+  PYTHON_VERSION: '3.12.4'
+
 jobs:
-  build:
+  test:
     runs-on: windows-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.12.4'
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest -v -rs
+
+  build:
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Patch version in installer script and Python source
+      - name: Patch version
+        shell: bash
         run: |
-          $version = "${{ github.ref_name }}" -replace '^v', ''
-          (Get-Content SpoTracker.iss) -replace '#define AppVersion "0\.0\.0"', "#define AppVersion `"$version`"" | Set-Content SpoTracker.iss
-          (Get-Content version.py) -replace 'VERSION = "0\.0\.0"', "VERSION = `"$version`"" | Set-Content version.py
+          python - "${GITHUB_REF_NAME#v}" <<'EOF'
+          import re, sys
+          version = sys.argv[1]
+          for path, pattern, repl in [
+              ("version.py", r'VERSION = "0\.0\.0"', f'VERSION = "{version}"'),
+              ("SpoTracker.iss", r'#define AppVersion "0\.0\.0"', f'#define AppVersion "{version}"'),
+          ]:
+              text = open(path, encoding="utf-8").read()
+              new = re.sub(pattern, repl, text)
+              assert new != text, f"version placeholder not found in {path}"
+              open(path, "w", encoding="utf-8").write(new)
+          EOF
 
       - name: Build SpoTracker
         run: pyinstaller music-register.spec --noconfirm
 
-      - name: Install Inno Setup
-        run: choco install innosetup --yes
+      - name: Smoke test
+        run: python smoke_test.py
 
-      - name: Build Installer
-        run: iscc SpoTracker.iss
+      - name: Build installer
+        run: |
+          choco install innosetup --yes
+          iscc SpoTracker.iss
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
