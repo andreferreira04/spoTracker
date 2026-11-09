@@ -70,12 +70,18 @@ jobs:
           choco install innosetup --yes
           iscc SpoTracker.iss
 
+      # Stable-name copy so the landing page's releases/latest/download link keeps working
+      - name: Copy installer to stable name
+        shell: bash
+        run: cp "output/SpoTrackerInstaller-${GITHUB_REF_NAME#v}.exe" output/SpoTrackerInstaller.exe
+
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           name: "SpoTracker ${{ github.ref_name }}"
           files: |
+            output/SpoTrackerInstaller-*.exe
             output/SpoTrackerInstaller.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
