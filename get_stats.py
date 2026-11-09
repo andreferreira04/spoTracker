@@ -9,6 +9,7 @@ import os
 
 import feats
 import platform_utils as pu
+import spotify_api
 from version import APP_NAME
 
 # ── Paths ─────────────────────────────────────────────────────────────────────
@@ -355,7 +356,11 @@ def generate_overview() -> Path:
         "heatmap":         heatmap,
     }
 
-    html = template.replace("{{ overview_json }}", json.dumps(overview, ensure_ascii=False))
+    html = (
+        template
+        .replace("{{ overview_json }}", json.dumps(overview, ensure_ascii=False))
+        .replace("{{ api_port }}", str(spotify_api.PORT))
+    )
 
     out = output_folder / "overview.html"
     out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")

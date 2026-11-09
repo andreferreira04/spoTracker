@@ -172,6 +172,11 @@ def run_tray():
     tracker_thread = threading.Thread(target=tracking_loop, daemon=True)
     tracker_thread.start()
 
+    # Local API the reports use for the Spotify login and artist pages
+    import spotify_api
+    if not spotify_api.start_server():
+        print(f"Spotify API port {spotify_api.PORT} is busy; Spotify features in the reports are off.")
+
     # Check for updates in a background thread (non-blocking)
     update_thread = threading.Thread(target=check_for_updates, daemon=True)
     update_thread.start()

@@ -13,7 +13,7 @@ a = Analysis(
         ('templates/share.html', 'templates'),
         ('templates/logo.png', 'templates'),
     ],
-    hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats', 'clear_data', 'version', 'platform_utils', 'tracker', 'feats'],
+    hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats', 'clear_data', 'version', 'platform_utils', 'tracker', 'feats', 'spotify_api', 'websocket'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

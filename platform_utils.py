@@ -131,6 +131,38 @@ def open_in_browser_url(url):
     webbrowser.open(url)
 
 
+def find_chromium_browser():
+    """Path to an installed Chrome / Edge / Brave / Chromium, or None.
+
+    The Spotify login drives one of these through the DevTools protocol, which
+    Firefox and Safari don't speak.
+    """
+    import shutil
+
+    if IS_WINDOWS:
+        roots = [os.environ.get(v) for v in ("PROGRAMFILES", "PROGRAMFILES(X86)", "LOCALAPPDATA")]
+        relatives = [
+            r"Google\Chrome\Application\chrome.exe",
+            r"Microsoft\Edge\Application\msedge.exe",
+            r"BraveSoftware\Brave-Browser\Application\brave.exe",
+            r"Chromium\Application\chrome.exe",
+        ]
+        candidates = [Path(root) / rel for rel in relatives for root in roots if root]
+    elif sys.platform == "darwin":
+        candidates = [Path(p) for p in (
+            "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+            "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+            "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+            "/Applications/Chromium.app/Contents/MacOS/Chromium",
+        )]
+    else:
+        names = ("google-chrome", "google-chrome-stable", "chromium", "chromium-browser",
+                 "microsoft-edge", "microsoft-edge-stable", "brave-browser")
+        candidates = [Path(found) for found in map(shutil.which, names) if found]
+
+    return next((str(p) for p in candidates if p.is_file()), None)
+
+
 # ── Message boxes ─────────────────────────────────────────────────────────────
 _WIN_ICONS = {"info": 0x40, "warning": 0x30, "error": 0x10}
 
