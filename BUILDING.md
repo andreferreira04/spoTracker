@@ -76,8 +76,7 @@ Local builds keep version `0.0.0` (in `version.py` and `SpoTracker.iss`), so the
 
 ## CI (`.github/workflows/main.yml`)
 
-- **Every push to `main` and every pull request:** runs the tests.
-- **Version tags (`v*`):** also builds and smoke-tests the app, builds the installer and publishes a GitHub Release with `SpoTrackerInstaller.exe`.
+Runs only when a version tag (`v*`) is pushed: runs the tests, then builds and smoke-tests the app, builds the installer and publishes a GitHub Release with `SpoTrackerInstaller.exe`.
 
 ## Release
 
@@ -106,11 +105,12 @@ The release will appear at `https://github.com/<user>/<repo>/releases`.
 | `tracker.py` | Listening logic (pauses, ads, song changes) and CSV writing |
 | `get_stats.py` | Report generator (bundled into the app, also runnable standalone) |
 | `feats.py` | Featured-artist detection and merging of song variants for the reports |
-| `spotify_api.py` | Spotify login (token captured from a Chrome/Edge window) and the localhost API the reports use for the profile and artist pages; started by the tray |
+| `spotify_api.py` | Spotify login (token captured from a Chrome/Edge window) and the localhost API the reports use for the profile, artist pages and playlists; started by the tray |
 | `clear_data.py` | Clear Data window |
 | `music-register.spec` | PyInstaller config |
 | `smoke_test.py` | Checks a built app |
 | `tests/` | pytest suite |
 | `templates/*.html`, `templates/logo.png` | Report templates |
+| `templates/spotify.js`, `templates/spotify.css` | Spotify login, account menu and artist modal shared by the report pages (copied next to the reports) |
 | `SpoTracker.iss` | Windows installer (Inno Setup) |
 | `generate-stats.vbs` | Wrapper to run `get_stats.py` without a console |

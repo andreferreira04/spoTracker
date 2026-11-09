@@ -24,6 +24,7 @@ POST /api/auth/confirm    the user confirmed the profile is theirs
 POST /api/auth/logout     forget the token and the browser session
 GET  /api/profile         the user's Spotify profile (get-spotify-profile.md)
 GET  /api/artist?name=X   an artist's Spotify page (get-artist-profile.md)
+GET  /api/playlists       the user's playlists and their tracks (?refresh=1 skips the cache)
 
 The reports are opened from file://, so browsers send ``Origin: null``. Any
 other origin is refused, so websites can't use the user's token.
@@ -51,6 +52,9 @@ PORT = 47815
 TOKEN_URL_MARK = "open.spotify.com/api/token"
 PATHFINDER_URL = "https://api-partner.spotify.com/pathfinder/v2/query"
 
+LIKED_SONGS_PAGE = "https://open.spotify.com/collection/tracks"
+PLAYLIST_PAGE = 100
+
 # Persisted queries: the web player sends the SHA-256 of a GraphQL query instead
 # of the query itself. The hashes are public and the same for everyone, but they
 # change when Spotify edits a query (an outdated one answers HTTP 412). Then the
@@ -67,6 +71,17 @@ DEFAULT_QUERIES = {
         "includePreReleases": False, "includeAlbumPreReleases": False, "includeAuthors": False,
         "includeEpisodeContentRatingsV2": False, "isPrefix": None, "sectionFilters": ["GENERIC"],
     }),
+    # The user's library ("Your Library" sidebar), filtered to playlists
+    "libraryV3": ("390c78e5b951029bad359785e69b07b536a509c581cbcd0aded5e5067f187455", {
+        "order": None, "textFilter": "", "features": ["LIKED_SONGS"], "limit": 50, "offset": 0,
+        "flatten": True, "expandedFolders": [], "folderUri": None, "includeFoldersWhenFlattening": False,
+        "filters": ["Playlists"],
+    }),
+    # A playlist page (get-playlist-content.md), also used for Liked Songs (get-liked-songs.md)
+    "fetchPlaylist": ("21ea11a6ac75a5f3e01fd365d29c18e0a4a8b7dc09f89bbb5d73910190c6acaf", {
+        "uri": "", "offset": 0, "limit": 100, "enableWatchFeedEntrypoint": False,
+        "includeEpisodeContentRatingsV2": False,
+    }),
 }
 DISCOVERY_ARTIST_ID = "4gzpq5DPGxSnKTe4SA8HAU"  # Coldplay: any artist page works
 USER_AGENT = (
@@ -79,6 +94,7 @@ _token_file = _data_dir / "spotify_token.json"
 _browser_profile = _data_dir / "spotify-browser"
 _artist_uri_file = _data_dir / "spotify_artists.json"
 _queries_file = _data_dir / "spotify_queries.json"
+_playlists_file = _data_dir / "spotify_playlists.json"
 
 
 class NotAuthenticated(Exception):
@@ -356,28 +372,29 @@ def _parse_pathfinder_request(request):
     return operation, {"hash": sha, "variables": body.get("variables") or {}}
 
 
-def _discover_queries(timeout=45):
-    """Browse an artist page and a search in a headless browser and save the queries the web player sends.
+def _discover_queries(timeout=60):
+    """Browse a few web-player pages in a headless browser and save the queries it sends.
 
-    Works logged out too, except for profileAttributes (only sent when logged in),
-    which then keeps its previous hash. Returns the operations found.
+    Also saves the playlist uri the web player uses for Liked Songs (it differs
+    from the library's spotify:collection:tracks). Logged out, only the artist
+    and search queries show up; the others keep their previous values.
+    Returns the operations found.
     """
-    # The pages to visit, each moving on once its query was seen (or after 12 s).
-    # The web player sends profileAttributes on every page when logged in, so by
-    # the last step it has usually been seen already.
+    # The pages to visit, each moving on once its query was seen (or after 10 s).
+    # profileAttributes and libraryV3 are sent on every page when logged in.
     steps = [
         (f"https://open.spotify.com/artist/{DISCOVERY_ARTIST_ID}", "queryArtistOverview"),
         ("https://open.spotify.com/search/coldplay", "searchDesktop"),
-        ("https://open.spotify.com/", "profileAttributes"),
+        (LIKED_SONGS_PAGE, "fetchPlaylist"),
     ]
-    found = {}
+    found, liked_uri = {}, None
     browser = _Browser(headless=True)
     try:
         step, step_started = -1, 0.0
         for msg in browser.messages(time.time() + timeout):
-            if found.keys() >= DEFAULT_QUERIES.keys():
+            if found.keys() >= DEFAULT_QUERIES.keys() and liked_uri:
                 break
-            if browser.page and (step < 0 or steps[step][1] in found or time.time() - step_started > 12):
+            if browser.page and (step < 0 or steps[step][1] in found or time.time() - step_started > 10):
                 step += 1
                 if step == len(steps):
                     break
@@ -387,6 +404,8 @@ def _discover_queries(timeout=45):
                 parsed = _parse_pathfinder_request(msg["params"].get("request", {}))
                 if parsed:
                     found[parsed[0]] = parsed[1]
+                    if parsed[0] == "fetchPlaylist" and steps[step][0] == LIKED_SONGS_PAGE:
+                        liked_uri = parsed[1]["variables"].get("uri")
     finally:
         browser.close()
 
@@ -394,8 +413,15 @@ def _discover_queries(timeout=45):
         with _store_lock:
             saved = _read_json(_queries_file, {})
             saved.update(found)
+            if liked_uri:
+                saved["likedSongs"] = {"uri": liked_uri}
             _queries_file.write_text(json.dumps(saved, indent=2), encoding="utf-8")
     return set(found)
+
+
+def _liked_songs_uri():
+    with _store_lock:
+        return (_read_json(_queries_file, {}).get("likedSongs") or {}).get("uri")
 
 
 def _rediscover_queries():
@@ -669,6 +695,141 @@ def fetch_artist(name):
     return _artist_cache[key]
 
 
+# ── Playlists ────────
+_playlists_lock = threading.Lock()  # one fetch at a time; a second request waits and reuses the cache
+
+def track_keys(name, artists):
+    """Keys that match this track to the listening history.
+
+    The CSV stores the main artist and the title as Spotify shows them; the
+    reports merge "(feat. …)" variants with feats.py, so the same normalisation
+    is used here. One key per artist, in case the CSV has another one as main.
+    """
+    import feats
+    return [feats.song_key(a, name or "") for a in artists if a]
+
+
+def _summarize_track(item):
+    data = (item.get("itemV2") or {}).get("data") or {}
+    if data.get("__typename") != "Track":
+        return None  # episodes, unavailable or local files
+    artists = [(a.get("profile") or {}).get("name") for a in (data.get("artists") or {}).get("items") or []]
+    album = data.get("albumOfTrack") or {}
+    return {
+        "uri": data.get("uri"),
+        "name": data.get("name"),
+        "artists": [a for a in artists if a],
+        "album": album.get("name"),
+        "cover": _smallest_over((album.get("coverArt") or {}).get("sources")),
+        "durationMs": (data.get("trackDuration") or {}).get("totalMilliseconds"),
+        "addedAt": (item.get("addedAt") or {}).get("isoString"),
+        "playcount": int(data["playcount"]) if str(data.get("playcount", "")).isdigit() else None,
+        "keys": track_keys(data.get("name"), artists),
+    }
+
+
+def _fetch_playlist_tracks(token, uri):
+    """(playlistV2 without its items, [tracks]) reading every page."""
+    tracks, offset, meta = [], 0, None
+    while True:
+        data = _pathfinder(token, "fetchPlaylist", {"uri": uri, "offset": offset, "limit": PLAYLIST_PAGE})
+        playlist = data.get("playlistV2") or {}
+        if playlist.get("__typename") != "Playlist":
+            return None, []
+        content = playlist.get("content") or {}
+        meta = meta or playlist
+        items = content.get("items") or []
+        tracks.extend(t for t in map(_summarize_track, items) if t)
+        offset += PLAYLIST_PAGE
+        if not items or offset >= (content.get("totalCount") or 0):
+            return meta, tracks
+
+
+def _library_playlists(token):
+    """Playlist entries of the user's library (folders flattened), Liked Songs included."""
+    entries, offset = [], 0
+    while True:
+        data = _pathfinder(token, "libraryV3", {"offset": offset, "limit": 50})
+        library = ((data.get("me") or {}).get("libraryV3")) or {}
+        items = library.get("items") or []
+        for it in items:
+            d = (it.get("item") or {}).get("data") or {}
+            if d.get("__typename") in ("Playlist", "PseudoPlaylist"):
+                entries.append(d)
+        offset += 50
+        if not items or offset >= (library.get("totalCount") or 0):
+            return entries
+
+
+def _playlist_summary(entry, meta, tracks, liked_uri, me):
+    liked = entry.get("__typename") == "PseudoPlaylist"
+    owner = ((entry.get("ownerV2") or {}).get("data")) or {}
+    images = (entry.get("images") or {}).get("items") or []
+    uri = liked_uri if liked else entry.get("uri")
+    return {
+        "uri": uri,
+        "name": entry.get("name") or (meta or {}).get("name"),
+        "description": _plain_text(entry.get("description")),
+        "image": _smallest_over((entry.get("image") or {}).get("sources") if liked
+                                else (images[0].get("sources") if images else None), 200),
+        "owner": owner.get("name") if not liked else (me or {}).get("name"),
+        "own": liked or bool(me and owner.get("username") == me.get("username")),
+        "liked": liked,
+        "followers": (meta or {}).get("followers"),
+        "url": LIKED_SONGS_PAGE if liked else f"https://open.spotify.com/playlist/{uri.rsplit(':', 1)[-1]}",
+        "totalTracks": len(tracks),
+        "tracks": tracks,
+    }
+
+
+def fetch_playlists(refresh=False):
+    """The user's playlists with all their tracks.
+
+    Each playlist is cached on disk by its revision, so only changed ones are
+    fetched again (Liked Songs by its count; refresh=True refetches everything).
+    """
+    from concurrent.futures import ThreadPoolExecutor
+
+    with _playlists_lock:
+        token = get_access_token()
+        me = (load_token() or {}).get("profile")
+        liked_uri = _liked_songs_uri()
+        entries = _library_playlists(token)
+        if not liked_uri and any(e.get("__typename") == "PseudoPlaylist" for e in entries):
+            _rediscover_queries()  # learns the Liked Songs playlist uri from the web player
+            liked_uri = _liked_songs_uri()
+        entries = [e for e in entries if e.get("__typename") == "Playlist" or liked_uri]
+
+        with _store_lock:
+            cache = {} if refresh else _read_json(_playlists_file, {})
+
+        def revision(e):
+            return f"count:{e.get('count')}" if e.get("__typename") == "PseudoPlaylist" else e.get("revisionId")
+
+        def load(e):
+            uri = liked_uri if e.get("__typename") == "PseudoPlaylist" else e.get("uri")
+            cached = cache.get(uri)
+            if cached and cached.get("revision") == revision(e):
+                return uri, cached
+            meta, tracks = _fetch_playlist_tracks(token, uri)
+            if meta is None:
+                return uri, None  # deleted or not visible any more
+            if e.get("__typename") == "PseudoPlaylist" and meta.get("format") != "liked-songs":
+                return uri, None  # the discovered uri isn't Liked Songs after all
+            return uri, {"revision": revision(e), "playlist": _playlist_summary(e, meta, tracks, liked_uri, me)}
+
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            results = list(pool.map(load, entries))
+
+        fresh = {uri: entry for uri, entry in results if entry}
+        with _store_lock:
+            _playlists_file.write_text(json.dumps(fresh, ensure_ascii=False), encoding="utf-8")
+        return {
+            "fetchedAt": int(time.time() * 1000),
+            "playlists": [fresh[uri]["playlist"] for uri, entry in results if entry],
+        }
+
+
 # ── HTTP server ───────────────────────────────────────────────────────────────
 class Handler(BaseHTTPRequestHandler):
     def _origin_allowed(self):
@@ -733,6 +894,8 @@ class Handler(BaseHTTPRequestHandler):
                 if not name:
                     return self._send(400, {"error": "Missing artist name."})
                 return self._send(200, fetch_artist(name))
+            if route == ("GET", "/api/playlists"):
+                return self._send(200, fetch_playlists(refresh=(query.get("refresh") or [""])[0] == "1"))
             return self._send(404, {"error": "Not found"})
         except NotAuthenticated as e:
             return self._send(401, {"error": str(e)})

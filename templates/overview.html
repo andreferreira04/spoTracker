@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Overview — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
+	<link rel="stylesheet" href="spotify.css" />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 	<style>
 		:root {
@@ -107,88 +108,7 @@
 		/* ── Footer ────────────────────────────────────── */
 		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
 
-		/* ── Spotify account (top right) ───────────────── */
-		.header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
-		.account { position: relative }
-		.spotify-login-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background-color: #1DB954; color: #fff; border: none; border-radius: 999px; font-family: "Inter", system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background-color .15s, transform .1s }
-		.spotify-login-btn:hover { background-color: #1ed760; transform: scale(1.03) }
-		.spotify-login-btn:active { transform: scale(.98) }
-		.spotify-login-btn svg { width: 18px; height: 18px; fill: currentColor }
-		.spotify-login-btn:disabled { opacity: .5; cursor: not-allowed; transform: none }
-		.spotify-login-btn[hidden], .account-btn[hidden] { display: none }
-		.account-btn { width: 40px; height: 40px; padding: 4px; border-radius: 50%; border: none; background-color: var(--ps-surface-2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .1s, background-color .15s }
-		.account-btn:hover { transform: scale(1.06); background-color: var(--ps-border) }
-		.account-btn.unconfirmed { box-shadow: 0 0 0 2px var(--ps-accent) }
-		.account-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; background-color: var(--ps-accent); color: #1a0f07; font-family: "Space Grotesk", system-ui, sans-serif; font-size: 14px; font-weight: 700 }
-		.account-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 900; width: 270px; background-color: var(--ps-surface-2); border: 1px solid var(--ps-border); border-radius: 12px; padding: 6px; box-shadow: 0 16px 40px rgba(0,0,0,.5) }
-		.account-menu[hidden] { display: none }
-		.account-head { display: flex; align-items: center; gap: 12px; padding: 10px }
-		.account-head .account-avatar { width: 44px; height: 44px; font-size: 18px; flex-shrink: 0 }
-		.account-name { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-		.account-id { font-size: 12px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-		.account-question { font-size: 13px; color: var(--ps-ink-soft); padding: 4px 10px 8px }
-		.account-actions { display: flex; gap: 8px; padding: 0 10px 10px }
-		.account-actions button { flex: 1; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: inherit }
-		.confirm-yes { background-color: var(--ps-up); color: #1a0f07 }
-		.confirm-yes:hover { background-color: #7dd386 }
-		.confirm-no { background-color: var(--ps-surface); color: var(--ps-ink-soft) }
-		.confirm-no:hover { color: var(--ps-ink) }
-		.account-divider { height: 1px; background-color: var(--ps-border); margin: 2px 4px }
-		.account-item { display: block; width: 100%; text-align: left; padding: 10px; border: none; border-radius: 8px; background: none; color: var(--ps-ink); font-family: inherit; font-size: 14px; cursor: pointer }
-		.account-item:hover { background-color: var(--ps-surface) }
-		.spotify-status { margin: -12px 0 24px; font-size: 14px; color: var(--ps-ink-soft) }
-		.spotify-status:empty { display: none }
-		.spotify-status.error { color: var(--ps-down) }
-		.spotify-status.warning { color: var(--ps-accent) }
-		.spotify-status.success { color: var(--ps-up) }
-
-		/* ── Artist Link ───────────────────────────────── */
-		.artist-link { cursor: pointer; text-decoration: none; color: inherit; transition: color .15s }
-		.artist-link:hover { color: var(--ps-accent); text-decoration: underline }
-
-		/* ── Artist Modal / Detail ─────────────────────── */
-		.artist-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s }
-		.artist-modal-overlay.visible { opacity: 1; visibility: visible }
-		.artist-modal { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 0; max-width: 600px; width: 90vw; max-height: 85vh; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.5); display: flex; flex-direction: column }
-		.artist-modal-header { position: relative; height: 180px; background-color: var(--ps-surface-2); background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 20px 24px }
-		.artist-modal-header::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 30%, rgba(0,0,0,.7)) }
-		.artist-modal-header-info { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px }
-		.artist-modal-avatar { width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--ps-surface); background-color: var(--ps-surface-2); object-fit: cover }
-		.artist-modal-name { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 24px; font-weight: 700; color: #fff }
-		.artist-modal-verified { font-size: 12px; color: var(--ps-up); font-weight: 500 }
-		.artist-modal-close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,.5); border: none; color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color .15s }
-		.artist-modal-close:hover { background: rgba(0,0,0,.8) }
-		.artist-modal-body { padding: 24px; overflow-y: auto; flex: 1 }
-		.artist-modal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px }
-		.artist-modal-stat { text-align: center; padding: 12px; background-color: var(--ps-surface-2); border-radius: 12px }
-		.artist-modal-stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 20px; font-weight: 700 }
-		.artist-modal-stat-label { font-size: 12px; color: var(--ps-ink-soft); margin-top: 2px }
-		.artist-modal-section { margin-bottom: 18px }
-		.artist-modal-section-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 10px; color: var(--ps-ink) }
-		.artist-modal-top-track { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px }
-		.artist-modal-top-track:hover { background-color: var(--ps-surface-2) }
-		.artist-modal-top-track-cover { width: 40px; height: 40px; border-radius: 6px; background-color: var(--ps-surface-2); object-fit: cover }
-		.artist-modal-top-track-info { flex: 1 }
-		.artist-modal-top-track-name { font-size: 14px; font-weight: 500 }
-		.artist-modal-top-track-plays { font-size: 12px; color: var(--ps-ink-soft) }
-		.artist-modal-bio { font-size: 14px; color: var(--ps-ink-soft); line-height: 1.6 }
-		.artist-modal-cities { list-style: none; display: flex; flex-direction: column; gap: 6px }
-		.artist-modal-city { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0 }
-		.artist-modal-city-name { font-weight: 500 }
-		.artist-modal-city-count { color: var(--ps-ink-soft) }
-		.artist-modal-note { font-size: 13px; color: var(--ps-accent); margin-bottom: 16px }
-		.artist-modal-error { color: var(--ps-down) }
-		.artist-modal-mine { font-size: 14px; color: var(--ps-ink-soft); margin-bottom: 18px }
-		.artist-modal-mine strong { color: var(--ps-ink) }
-		.artist-modal-chips { display: flex; flex-wrap: wrap; gap: 8px }
-		.artist-modal-chip { padding: 5px 12px; border-radius: 999px; background-color: var(--ps-surface-2); font-size: 13px; cursor: pointer; border: none; color: var(--ps-ink); font-family: inherit }
-		.artist-modal-chip:hover { color: var(--ps-accent) }
-		.artist-modal-open { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 600; color: #1DB954; text-decoration: none }
-		.artist-modal-open:hover { text-decoration: underline }
 		.artist-photo.has-image { background-size: cover; background-position: center; color: transparent }
-		.artist-modal-loading { text-align: center; padding: 40px; color: var(--ps-ink-soft) }
-		.artist-modal-loading .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--ps-border); border-top-color: var(--ps-accent); border-radius: 50%; animation: spin .6s linear infinite; margin-bottom: 10px }
-		@keyframes spin { to { transform: rotate(360deg) } }
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr) } }
@@ -213,19 +133,13 @@
 			<a class="nav-link active" href="overview.html">Overview</a>
 			<a class="nav-link" href="tracks-by-artist.html">Tracks</a>
 			<a class="nav-link" href="top-artists.html">Top Artists</a>
+			<a class="nav-link" href="playlists.html">Playlists</a>
 			<a class="nav-link" href="stats.html">Stats</a>
 			<a class="nav-link" href="share.html">Share</a>
 		</nav>
 
 		<!-- Spotify account -->
-		<div class="account" id="account">
-			<button class="spotify-login-btn" id="btn-spotify-login" onclick="spotifyLogin()">
-				<svg aria-hidden="true" viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
-				Log in
-			</button>
-			<button class="account-btn" id="account-btn" hidden aria-haspopup="menu" aria-expanded="false" aria-controls="account-menu" onclick="toggleAccountMenu()"></button>
-			<div class="account-menu" id="account-menu" role="menu" hidden></div>
-		</div>
+		<div class="account" id="account"></div>
 		</div>
 	</header>
 
@@ -339,29 +253,11 @@
 
 </div>
 
-<!-- Artist Detail Modal -->
-<div class="artist-modal-overlay" id="artist-modal-overlay" onclick="if(event.target===this)closeArtistModal()">
-	<div class="artist-modal">
-		<div class="artist-modal-header" id="artist-modal-header">
-			<button class="artist-modal-close" onclick="closeArtistModal()" aria-label="Close">✕</button>
-			<div class="artist-modal-header-info" id="artist-modal-header-info"></div>
-		</div>
-		<div class="artist-modal-body" id="artist-modal-body">
-			<div class="artist-modal-loading" id="artist-modal-loading">
-				<div class="spinner"></div>
-				<p>Loading artist info…</p>
-			</div>
-			<div id="artist-modal-content" style="display:none"></div>
-		</div>
-	</div>
-</div>
+<script>window.SPOTRACKER_API_PORT = {{ api_port }};</script>
+<script src="spotify.js"></script>
 <script>
 // ── Data injected by Python ───────────────────────────────────────────────────
 const OVERVIEW = {{ overview_json }};
-const API_PORT = {{ api_port }};
-const API_BASE = `http://127.0.0.1:${API_PORT}`;
-
-let spotify = { authenticated: false, confirmed: false, profile: null };
 
 function formatNumber(n) { return n.toLocaleString(); }
 function formatDuration(sec) {
@@ -370,333 +266,6 @@ function formatDuration(sec) {
 	if (h > 0) return `${h}h ${m}m`;
 	return `${m}m`;
 }
-function esc(s) {
-	return String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-}
-
-// ── Local API (served by the SpoTracker tray app) ────────────────────────────
-async function api(path, method = "GET") {
-	let resp;
-	try {
-		resp = await fetch(`${API_BASE}${path}`, { method });
-	} catch (e) {
-		const err = new Error("SpoTracker isn't running. Start it from the Start Menu to use Spotify features.");
-		err.offline = true;
-		throw err;
-	}
-	const data = await resp.json().catch(() => ({}));
-	if (!resp.ok) {
-		const err = new Error(data.error || `Request failed (${resp.status})`);
-		err.status = resp.status;
-		throw err;
-	}
-	return data;
-}
-
-// ── Spotify Auth ──────────────────────────────────────────────────────────────
-function setAuthStatus(msg, type) {
-	const el = document.getElementById("auth-status");
-	el.textContent = msg || "";
-	el.className = "spotify-status" + (type ? " " + type : "");
-}
-
-function showLoginButton(show) {
-	const btn = document.getElementById("btn-spotify-login");
-	btn.hidden = !show;
-	btn.disabled = false;
-	document.getElementById("account-btn").hidden = show;
-	if (show) closeAccountMenu();
-}
-
-async function checkAuthStatus() {
-	let status;
-	try {
-		status = await api("/api/status");
-	} catch (e) {
-		return; // tray app not running: the login button explains it when clicked
-	}
-	if (["starting", "waiting", "anonymous"].includes(status.login.status)) {
-		document.getElementById("btn-spotify-login").disabled = true;
-		pollLogin();
-		return;
-	}
-	if (!status.authenticated) return;
-	spotify.authenticated = true;
-	spotify.confirmed = status.confirmed;
-	if (status.profile) showUserProfile(status.profile);
-	else await loadUserProfile();
-}
-
-async function spotifyLogin() {
-	const ok = confirm(
-		"SpoTracker will open open.spotify.com in a browser window.\n\n" +
-		"Log in to Spotify there; the window closes by itself once you're logged in."
-	);
-	if (!ok) return;
-	document.getElementById("btn-spotify-login").disabled = true;
-	try {
-		await api("/api/auth/login", "POST");
-	} catch (e) {
-		setAuthStatus(e.message, "error");
-		document.getElementById("btn-spotify-login").disabled = false;
-		return;
-	}
-	pollLogin();
-}
-
-async function pollLogin() {
-	let state;
-	try {
-		state = await api("/api/auth/state");
-	} catch (e) {
-		setAuthStatus(e.message, "error");
-		showLoginButton(true);
-		return;
-	}
-	switch (state.status) {
-		case "success":
-			spotify.authenticated = true;
-			spotify.confirmed = false;
-			setAuthStatus("Logged in. Loading your profile…", "success");
-			await loadUserProfile();
-			return;
-		case "anonymous":
-			setAuthStatus(state.message, "warning");
-			break;
-		case "error":
-		case "cancelled":
-		case "timeout":
-			setAuthStatus(state.message, "error");
-			showLoginButton(true);
-			return;
-		default:
-			setAuthStatus(state.message || "Opening Spotify…", "");
-	}
-	setTimeout(pollLogin, 1000);
-}
-
-async function loadUserProfile() {
-	try {
-		showUserProfile(await api("/api/profile"));
-	} catch (e) {
-		if (e.status === 401) {
-			spotify.authenticated = false;
-			showLoginButton(true);
-		}
-		setAuthStatus("Couldn't load your Spotify profile: " + e.message, "error");
-	}
-}
-
-function avatarHtml(profile) {
-	return profile.avatar
-		? `<img class="account-avatar" src="${esc(profile.avatar)}" alt="" />`
-		: `<span class="account-avatar">${esc((profile.name || "?").charAt(0).toUpperCase())}</span>`;
-}
-
-function showUserProfile(profile) {
-	spotify.profile = profile;
-	const btn = document.getElementById("account-btn");
-	btn.innerHTML = avatarHtml(profile);
-	btn.title = profile.name;
-	btn.setAttribute("aria-label", `Spotify account: ${profile.name}`);
-	showLoginButton(false);
-	renderAccountMenu();
-	if (spotify.confirmed) {
-		setAuthStatus("", "");
-		loadSpotlightPhoto();
-	} else {
-		openAccountMenu(); // ask right away whether this is the right account
-	}
-}
-
-function renderAccountMenu() {
-	const p = spotify.profile;
-	document.getElementById("account-btn").classList.toggle("unconfirmed", !spotify.confirmed);
-	document.getElementById("account-menu").innerHTML =
-		`<div class="account-head">` +
-			avatarHtml(p) +
-			`<div style="min-width:0"><div class="account-name">${esc(p.name)}</div>` +
-			`<div class="account-id" title="${esc(p.username)}">ID: ${esc(p.username)}</div></div>` +
-		`</div>` +
-		(spotify.confirmed
-			? `<div class="account-divider"></div>` +
-			  `<button class="account-item" role="menuitem" onclick="spotifyLogout()">Log out</button>`
-			: `<p class="account-question">Is this your Spotify account?</p>` +
-			  `<div class="account-actions">` +
-				`<button class="confirm-yes" onclick="confirmUser(true)">Yes, it's me</button>` +
-				`<button class="confirm-no" onclick="confirmUser(false)">Not me</button>` +
-			  `</div>`);
-}
-
-function openAccountMenu() {
-	document.getElementById("account-menu").hidden = false;
-	document.getElementById("account-btn").setAttribute("aria-expanded", "true");
-}
-
-function closeAccountMenu() {
-	document.getElementById("account-menu").hidden = true;
-	document.getElementById("account-btn").setAttribute("aria-expanded", "false");
-}
-
-function toggleAccountMenu() {
-	if (document.getElementById("account-menu").hidden) openAccountMenu();
-	else closeAccountMenu();
-}
-
-// Close the account menu on a click outside it
-document.addEventListener("click", e => {
-	if (!e.target.closest("#account")) closeAccountMenu();
-});
-
-async function confirmUser(isMe) {
-	if (!isMe) {
-		await spotifyLogout();
-		setAuthStatus("Logged out. Log in again with your own Spotify account.", "warning");
-		return;
-	}
-	try {
-		await api("/api/auth/confirm", "POST");
-	} catch (e) {
-		setAuthStatus(e.message, "error");
-		return;
-	}
-	spotify.confirmed = true;
-	renderAccountMenu();
-	closeAccountMenu();
-	setAuthStatus("Connected to Spotify ✓ Click an artist's name to see their Spotify page.", "success");
-	loadSpotlightPhoto();
-}
-
-async function spotifyLogout() {
-	try { await api("/api/auth/logout", "POST"); } catch (e) { /* ignore */ }
-	spotify.authenticated = spotify.confirmed = false;
-	spotify.profile = null;
-	showLoginButton(true);
-	setAuthStatus("Logged out.", "");
-}
-
-// ── Artist Modal ──────────────────────────────────────────────────────────────
-function modalMessage(html) {
-	document.getElementById("artist-modal-loading").style.display = "none";
-	const content = document.getElementById("artist-modal-content");
-	content.innerHTML = html;
-	content.style.display = "";
-}
-
-async function openArtistModal(artistName) {
-	if (!spotify.authenticated || !spotify.confirmed) {
-		setAuthStatus(
-			spotify.authenticated ? "Confirm your Spotify account first to see artist details."
-			                      : "Log in with Spotify to see artist details.",
-			"warning");
-		window.scrollTo({ top: 0, behavior: "smooth" });
-		if (spotify.authenticated) openAccountMenu();
-		return;
-	}
-
-	document.getElementById("artist-modal-loading").style.display = "";
-	document.getElementById("artist-modal-content").style.display = "none";
-	document.getElementById("artist-modal-header-info").innerHTML =
-		`<div><div class="artist-modal-name">${esc(artistName)}</div></div>`;
-	document.getElementById("artist-modal-header").style.backgroundImage = "";
-	document.getElementById("artist-modal-overlay").classList.add("visible");
-	document.body.style.overflow = "hidden";
-
-	try {
-		const artist = await api(`/api/artist?name=${encodeURIComponent(artistName)}`);
-		renderArtistModal(artist, artistName);
-	} catch (e) {
-		if (e.status === 401) {
-			spotify.authenticated = spotify.confirmed = false;
-			showLoginButton(true);
-			setAuthStatus(e.message, "warning");
-		}
-		modalMessage(`<p class="artist-modal-error">${esc(e.message)}</p>`);
-	}
-}
-
-function myStatsFor(artistName) {
-	const key = artistName.toLowerCase();
-	return OVERVIEW.topArtists.find(a => a.artist.toLowerCase() === key);
-}
-
-function renderArtistModal(artist, reportName) {
-	if (artist.header || artist.avatar) {
-		document.getElementById("artist-modal-header").style.backgroundImage = `url("${encodeURI(artist.header || artist.avatar)}")`;
-	}
-	document.getElementById("artist-modal-header-info").innerHTML =
-		(artist.avatar ? `<img class="artist-modal-avatar" src="${esc(artist.avatar)}" alt="" />` : "") +
-		`<div>` +
-			`<div class="artist-modal-name">${esc(artist.name)}</div>` +
-			(artist.verified ? `<span class="artist-modal-verified">✓ Verified Artist</span>` : "") +
-		`</div>`;
-
-	let html = "";
-	if (artist.approximate) {
-		html += `<p class="artist-modal-note">No artist named “${esc(reportName)}” on Spotify; showing the closest match.</p>`;
-	}
-
-	const mine = myStatsFor(reportName);
-	if (mine) {
-		html += `<p class="artist-modal-mine">You: <strong>${formatNumber(mine.plays)} plays</strong> · ${formatDuration(mine.seconds)} · ${mine.tracks} tracks</p>`;
-	}
-
-	html +=
-		`<div class="artist-modal-stats">` +
-			`<div class="artist-modal-stat"><div class="artist-modal-stat-value">${formatNumber(artist.monthlyListeners || 0)}</div><div class="artist-modal-stat-label">Monthly listeners</div></div>` +
-			`<div class="artist-modal-stat"><div class="artist-modal-stat-value">${formatNumber(artist.followers || 0)}</div><div class="artist-modal-stat-label">Followers</div></div>` +
-			`<div class="artist-modal-stat"><div class="artist-modal-stat-value">${artist.worldRank ? "#" + formatNumber(artist.worldRank) : "—"}</div><div class="artist-modal-stat-label">World rank</div></div>` +
-		`</div>`;
-
-	if (artist.topTracks.length) {
-		html += `<div class="artist-modal-section"><h4 class="artist-modal-section-title">Popular tracks</h4>`;
-		artist.topTracks.forEach(t => {
-			html +=
-				`<div class="artist-modal-top-track">` +
-					(t.cover ? `<img class="artist-modal-top-track-cover" src="${esc(t.cover)}" alt="" />` : `<div class="artist-modal-top-track-cover"></div>`) +
-					`<div class="artist-modal-top-track-info"><div class="artist-modal-top-track-name" translate="no">${esc(t.name)}</div>` +
-					`<div class="artist-modal-top-track-plays">${t.playcount != null ? formatNumber(t.playcount) + " plays" : ""}</div></div>` +
-				`</div>`;
-		});
-		html += `</div>`;
-	}
-
-	if (artist.topCities.length) {
-		html += `<div class="artist-modal-section"><h4 class="artist-modal-section-title">Where people listen</h4><ul class="artist-modal-cities">`;
-		artist.topCities.forEach(c => {
-			html += `<li class="artist-modal-city"><span class="artist-modal-city-name">${esc(c.city)}, ${esc(c.country)}</span><span class="artist-modal-city-count">${formatNumber(c.listeners || 0)} listeners</span></li>`;
-		});
-		html += `</ul></div>`;
-	}
-
-	if (artist.bio) {
-		html += `<div class="artist-modal-section"><h4 class="artist-modal-section-title">About</h4><p class="artist-modal-bio">${esc(artist.bio)}</p></div>`;
-	}
-
-	if (artist.url) {
-		html += `<a class="artist-modal-open" href="${esc(artist.url)}" target="_blank" rel="noopener">Open in Spotify ↗</a>`;
-	}
-
-	modalMessage(html);
-	document.getElementById("artist-modal-body").scrollTop = 0;
-}
-
-function closeArtistModal() {
-	document.getElementById("artist-modal-overlay").classList.remove("visible");
-	document.body.style.overflow = "";
-}
-
-document.addEventListener("keydown", e => {
-	if (e.key === "Escape") { closeArtistModal(); closeAccountMenu(); }
-});
-
-// Any element with data-artist opens that artist (names in the report, chips in the modal)
-document.addEventListener("click", e => {
-	const el = e.target.closest("[data-artist]");
-	if (!el) return;
-	e.preventDefault();
-	openArtistModal(el.dataset.artist);
-});
 
 // Once connected, swap the spotlight initials for the top artist's photo
 async function loadSpotlightPhoto() {
@@ -704,7 +273,7 @@ async function loadSpotlightPhoto() {
 	const photo = document.querySelector("#spotlight-content .artist-photo");
 	if (!top || !photo || photo.classList.contains("has-image")) return;
 	try {
-		const artist = await api(`/api/artist?name=${encodeURIComponent(top.artist)}`);
+		const artist = await Spotify.api(`/api/artist?name=${encodeURIComponent(top.artist)}`);
 		if (artist.avatar && !artist.approximate) {
 			photo.style.backgroundImage = `url("${encodeURI(artist.avatar)}")`;
 			photo.classList.add("has-image");
@@ -712,9 +281,13 @@ async function loadSpotlightPhoto() {
 	} catch (e) { /* keep the initials */ }
 }
 
-function makeArtistLink(artistName) {
-	return `<a class="artist-link" href="#" data-artist="${esc(artistName)}" translate="no">${esc(artistName)}</a>`;
-}
+const makeArtistLink = Spotify.artistLink;
+
+// "You: …" line in the artist modal
+Spotify.myStatsFor = name => {
+	const key = name.toLowerCase();
+	return OVERVIEW.topArtists.find(a => a.artist.toLowerCase() === key);
+};
 
 function init() {
 	// ── Stats cards ───────────────────────────────────────────────
@@ -806,8 +379,8 @@ function init() {
 		recentTbody.appendChild(tr);
 	});
 
-	// ── Check if already authenticated ───────────────────────────
-	checkAuthStatus();
+	// ── Spotify: the spotlight gets the artist's photo once connected ─
+	Spotify.onChange(s => { if (s.confirmed) loadSpotlightPhoto(); });
 }
 
 init();

@@ -172,7 +172,7 @@ def generate_tracks_report() -> Path:
     )
 
     out = output_folder / "tracks-by-artist.html"
-    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
     return out
 
 
@@ -204,7 +204,7 @@ def generate_top_artists() -> Path:
     html = template.replace("{{ entries_json }}", json.dumps(entries_list, ensure_ascii=False))
 
     out = output_folder / "top-artists.html"
-    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
     return out
 
 # ── Report: overview dashboard ────────────────────────────────────────────────
@@ -363,7 +363,7 @@ def generate_overview() -> Path:
     )
 
     out = output_folder / "overview.html"
-    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
     return out, overview
 
 
@@ -442,7 +442,7 @@ def generate_stats_page(overview_data: dict) -> Path:
     html = template.replace("{{ stats_json }}", json.dumps(stats_data, ensure_ascii=False))
 
     out = output_folder / "stats.html"
-    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
     return out
 
 
@@ -526,7 +526,51 @@ def generate_share_page() -> Path:
     )
 
     out = output_folder / "share.html"
-    out.write_text(html.replace("{{ app_name }}", APP_NAME), encoding="utf-8")
+    out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
+    return out
+
+
+# ── Report: playlists (filled in the browser from the Spotify API) ────────────
+def generate_playlists_page() -> Path:
+    """The page lists the playlists from Spotify; this embeds the listening history per song to rank them."""
+    template_path = resource_path("templates/playlists.html")
+    try:
+        template = template_path.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        msgbox(f"{APP_NAME} — Error", f"Template not found:\n{template_path}", "error")
+        raise SystemExit(1)
+
+    songs: dict = {}   # song key -> [artist, track, seconds, plays, last played (ISO date)]
+    dates: dict = {}   # "dd-mm-yyyy" -> ISO date (dates repeat a lot)
+    total_seconds = 0
+    for entry in data:
+        if entry.date not in dates:
+            try:
+                dates[entry.date] = datetime.strptime(entry.date, "%d-%m-%Y").date().isoformat()
+            except ValueError:
+                dates[entry.date] = ""
+        day = dates[entry.date]
+        sec = entry.seconds_listened
+        total_seconds += sec
+        song = songs.setdefault(feats.song_key(entry.artist, entry.track), [entry.artist, entry.track, 0, 0, ""])
+        song[2] += sec
+        if sec > MIN_LISTEN_SECONDS:
+            song[3] += 1
+        if day > song[4]:
+            song[4] = day
+
+    history = {
+        "songs": songs,
+        "totalSeconds": total_seconds,
+        "since": min((d for d in dates.values() if d), default=""),
+    }
+    html = (
+        template
+        .replace("{{ history_json }}", json.dumps(history, ensure_ascii=False, separators=(",", ":")))
+        .replace("{{ api_port }}", str(spotify_api.PORT))
+    )
+    out = output_folder / "playlists.html"
+    out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
     return out
 
 
@@ -537,13 +581,15 @@ def generate_stats():
     if not load_data():
         return
 
-    shutil.copyfile(resource_path("templates/logo.png"), output_folder / "logo.png")
+    for name in ("logo.png", "spotify.js", "spotify.css"):
+        shutil.copyfile(resource_path(f"templates/{name}"), output_folder / name)
 
     overview_path, overview_data = generate_overview()
     generate_tracks_report()
     generate_top_artists()
     generate_stats_page(overview_data)
     generate_share_page()
+    generate_playlists_page()
 
     msgbox(
         f"{APP_NAME} — Report generated",

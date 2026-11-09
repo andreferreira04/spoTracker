@@ -1,0 +1,83 @@
+/* Spotify login, account menu and artist modal, shared by the report pages (spotify.js). */
+
+/* ── Spotify account (top right) ───────────────── */
+.header-right { display: flex; align-items: center; gap: 14px; flex-wrap: wrap }
+.account { position: relative }
+.spotify-login-btn { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; background-color: #1DB954; color: #fff; border: none; border-radius: 999px; font-family: "Inter", system-ui, sans-serif; font-size: 14px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: background-color .15s, transform .1s }
+.spotify-login-btn:hover { background-color: #1ed760; transform: scale(1.03) }
+.spotify-login-btn:active { transform: scale(.98) }
+.spotify-login-btn svg { width: 18px; height: 18px; fill: currentColor }
+.spotify-login-btn:disabled { opacity: .5; cursor: not-allowed; transform: none }
+.spotify-login-btn[hidden], .account-btn[hidden] { display: none }
+.account-btn { width: 40px; height: 40px; padding: 4px; border-radius: 50%; border: none; background-color: var(--ps-surface-2); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform .1s, background-color .15s }
+.account-btn:hover { transform: scale(1.06); background-color: var(--ps-border) }
+.account-btn.unconfirmed { box-shadow: 0 0 0 2px var(--ps-accent) }
+.account-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: flex; align-items: center; justify-content: center; background-color: var(--ps-accent); color: #1a0f07; font-family: "Space Grotesk", system-ui, sans-serif; font-size: 14px; font-weight: 700 }
+.account-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 900; width: 270px; background-color: var(--ps-surface-2); border: 1px solid var(--ps-border); border-radius: 12px; padding: 6px; box-shadow: 0 16px 40px rgba(0,0,0,.5) }
+.account-menu[hidden] { display: none }
+.account-head { display: flex; align-items: center; gap: 12px; padding: 10px }
+.account-head .account-avatar { width: 44px; height: 44px; font-size: 18px; flex-shrink: 0 }
+.account-name { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.account-id { font-size: 12px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+.account-question { font-size: 13px; color: var(--ps-ink-soft); padding: 4px 10px 8px }
+.account-actions { display: flex; gap: 8px; padding: 0 10px 10px }
+.account-actions button { flex: 1; padding: 8px 12px; border-radius: 999px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; font-family: inherit }
+.confirm-yes { background-color: var(--ps-up); color: #1a0f07 }
+.confirm-yes:hover { background-color: #7dd386 }
+.confirm-no { background-color: var(--ps-surface); color: var(--ps-ink-soft) }
+.confirm-no:hover { color: var(--ps-ink) }
+.account-divider { height: 1px; background-color: var(--ps-border); margin: 2px 4px }
+.account-item { display: block; width: 100%; text-align: left; padding: 10px; border: none; border-radius: 8px; background: none; color: var(--ps-ink); font-family: inherit; font-size: 14px; cursor: pointer }
+.account-item:hover { background-color: var(--ps-surface) }
+.spotify-status { margin: -12px 0 24px; font-size: 14px; color: var(--ps-ink-soft) }
+.spotify-status:empty { display: none }
+.spotify-status.error { color: var(--ps-down) }
+.spotify-status.warning { color: var(--ps-accent) }
+.spotify-status.success { color: var(--ps-up) }
+
+/* ── Artist Link ───────────────────────────────── */
+.artist-link { cursor: pointer; text-decoration: none; color: inherit; transition: color .15s }
+.artist-link:hover { color: var(--ps-accent); text-decoration: underline }
+
+/* ── Artist Modal / Detail ─────────────────────── */
+.artist-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.7); z-index: 1000; display: flex; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s }
+.artist-modal-overlay.visible { opacity: 1; visibility: visible }
+.artist-modal { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 0; max-width: 600px; width: 90vw; max-height: 85vh; overflow: hidden; box-shadow: 0 24px 64px rgba(0,0,0,.5); display: flex; flex-direction: column }
+.artist-modal-header { position: relative; height: 180px; background-color: var(--ps-surface-2); background-size: cover; background-position: center; display: flex; align-items: flex-end; padding: 20px 24px }
+.artist-modal-header::after { content: ""; position: absolute; inset: 0; background: linear-gradient(transparent 30%, rgba(0,0,0,.7)) }
+.artist-modal-header-info { position: relative; z-index: 1; display: flex; align-items: center; gap: 16px }
+.artist-modal-avatar { width: 72px; height: 72px; border-radius: 50%; border: 3px solid var(--ps-surface); background-color: var(--ps-surface-2); object-fit: cover }
+.artist-modal-name { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 24px; font-weight: 700; color: #fff }
+.artist-modal-verified { font-size: 12px; color: var(--ps-up); font-weight: 500 }
+.artist-modal-close { position: absolute; top: 14px; right: 14px; z-index: 2; width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,.5); border: none; color: #fff; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background-color .15s }
+.artist-modal-close:hover { background: rgba(0,0,0,.8) }
+.artist-modal-body { padding: 24px; overflow-y: auto; flex: 1 }
+.artist-modal-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px }
+.artist-modal-stat { text-align: center; padding: 12px; background-color: var(--ps-surface-2); border-radius: 12px }
+.artist-modal-stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 20px; font-weight: 700 }
+.artist-modal-stat-label { font-size: 12px; color: var(--ps-ink-soft); margin-top: 2px }
+.artist-modal-section { margin-bottom: 18px }
+.artist-modal-section-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 600; margin-bottom: 10px; color: var(--ps-ink) }
+.artist-modal-top-track { display: flex; align-items: center; gap: 12px; padding: 8px; border-radius: 8px }
+.artist-modal-top-track:hover { background-color: var(--ps-surface-2) }
+.artist-modal-top-track-cover { width: 40px; height: 40px; border-radius: 6px; background-color: var(--ps-surface-2); object-fit: cover }
+.artist-modal-top-track-info { flex: 1 }
+.artist-modal-top-track-name { font-size: 14px; font-weight: 500 }
+.artist-modal-top-track-plays { font-size: 12px; color: var(--ps-ink-soft) }
+.artist-modal-bio { font-size: 14px; color: var(--ps-ink-soft); line-height: 1.6 }
+.artist-modal-cities { list-style: none; display: flex; flex-direction: column; gap: 6px }
+.artist-modal-city { display: flex; justify-content: space-between; font-size: 13px; padding: 4px 0 }
+.artist-modal-city-name { font-weight: 500 }
+.artist-modal-city-count { color: var(--ps-ink-soft) }
+.artist-modal-note { font-size: 13px; color: var(--ps-accent); margin-bottom: 16px }
+.artist-modal-error { color: var(--ps-down) }
+.artist-modal-mine { font-size: 14px; color: var(--ps-ink-soft); margin-bottom: 18px }
+.artist-modal-mine strong { color: var(--ps-ink) }
+.artist-modal-chips { display: flex; flex-wrap: wrap; gap: 8px }
+.artist-modal-chip { padding: 5px 12px; border-radius: 999px; background-color: var(--ps-surface-2); font-size: 13px; cursor: pointer; border: none; color: var(--ps-ink); font-family: inherit }
+.artist-modal-chip:hover { color: var(--ps-accent) }
+.artist-modal-open { display: inline-block; margin-top: 4px; font-size: 13px; font-weight: 600; color: #1DB954; text-decoration: none }
+.artist-modal-open:hover { text-decoration: underline }
+.artist-modal-loading { text-align: center; padding: 40px; color: var(--ps-ink-soft) }
+.artist-modal-loading .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid var(--ps-border); border-top-color: var(--ps-accent); border-radius: 50%; animation: spin .6s linear infinite; margin-bottom: 10px }
+@keyframes spin { to { transform: rotate(360deg) } }

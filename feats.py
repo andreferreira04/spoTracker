@@ -37,6 +37,15 @@ def normalize(text: str) -> str:
     return " ".join(text.casefold().split())
 
 
+def song_key(artist: str, track: str) -> str:
+    """Key of a song across spellings and "(feat. …)" variants: the main artist and the bare title.
+
+    Matches the CSV to tracks from Spotify (playlists), whatever the case,
+    accents or featured artists in either.
+    """
+    return normalize(split_feats(artist)[0]) + "\x1f" + normalize(split_feats(track)[0])
+
+
 def split_feats(text: str) -> tuple[str, list[str]]:
     """Split "Some (feat. Gson)" into ("Some", ["Gson"]). Works on artist fields too."""
     found = []

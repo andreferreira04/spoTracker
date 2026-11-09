@@ -10,7 +10,7 @@ from conftest import ROOT, SAMPLE_CSV
 from platform_utils import FileLock
 
 MAIN = str(ROOT / "music-register.py")
-REPORTS = ["overview.html", "tracks-by-artist.html", "top-artists.html", "stats.html", "share.html", "logo.png"]
+REPORTS = ["overview.html", "tracks-by-artist.html", "top-artists.html", "stats.html", "share.html", "playlists.html", "logo.png", "spotify.js", "spotify.css"]
 
 
 def run_app(*args, timeout=120):
@@ -47,6 +47,19 @@ def test_reports_embed_the_data(get_stats, data_dir):
     stats = (reports / "stats.html").read_text(encoding="utf-8")
     assert "{{ stats_json }}" not in stats and '"totalDaysTracked"' in stats
     assert "Árvore" in (reports / "top-artists.html").read_text(encoding="utf-8")
+
+
+def test_playlists_page_embeds_history_per_song(get_stats, data_dir):
+    import json
+    import feats
+    (data_dir / "music-list.csv").write_text(SAMPLE_CSV, encoding="utf-8")
+    get_stats.generate_stats()
+    html = (data_dir / "reports" / "playlists.html").read_text(encoding="utf-8")
+    history = json.loads(html.split("const HISTORY = ", 1)[1].split(";\n", 1)[0])
+    # Song 3: a 15 s skip and a 240 s play -> 255 s, 1 play, last played on the 15th
+    assert history["songs"][feats.song_key("Artist B", "Song 3")] == ["Artist B", "Song 3", 255, 1, "2026-09-15"]
+    assert history["totalSeconds"] == 755 and history["since"] == "2026-09-01"
+    assert "window.SPOTRACKER_API_PORT = 47815" in html
 
 
 def test_generate_stats_without_data_warns(get_stats, data_dir, capsys):

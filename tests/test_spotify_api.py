@@ -1,25 +1,49 @@
 """Spotify login/API helpers that work without a browser or the network."""
 import json
-import re
 import threading
-from pathlib import Path
 from urllib.error import HTTPError
 from urllib.request import Request, urlopen
 
 import pytest
 
+import feats
 import spotify_api
 
-DOCS = Path(__file__).resolve().parent.parent / "docs" / "implement-spotify-private-api"
+# Trimmed-down pathfinder responses (same shape as the real ones)
+ARTIST_UNION = {
+    "uri": "spotify:artist:5rL8nsDdA5x4gJpZS40uvc",
+    "profile": {"name": "quintasz", "biography": {"text": "bookquintasz&#64;gmail.com"}},
+    "onPlatformReputationTrait": {"verification": {"isVerified": True}},
+    "stats": {
+        "followers": 10000,
+        "monthlyListeners": 20736,
+        "worldRank": 0,
+        "topCities": {"items": [{"city": "Lisbon", "country": "PT", "numberOfListeners": 4941}]},
+    },
+    "discography": {
+        "latest": {"name": "EGO", "type": "SINGLE", "date": {"year": 2026}},
+        "topTracks": {"items": [{"track": {"name": "A1", "playcount": "27355"}}]},
+        "albums": {"totalCount": 1},
+        "singles": {"totalCount": 5},
+    },
+    "relatedContent": {"relatedArtists": {"items": [{"profile": {"name": "Lutz"}}]}},
+}
+
+PLAYLIST_ITEM = {
+    "addedAt": {"isoString": "2026-01-13T16:13:49Z"},
+    "itemV2": {"data": {
+        "__typename": "Track",
+        "uri": "spotify:track:1",
+        "name": "Nação",
+        "playcount": "15114",
+        "artists": {"items": [{"profile": {"name": n}} for n in ("GUIMA", "Vilas Boas", "DJ Suprhyme")]},
+        "albumOfTrack": {"name": "Nação"},
+        "trackDuration": {"totalMilliseconds": 180000},
+    }},
+}
 
 
-def _doc_response(name):
-    """The RESPONSE json block of one of the API docs."""
-    text = (DOCS / name).read_text("utf-8")
-    return json.loads(re.findall(r"```json\n(.*?)```", text, re.S)[-1])
-
-
-# ── /api/token responses (get-auth-token.md) ──────────────────────────────────
+# ── /api/token responses ──────────────────────────────────────────────────────
 def test_token_logged_in():
     kind, data = spotify_api._parse_token_body(json.dumps({"accessToken": "abc", "isAnonymous": False}))
     assert kind == "token" and data["accessToken"] == "abc"
@@ -39,9 +63,9 @@ def test_token_garbage():
     assert spotify_api._parse_token_body("<html>")[0] == "error"
 
 
-# ── Artist page (get-artist-profile.md) ───────────────────────────────────────
-def test_summarize_artist_from_doc_response():
-    artist = spotify_api.summarize_artist(_doc_response("get-artist-profile.md")["data"]["artistUnion"])
+# ── Artist page ───────────────────────────────────────────────────────────────
+def test_summarize_artist():
+    artist = spotify_api.summarize_artist(ARTIST_UNION)
     assert artist["name"] == "quintasz"
     assert artist["uri"] == "spotify:artist:5rL8nsDdA5x4gJpZS40uvc"
     assert artist["verified"] is True
@@ -52,6 +76,21 @@ def test_summarize_artist_from_doc_response():
     assert artist["topTracks"][0]["name"] == "A1" and artist["topTracks"][0]["playcount"] == 27355
     assert artist["latest"]["name"] == "EGO"
     assert "Lutz" in artist["relatedArtists"]
+
+
+def test_playlist_track():
+    track = spotify_api._summarize_track(PLAYLIST_ITEM)
+    assert track["name"] == "Nação" and track["artists"] == ["GUIMA", "Vilas Boas", "DJ Suprhyme"]
+    assert track["playcount"] == 15114 and track["addedAt"] == "2026-01-13T16:13:49Z"
+    assert track["keys"][0] == feats.song_key("GUIMA", "Nação")
+
+
+def test_track_keys_match_feat_variants_in_the_csv():
+    # The CSV has the title with its "(feat. …)"; one key per Spotify artist
+    keys = spotify_api.track_keys("Some (feat. Gson)", ["Wet Bed Gang", "Gson"])
+    assert feats.song_key("Wet Bed Gang", "Some (feat. Gson)") in keys
+    assert feats.song_key("wet bed gang", "SOME") in keys
+    assert feats.song_key("Gson", "Some") in keys
 
 
 def test_plain_text_strips_links():
@@ -115,7 +154,7 @@ def test_parse_pathfinder_request():
 
 
 def test_parse_pathfinder_request_ignores_other_traffic():
-    assert spotify_api._parse_pathfinder_request(_pathfinder_request("fetchPlaylist")) is None  # not one we use
+    assert spotify_api._parse_pathfinder_request(_pathfinder_request("fetchPlaylistMetadata")) is None  # not one we use
     assert spotify_api._parse_pathfinder_request(_pathfinder_request("searchDesktop", sha="xyz")) is None
     assert spotify_api._parse_pathfinder_request({"url": "https://open.spotify.com/api/token"}) is None
 

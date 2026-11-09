@@ -50,7 +50,7 @@ def main():
     # Report generation
     (data / "music-list.csv").write_text(SAMPLE, encoding="utf-8")
     result = run("--generate-report")
-    reports = [data / "reports" / n for n in ("overview.html", "tracks-by-artist.html", "top-artists.html", "stats.html", "share.html", "logo.png")]
+    reports = [data / "reports" / n for n in ("overview.html", "tracks-by-artist.html", "top-artists.html", "stats.html", "share.html", "playlists.html", "logo.png", "spotify.js", "spotify.css")]
     missing = [p.name for p in reports if not p.exists()]
     check("--generate-report", result.returncode == 0 and not missing, f"exit {result.returncode}, missing {missing}\n{result.stderr[-2000:]}")
 

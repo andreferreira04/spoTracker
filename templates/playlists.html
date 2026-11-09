@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Playlists — {{ app_name }}</title>
+	<link rel="icon" href="logo.png" type="image/png" />
+	<link rel="stylesheet" href="spotify.css" />
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<style>
+		:root {
+			--ps-bg: #121212;
+			--ps-surface: #1c1b19;
+			--ps-surface-2: #2a2825;
+			--ps-ink: #f4efe9;
+			--ps-ink-soft: #a39b90;
+			--ps-accent: #f0712c;
+			--ps-accent-soft: #f7a96b;
+			--ps-up: #5fc46b;
+			--ps-down: #ef6f4d;
+			--ps-border: #312e2a;
+			--ps-radius: 16px;
+			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+		}
+		* { box-sizing: border-box; margin: 0; padding: 0 }
+		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+		button { font-family: inherit }
+
+		/* ── Header / Nav ──────────────────────────────── */
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.brand { display: flex; align-items: center; gap: 14px }
+		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
+		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
+		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
+		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
+		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
+		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
+		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+
+		/* ── Intro ─────────────────────────────────────── */
+		.intro { margin-bottom: 28px }
+		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
+		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+
+		/* ── Cards & panels ────────────────────────────── */
+		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px }
+		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
+		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
+		.stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
+		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
+		.content-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px }
+		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 22px; box-shadow: var(--ps-shadow) }
+		.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px }
+		.panel-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 18px; font-weight: 600 }
+		.panel-sub { font-size: 13px; color: var(--ps-ink-soft); margin-top: 2px }
+		.panel-tag { font-size: 12px; font-weight: 500; color: var(--ps-accent); background-color: var(--ps-surface-2); padding: 4px 10px; border-radius: 999px; white-space: nowrap }
+		.empty { font-size: 14px; color: var(--ps-ink-soft) }
+
+		/* ── Locked / loading ──────────────────────────── */
+		.locked { max-width: 640px }
+		.locked h3 { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 600; margin-bottom: 8px }
+		.locked p { color: var(--ps-ink-soft); font-size: 15px }
+		.locked ul { margin: 16px 0 18px 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px }
+		.locked .privacy { font-size: 13px; margin-top: 14px }
+		.locked .spotify-login-btn { padding: 11px 22px; font-size: 15px }
+		.loading { display: flex; align-items: center; gap: 14px; color: var(--ps-ink-soft) }
+		.spinner { flex-shrink: 0; width: 24px; height: 24px; border: 3px solid var(--ps-border); border-top-color: var(--ps-accent); border-radius: 50%; animation: spin .6s linear infinite }
+		@keyframes spin { to { transform: rotate(360deg) } }
+		[hidden] { display: none !important }
+
+		/* ── Playlist chart ────────────────────────────── */
+		.toolbar { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ps-ink-soft) }
+		.refresh-btn { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--ps-border); background: none; color: var(--ps-ink-soft); font-size: 12px; font-weight: 500; cursor: pointer }
+		.refresh-btn:hover:not(:disabled) { color: var(--ps-ink); background-color: var(--ps-surface-2) }
+		.refresh-btn:disabled { opacity: .5; cursor: default }
+		.pl-list { list-style: none; display: flex; flex-direction: column; gap: 4px }
+		.pl-row { width: 100%; display: grid; grid-template-columns: 28px 52px minmax(0, 1fr) minmax(90px, 32%) 18px; align-items: center; gap: 14px; padding: 10px 8px; border: none; border-radius: 12px; background: none; color: inherit; text-align: left; cursor: pointer }
+		.pl-row:hover, .pl-row[aria-expanded="true"] { background-color: var(--ps-surface-2) }
+		.rank { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); text-align: center }
+		.pl-cover { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; background-color: var(--ps-surface-2) }
+		.pl-name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.pl-meta { font-size: 13px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; vertical-align: 2px; background-color: #1DB954; color: #08240f }
+		.badge.follow { background-color: var(--ps-surface-2); color: var(--ps-ink-soft) }
+		.pl-bar { display: flex; flex-direction: column; gap: 6px }
+		.pl-time { font-size: 13px; font-weight: 600; text-align: right }
+		.meter { height: 8px; background-color: var(--ps-surface-2); border-radius: 999px; overflow: hidden }
+		.pl-row:hover .meter, .pl-row[aria-expanded="true"] .meter { background-color: var(--ps-surface) }
+		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent); border-radius: 999px }
+		.chevron { color: var(--ps-ink-soft); transition: transform .15s; font-size: 12px }
+		.pl-row[aria-expanded="true"] .chevron { transform: rotate(90deg) }
+
+		/* ── Track chart (inside a playlist) ───────────── */
+		.tracks { margin: 4px 0 14px 42px; padding: 6px 0 4px 14px; border-left: 2px solid var(--ps-border) }
+		.tracks-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ps-ink-soft); margin: 4px 0 8px }
+		.tracks-head a { color: #1DB954; font-weight: 600; text-decoration: none }
+		.tracks-head a:hover { text-decoration: underline }
+		.track-list { list-style: none; display: flex; flex-direction: column; gap: 2px }
+		.track { display: grid; grid-template-columns: 26px 40px minmax(0, 1fr) 72px minmax(80px, 24%); align-items: center; gap: 12px; padding: 7px 6px; border-radius: 8px }
+		.track:hover { background-color: var(--ps-surface-2) }
+		.track .rank { font-size: 13px }
+		.track-cover { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background-color: var(--ps-surface-2) }
+		.track-name { font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.track-sub { font-size: 12px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.track-plays { font-size: 13px; color: var(--ps-ink-soft); text-align: right; white-space: nowrap }
+		.track-bar { display: flex; flex-direction: column; gap: 4px }
+		.track-time { font-size: 12px; text-align: right; color: var(--ps-ink-soft) }
+		.track.unplayed { opacity: .55 }
+		.show-all { margin: 8px 0 0 6px; padding: 6px 12px; border-radius: 999px; border: none; background-color: var(--ps-surface-2); color: var(--ps-ink); font-size: 13px; cursor: pointer }
+		.show-all:hover { color: var(--ps-accent) }
+		.artist-link { color: inherit }
+
+		/* ── Insight lists ─────────────────────────────── */
+		.mini-list { list-style: none; display: flex; flex-direction: column; gap: 2px }
+		.mini { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 7px 6px; border-radius: 8px }
+		.mini:hover { background-color: var(--ps-surface-2) }
+		.mini.no-cover { grid-template-columns: minmax(0, 1fr) auto }
+		.mini-value { font-size: 13px; color: var(--ps-ink-soft); text-align: right; white-space: nowrap }
+		.mini-value strong { color: var(--ps-ink); font-weight: 600 }
+
+		.footnote { margin-top: 20px; font-size: 13px; color: var(--ps-ink-soft) }
+		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+
+		/* ── Responsive ────────────────────────────────── */
+		@media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr) } }
+		@media (min-width: 860px) { .content-grid { grid-template-columns: 1fr 1fr } }
+		@media (max-width: 700px) {
+			.header { flex-direction: column; align-items: flex-start }
+			.page { padding: 24px 16px 40px }
+			.pl-row { grid-template-columns: 22px 44px minmax(0, 1fr) 16px; gap: 10px }
+			.pl-row .pl-bar { grid-column: 3 / 4 }
+			.pl-cover { width: 44px; height: 44px }
+			.tracks { margin-left: 8px }
+			.track { grid-template-columns: 22px 36px minmax(0, 1fr) auto; gap: 10px }
+			.track .track-bar { grid-column: 3 / 5 }
+		}
+	</style>
+</head>
+<body>
+<div class="page">
+
+	<!-- Header -->
+	<header class="header">
+		<div class="brand">
+			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
+			<div>
+				<h1 class="brand-title">{{ app_name }}</h1>
+				<p class="brand-subtitle">Your listening statistics</p>
+			</div>
+		</div>
+		<div class="header-right">
+			<nav class="main-nav" aria-label="Main navigation">
+				<a class="nav-link" href="overview.html">Overview</a>
+				<a class="nav-link" href="tracks-by-artist.html">Tracks</a>
+				<a class="nav-link" href="top-artists.html">Top Artists</a>
+				<a class="nav-link active" href="playlists.html">Playlists</a>
+				<a class="nav-link" href="stats.html">Stats</a>
+				<a class="nav-link" href="share.html">Share</a>
+			</nav>
+			<div class="account" id="account"></div>
+		</div>
+	</header>
+
+	<main>
+		<section class="intro">
+			<h2 class="intro-title">Playlists</h2>
+			<p class="intro-text">Your Spotify playlists, ranked by how much you actually listen to their songs.</p>
+		</section>
+
+		<p class="spotify-status" id="auth-status" role="status"></p>
+
+		<!-- Not connected -->
+		<section class="panel locked" id="locked" hidden>
+			<h3>Connect Spotify to see your playlists</h3>
+			<p>This page reads your playlists from Spotify and matches them with the listening history SpoTracker has recorded. Once you log in you'll see:</p>
+			<ul>
+				<li>Every playlist you own or follow, plus your Liked Songs, ranked by the time you spent on their songs</li>
+				<li>Each playlist's songs as a chart, with your plays, listening time and when you last played them</li>
+				<li>Songs you play a lot that aren't in any playlist, favourites you stopped playing, hidden gems, and songs you added but never played</li>
+			</ul>
+			<div id="locked-action"></div>
+			<p class="privacy">Your playlists are read through SpoTracker on this computer; nothing is uploaded anywhere.</p>
+		</section>
+
+		<!-- Loading -->
+		<section class="panel loading" id="loading" hidden>
+			<div class="spinner" aria-hidden="true"></div>
+			<div>
+				<div>Loading your playlists from Spotify…</div>
+				<div class="panel-sub">The first time can take up to a minute; after that only changed playlists are fetched.</div>
+			</div>
+		</section>
+
+		<!-- Error -->
+		<section class="panel" id="error" hidden>
+			<p class="empty" id="error-text"></p>
+			<button class="refresh-btn" style="margin-top:12px" onclick="loadPlaylists()">Try again</button>
+		</section>
+
+		<!-- Content -->
+		<div id="content" hidden>
+			<section class="stats-grid" aria-label="Key metrics">
+				<article class="stat-card">
+					<span class="stat-label">Playlists</span>
+					<strong class="stat-value" id="stat-playlists">0</strong>
+					<span class="stat-trend" id="stat-playlists-sub"></span>
+				</article>
+				<article class="stat-card">
+					<span class="stat-label">Songs in playlists</span>
+					<strong class="stat-value" id="stat-songs">0</strong>
+					<span class="stat-trend" id="stat-songs-sub"></span>
+				</article>
+				<article class="stat-card">
+					<span class="stat-label">Time on playlist songs</span>
+					<strong class="stat-value" id="stat-time">0</strong>
+					<span class="stat-trend" id="stat-time-sub"></span>
+				</article>
+				<article class="stat-card">
+					<span class="stat-label">Never played</span>
+					<strong class="stat-value" id="stat-never">0</strong>
+					<span class="stat-trend" id="stat-never-sub"></span>
+				</article>
+			</section>
+
+			<section class="panel">
+				<div class="panel-head">
+					<div>
+						<h3 class="panel-title">Playlist chart</h3>
+						<p class="panel-sub">Click a playlist to see its songs ranked the same way.</p>
+					</div>
+					<div class="toolbar">
+						<span id="updated"></span>
+						<button class="refresh-btn" id="refresh-btn" onclick="loadPlaylists(true)">Refresh from Spotify</button>
+					</div>
+				</div>
+				<ol class="pl-list" id="pl-list"></ol>
+			</section>
+
+			<div class="content-grid">
+				<section class="panel">
+					<div class="panel-head">
+						<div>
+							<h3 class="panel-title">Not in any playlist</h3>
+							<p class="panel-sub">Songs you play the most that none of your playlists has.</p>
+						</div>
+						<span class="panel-tag">Top 10</span>
+					</div>
+					<ol class="mini-list" id="not-in-playlist"></ol>
+				</section>
+
+				<section class="panel">
+					<div class="panel-head">
+						<div>
+							<h3 class="panel-title">Forgotten favourites</h3>
+							<p class="panel-sub">Playlist songs you played a lot, but not in the last 60 days.</p>
+						</div>
+						<span class="panel-tag">Top 10</span>
+					</div>
+					<ol class="mini-list" id="forgotten"></ol>
+				</section>
+
+				<section class="panel">
+					<div class="panel-head">
+						<div>
+							<h3 class="panel-title">Hidden gems</h3>
+							<p class="panel-sub">Songs you keep playing that few people stream on Spotify.</p>
+						</div>
+						<span class="panel-tag">Fewest Spotify plays</span>
+					</div>
+					<ol class="mini-list" id="gems"></ol>
+				</section>
+
+				<section class="panel">
+					<div class="panel-head">
+						<div>
+							<h3 class="panel-title">Added, never played</h3>
+							<p class="panel-sub" id="never-sub"></p>
+						</div>
+						<span class="panel-tag">Latest added</span>
+					</div>
+					<ol class="mini-list" id="never"></ol>
+				</section>
+			</div>
+
+			<p class="footnote" id="footnote"></p>
+		</div>
+	</main>
+
+	<footer class="footer">
+		<p>SpoTracker · Generated from your listening data</p>
+	</footer>
+
+</div>
+
+<script>window.SPOTRACKER_API_PORT = {{ api_port }};</script>
+<script src="spotify.js"></script>
+<script>
+// ── Listening history per song, injected by Python ───────────────────────────
+// songs: { key: [artist, track, seconds, plays, lastPlayed "YYYY-MM-DD"] }
+const HISTORY = {{ history_json }};
+const TRACKS_SHOWN = 30;
+const FORGOTTEN_DAYS = 60;
+
+const { esc, formatNumber, formatDuration, artistLink } = Spotify;
+const $ = id => document.getElementById(id);
+
+let model = null;        // playlists joined with the history (see buildModel)
+let loadingNow = false;
+
+function show(section) {
+	for (const id of ["locked", "loading", "error", "content"]) $(id).hidden = id !== section;
+}
+
+function formatDate(iso) {
+	if (!iso) return "";
+	return new Date(iso.length === 10 ? iso + "T00:00:00" : iso)
+		.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function daysAgo(isoDate) {
+	if (!isoDate) return Infinity;
+	return Math.floor((Date.now() - new Date(isoDate + "T00:00:00")) / 86400000);
+}
+
+function relativeDay(isoDate) {
+	const d = daysAgo(isoDate);
+	if (d === Infinity) return "never";
+	if (d <= 0) return "today";
+	if (d === 1) return "yesterday";
+	if (d < 30) return `${d} days ago`;
+	if (d < 365) return `${Math.round(d / 30)} months ago`;
+	return formatDate(isoDate);
+}
+
+// ── Join Spotify playlists with the local history ────────────────────────────
+function historyFor(track) {
+	for (const key of track.keys) {
+		const s = HISTORY.songs[key];
+		if (s) return { key, artist: s[0], track: s[1], seconds: s[2], plays: s[3], last: s[4] };
+	}
+	return null;
+}
+
+function buildModel(data) {
+	const songs = new Map();  // track uri -> {track, history, playlists: [names]}
+	const playlists = data.playlists.map(p => {
+		const seen = new Set();
+		const tracks = [];
+		for (const t of p.tracks) {
+			const h = historyFor(t);
+			const id = h ? h.key : t.uri;          // the same song twice in a playlist counts once
+			if (seen.has(id)) continue;
+			seen.add(id);
+			tracks.push({ ...t, h });
+			const entry = songs.get(t.uri) || { t, h, playlists: [] };
+			entry.playlists.push(p.name);
+			songs.set(t.uri, entry);
+		}
+		tracks.sort((a, b) => (b.h?.seconds || 0) - (a.h?.seconds || 0) || (b.addedAt || "").localeCompare(a.addedAt || ""));
+		const played = tracks.filter(t => t.h && t.h.plays > 0);
+		return {
+			...p,
+			tracks,
+			seconds: tracks.reduce((s, t) => s + (t.h?.seconds || 0), 0),
+			plays: tracks.reduce((s, t) => s + (t.h?.plays || 0), 0),
+			playedCount: played.length,
+			last: played.reduce((m, t) => (t.h.last > m ? t.h.last : m), ""),
+		};
+	});
+	playlists.sort((a, b) => b.seconds - a.seconds || b.plays - a.plays);
+	return { playlists, songs, fetchedAt: data.fetchedAt };
+}
+
+// ── Rendering ────────────────────────────────────────────────────────────────
+function render() {
+	const { playlists, songs } = model;
+	const unique = [...songs.values()];
+	const keysInPlaylists = new Set(unique.filter(s => s.h).map(s => s.h.key));
+	const playlistSeconds = [...keysInPlaylists].reduce((sum, k) => sum + HISTORY.songs[k][2], 0);
+	const never = unique.filter(s => !s.h || s.h.plays === 0);
+	const own = playlists.filter(p => p.own && !p.liked).length;
+	const liked = playlists.find(p => p.liked);
+
+	$("stat-playlists").textContent = formatNumber(playlists.length);
+	const followed = playlists.length - own - (liked ? 1 : 0);
+	$("stat-playlists-sub").textContent =
+		[`${own} yours`, followed ? `${followed} followed` : "", liked ? "+ Liked Songs" : ""].filter(Boolean).join(" · ");
+	$("stat-songs").textContent = formatNumber(unique.length);
+	$("stat-songs-sub").textContent = `${Math.round(100 * (unique.length - never.length) / (unique.length || 1))}% of them played`;
+	$("stat-time").textContent = formatDuration(playlistSeconds);
+	$("stat-time-sub").textContent = `${Math.round(100 * playlistSeconds / (HISTORY.totalSeconds || 1))}% of all your listening`;
+	$("stat-never").textContent = formatNumber(never.length);
+	$("stat-never-sub").textContent = HISTORY.since ? `since ${formatDate(HISTORY.since)}` : "";
+	$("updated").textContent = `Updated ${new Date(model.fetchedAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`;
+
+	renderPlaylistChart(playlists);
+	renderNotInPlaylist(keysInPlaylists);
+	renderForgotten(unique);
+	renderGems(unique);
+	renderNever(never);
+
+	$("footnote").textContent =
+		"Listening time per playlist is the time you spent on its songs anywhere: Spotify doesn't tell SpoTracker which playlist you played them from. " +
+		(HISTORY.since ? `History since ${formatDate(HISTORY.since)}.` : "");
+}
+
+function renderPlaylistChart(playlists) {
+	const max = playlists.reduce((m, p) => Math.max(m, p.seconds), 1);
+	$("pl-list").innerHTML = playlists.map((p, i) => {
+		const pct = p.tracks.length ? Math.round(100 * p.playedCount / p.tracks.length) : 0;
+		const badge = p.liked ? `<span class="badge">Liked</span>` : (p.own ? "" : `<span class="badge follow">by ${esc(p.owner)}</span>`);
+		const meta = [`${formatNumber(p.tracks.length)} songs`, `${pct}% played`, p.last ? `last played ${relativeDay(p.last)}` : "never played"];
+		return `<li>` +
+			`<button class="pl-row" aria-expanded="false" data-index="${i}">` +
+				`<span class="rank">${i + 1}</span>` +
+				(p.image ? `<img class="pl-cover" src="${esc(p.image)}" alt="" loading="lazy" />` : `<span class="pl-cover"></span>`) +
+				`<span style="min-width:0"><span class="pl-name" translate="no">${esc(p.name)}${badge}</span>` +
+				`<span class="pl-meta" style="display:block">${esc(meta.join(" · "))}</span></span>` +
+				`<span class="pl-bar"><span class="pl-time">${formatDuration(p.seconds)}</span>` +
+				`<span class="meter"><span class="meter-fill" style="--w:${Math.round(100 * p.seconds / max)}%"></span></span></span>` +
+				`<span class="chevron" aria-hidden="true">▶</span>` +
+			`</button>` +
+			`<div class="tracks" id="tracks-${i}" hidden></div>` +
+		`</li>`;
+	}).join("") || `<li class="empty">No playlists in your library.</li>`;
+}
+
+function trackRow(t, rank, max) {
+	const h = t.h;
+	const sub = t.artists.map(artistLink).join(", ") + (t.addedAt ? ` · added ${formatDate(t.addedAt)}` : "");
+	return `<li class="track${h && h.plays ? "" : " unplayed"}">` +
+		`<span class="rank">${rank}</span>` +
+		(t.cover ? `<img class="track-cover" src="${esc(t.cover)}" alt="" loading="lazy" />` : `<span class="track-cover"></span>`) +
+		`<span style="min-width:0"><span class="track-name" translate="no" style="display:block">${esc(t.name)}</span>` +
+		`<span class="track-sub" style="display:block">${sub}</span></span>` +
+		`<span class="track-plays">${h && h.plays ? `${formatNumber(h.plays)} plays` : "—"}</span>` +
+		`<span class="track-bar"><span class="track-time">${h ? formatDuration(h.seconds) + (h.last ? ` · ${relativeDay(h.last)}` : "") : "not played"}</span>` +
+		`<span class="meter"><span class="meter-fill" style="--w:${h ? Math.round(100 * h.seconds / max) : 0}%"></span></span></span>` +
+	`</li>`;
+}
+
+function renderTracks(i, all) {
+	const p = model.playlists[i];
+	const max = p.tracks.reduce((m, t) => Math.max(m, t.h?.seconds || 0), 1);
+	const list = all ? p.tracks : p.tracks.slice(0, TRACKS_SHOWN);
+	$(`tracks-${i}`).innerHTML =
+		`<div class="tracks-head"><span>${formatNumber(p.playedCount)} of ${formatNumber(p.tracks.length)} songs played · ${formatNumber(p.plays)} plays` +
+		(p.followers ? ` · ${formatNumber(p.followers)} followers` : "") + `</span>` +
+		`<a href="${esc(p.url)}" target="_blank" rel="noopener">Open in Spotify ↗</a></div>` +
+		`<ol class="track-list">${list.map((t, r) => trackRow(t, r + 1, max)).join("")}</ol>` +
+		(list.length < p.tracks.length ? `<button class="show-all" data-show-all="${i}">Show all ${formatNumber(p.tracks.length)} songs</button>` : "");
+}
+
+function miniRow({ cover, title, artists, value }) {
+	return `<li class="mini${cover === undefined ? " no-cover" : ""}">` +
+		(cover === undefined ? "" : cover ? `<img class="track-cover" src="${esc(cover)}" alt="" loading="lazy" />` : `<span class="track-cover"></span>`) +
+		`<span style="min-width:0"><span class="track-name" translate="no" style="display:block">${esc(title)}</span>` +
+		`<span class="track-sub" style="display:block">${artists}</span></span>` +
+		`<span class="mini-value">${value}</span>` +
+	`</li>`;
+}
+
+function fill(id, rows, emptyText) {
+	$(id).innerHTML = rows.length ? rows.join("") : `<li class="empty">${esc(emptyText)}</li>`;
+}
+
+function renderNotInPlaylist(keysInPlaylists) {
+	const rows = Object.entries(HISTORY.songs)
+		.filter(([key, s]) => !keysInPlaylists.has(key) && s[3] > 0)
+		.sort((a, b) => b[1][2] - a[1][2])
+		.slice(0, 10)
+		.map(([, s]) => miniRow({
+			title: s[1], artists: artistLink(s[0]),
+			value: `<strong>${formatDuration(s[2])}</strong> · ${formatNumber(s[3])} plays`,
+		}));
+	fill("not-in-playlist", rows, "Every song you play is already in a playlist.");
+}
+
+function renderForgotten(unique) {
+	const rows = unique
+		.filter(s => s.h && s.h.plays >= 5 && daysAgo(s.h.last) > FORGOTTEN_DAYS)
+		.sort((a, b) => b.h.seconds - a.h.seconds)
+		.slice(0, 10)
+		.map(s => miniRow({
+			cover: s.t.cover, title: s.t.name, artists: s.t.artists.map(artistLink).join(", "),
+			value: `<strong>${formatNumber(s.h.plays)} plays</strong> · ${relativeDay(s.h.last)}`,
+		}));
+	fill("forgotten", rows, "None: you still play all your favourites.");
+}
+
+function renderGems(unique) {
+	const rows = unique
+		.filter(s => s.h && s.h.plays >= 3 && s.t.playcount)
+		.sort((a, b) => a.t.playcount - b.t.playcount)
+		.slice(0, 10)
+		.map(s => miniRow({
+			cover: s.t.cover, title: s.t.name, artists: s.t.artists.map(artistLink).join(", "),
+			value: `<strong>${formatNumber(s.t.playcount)}</strong> on Spotify · you ${formatNumber(s.h.plays)}`,
+		}));
+	fill("gems", rows, "Play some songs a few times to find your hidden gems.");
+}
+
+function renderNever(never) {
+	$("never-sub").textContent =
+		`${formatNumber(never.length)} playlist songs with no plays` + (HISTORY.since ? ` since ${formatDate(HISTORY.since)}.` : ".");
+	const rows = never
+		.sort((a, b) => (b.t.addedAt || "").localeCompare(a.t.addedAt || ""))
+		.slice(0, 10)
+		.map(s => miniRow({
+			cover: s.t.cover, title: s.t.name, artists: s.t.artists.map(artistLink).join(", "),
+			value: s.t.addedAt ? `added ${relativeDay(s.t.addedAt.slice(0, 10))}<br>${esc(s.playlists[0])}` : esc(s.playlists[0]),
+		}));
+	fill("never", rows, "You've played every song in your playlists.");
+}
+
+// Expand / collapse a playlist, and "show all" inside it
+$("pl-list").addEventListener("click", e => {
+	const more = e.target.closest("[data-show-all]");
+	if (more) return renderTracks(+more.dataset.showAll, true);
+	const row = e.target.closest(".pl-row");
+	if (!row) return;
+	const i = +row.dataset.index;
+	const open = row.getAttribute("aria-expanded") !== "true";
+	row.setAttribute("aria-expanded", String(open));
+	if (open && !$(`tracks-${i}`).innerHTML) renderTracks(i, false);
+	$(`tracks-${i}`).hidden = !open;
+});
+
+// "You: …" in the artist modal
+Spotify.myStatsFor = name => {
+	const key = name.toLowerCase();
+	let plays = 0, seconds = 0, tracks = 0;
+	for (const s of Object.values(HISTORY.songs)) {
+		if (s[0].toLowerCase() === key) { plays += s[3]; seconds += s[2]; tracks++; }
+	}
+	return tracks ? { plays, seconds, tracks } : null;
+};
+
+// ── Loading ──────────────────────────────────────────────────────────────────
+async function loadPlaylists(refresh = false) {
+	if (loadingNow) return;
+	loadingNow = true;
+	$("refresh-btn").disabled = true;
+	if (!model || !refresh) show("loading");
+	try {
+		model = buildModel(await Spotify.api("/api/playlists" + (refresh ? "?refresh=1" : "")));
+		render();
+		show("content");
+	} catch (e) {
+		if (e.status === 401) return; // Spotify.onChange shows the login notice
+		$("error-text").textContent = "Couldn't load your playlists: " + e.message;
+		show("error");
+	} finally {
+		loadingNow = false;
+		$("refresh-btn").disabled = false;
+	}
+}
+
+function showLocked(state) {
+	let action;
+	if (!state.online) {
+		action = `<p class="empty">SpoTracker isn't running. Start it from the Start Menu, then reload this page.</p>`;
+	} else if (state.authenticated) {
+		action = `<p class="empty">Confirm your Spotify account in the menu at the top right to continue.</p>`;
+	} else {
+		action = `<button class="spotify-login-btn" id="locked-login">Log in with Spotify</button>`;
+	}
+	$("locked-action").innerHTML = action;
+	$("locked-login")?.addEventListener("click", Spotify.login);
+	show("locked");
+}
+
+Spotify.onChange(state => {
+	if (state.authenticated && state.confirmed) {
+		if (!model) loadPlaylists();
+	} else {
+		model = null;
+		showLocked(state);
+	}
+});
+</script>
+</body>
+</html>

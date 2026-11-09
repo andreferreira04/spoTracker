@@ -5,6 +5,7 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Tracks — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
+	<link rel="stylesheet" href="spotify.css" />
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
 	<style>
 		:root {
@@ -145,13 +146,17 @@
 				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
-		<nav class="main-nav" aria-label="Main navigation">
-			<a class="nav-link" href="overview.html">Overview</a>
-			<a class="nav-link active" href="tracks-by-artist.html">Tracks</a>
-			<a class="nav-link" href="top-artists.html">Top Artists</a>
-			<a class="nav-link" href="stats.html">Stats</a>
-			<a class="nav-link" href="share.html">Share</a>
-		</nav>
+		<div class="header-right">
+			<nav class="main-nav" aria-label="Main navigation">
+				<a class="nav-link" href="overview.html">Overview</a>
+				<a class="nav-link active" href="tracks-by-artist.html">Tracks</a>
+				<a class="nav-link" href="top-artists.html">Top Artists</a>
+				<a class="nav-link" href="playlists.html">Playlists</a>
+				<a class="nav-link" href="stats.html">Stats</a>
+				<a class="nav-link" href="share.html">Share</a>
+			</nav>
+			<div class="account" id="account"></div>
+		</div>
 	</header>
 
 	<main>
@@ -159,6 +164,8 @@
 			<h2 class="intro-title">Tracks</h2>
 			<p class="intro-text">Detailed analysis of your Spotify listening history, sorted by plays.</p>
 		</section>
+
+		<p class="spotify-status" id="auth-status" role="status"></p>
 
 		<!-- Filters -->
 		<div class="filter-bar">
@@ -516,5 +523,7 @@ function resetFilters() {
 
 init();
 </script>
+<script>window.SPOTRACKER_API_PORT = {{ api_port }};</script>
+<script src="spotify.js"></script>
 </body>
 </html>
