@@ -106,6 +106,7 @@ The release will appear at `https://github.com/<user>/<repo>/releases`.
 | `tracker.py` | Listening logic (pauses, ads, song changes) and CSV writing |
 | `get_stats.py` | Report generator (bundled into the app, also runnable standalone) |
 | `feats.py` | Featured-artist detection and merging of song variants for the reports |
+| `spotify_api.py` | Spotify login (token captured from a Chrome/Edge window) and the localhost API the reports use for the profile and artist pages; started by the tray |
 | `clear_data.py` | Clear Data window |
 | `music-register.spec` | PyInstaller config |
 | `smoke_test.py` | Checks a built app |
