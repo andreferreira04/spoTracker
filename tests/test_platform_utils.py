@@ -87,6 +87,25 @@ def test_windows_message_box(monkeypatch):
     assert calls == [(0, "M", "T", 0x10)]
 
 
+@pytest.mark.skipif(sys.platform != "win32", reason="Windows MessageBox")
+def test_windows_info_box_uses_logo_when_frozen(monkeypatch):
+    import ctypes
+    monkeypatch.delenv("SPOTRACKER_HEADLESS")
+    monkeypatch.setattr(sys, "frozen", True, raising=False)
+    indirect, plain = [], []
+    monkeypatch.setattr(ctypes.windll.user32, "MessageBoxIndirectW",
+                        lambda p: indirect.append(p._obj) or 1)
+    monkeypatch.setattr(ctypes.windll.user32, "MessageBoxW", lambda *a: plain.append(a))
+    pu.show_message("T", "M", "info")
+    assert plain == []
+    (params,) = indirect
+    assert (params.lpszCaption, params.lpszText, params.dwStyle, params.lpszIcon) == ("T", "M", 0x80, 1)
+
+
+def test_app_icon_bundled():
+    assert pu.app_icon_path().is_file()
+
+
 # ── File lock ─────────────────────────────────────────────────────────────────
 HOLD_LOCK = """
 import sys, time

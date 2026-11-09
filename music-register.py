@@ -121,32 +121,12 @@ def tracking_loop():
 
 # ── System Tray Icon ─────────────────────────────────────────────────────────
 def create_tray_icon():
-    """Create a green music-note icon for the system tray."""
-    from PIL import Image, ImageDraw
+    """Load the SpoTracker logo (assets/icon.ico, bundled by PyInstaller) for the system tray."""
+    from PIL import Image
 
-    # 64x64 icon with a Spotify-green gradient circle and a music note
-    size = 64
-    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
-    draw = ImageDraw.Draw(img)
-
-    # Circle background
-    draw.ellipse([2, 2, size - 3, size - 3], fill=(30, 215, 96))
-
-    # Simple music note shape using basic drawing
-    # Note head (filled ellipse)
-    draw.ellipse([16, 36, 28, 46], fill="white")
-    # Stem
-    draw.rectangle([26, 14, 29, 40], fill="white")
-    # Flag
-    draw.polygon([(29, 14), (42, 20), (42, 28), (29, 22)], fill="white")
-    # Second note head
-    draw.ellipse([34, 32, 46, 42], fill="white")
-    # Second stem
-    draw.rectangle([44, 10, 47, 36], fill="white")
-    # Beam connecting stems
-    draw.rectangle([26, 12, 47, 16], fill="white")
-
-    return img
+    img = Image.open(pu.app_icon_path())
+    img.size = (64, 64)  # pick the 64px frame of the .ico
+    return img.convert("RGBA")
 
 
 def run_tray():
@@ -192,6 +172,7 @@ def self_test():
     import get_stats
     import clear_data
     print("tray backend:", pystray.Icon.__module__)
+    print("tray icon:", create_tray_icon().size)  # fails if assets/icon.ico was not bundled
     print("now playing:", pu.get_now_playing())
     return 0
 

@@ -41,7 +41,7 @@ Source: "dist\SpoTracker\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdi
 [Icons]
 ; Start Menu shortcuts
 Name: "{group}\SpoTracker";            Filename: "{app}\SpoTracker.exe"
-Name: "{group}\Open Report";           Filename: "{userdocs}\SpoTracker\reports\overview.html"
+Name: "{group}\Open Report";           Filename: "{userdocs}\SpoTracker\reports\overview.html"; IconFilename: "{app}\SpoTracker.exe"
 
 [Registry]
 Root: HKCU; Subkey: "Software\Microsoft\Windows\CurrentVersion\Run"; \

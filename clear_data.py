@@ -5,6 +5,7 @@ import tkinter as tk
 from datetime import datetime
 from tkinter import ttk, messagebox
 
+import platform_utils as pu
 from version import APP_NAME
 
 ALL_TRACKS = "(all tracks)"
@@ -81,6 +82,7 @@ def _run_dialog(csv_file, backup_dir, lock):
 
     root = tk.Tk()
     root.title(f"{APP_NAME} — Clear Data")
+    pu.set_window_icon(root)
     root.resizable(False, False)
     root.attributes("-topmost", True)
 

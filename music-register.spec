@@ -15,6 +15,7 @@ a = Analysis(
         ('templates/playlists.html', 'templates'),
         ('templates/spotify.js', 'templates'),
         ('templates/spotify.css', 'templates'),
+        ('assets/icon.ico', 'assets'),
     ],
     hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats', 'clear_data', 'version', 'platform_utils', 'tracker', 'feats', 'spotify_api', 'websocket'],
     hookspath=[],

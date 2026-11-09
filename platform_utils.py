@@ -167,14 +167,58 @@ def find_chromium_browser():
 _WIN_ICONS = {"info": 0x40, "warning": 0x30, "error": 0x10}
 
 
+def app_icon_path():
+    """Path to the SpoTracker logo (.ico), bundled by PyInstaller under assets/."""
+    return Path(getattr(sys, "_MEIPASS", Path(__file__).parent)) / "assets" / "icon.ico"
+
+
+def set_window_icon(root):
+    """Give a Tk window (and the dialogs it opens) the SpoTracker logo; ignored where .ico is unsupported."""
+    try:
+        root.iconbitmap(default=str(app_icon_path()))
+    except Exception:
+        pass
+
+
+def _win_logo_message_box(title, message):
+    """Native MessageBox showing the logo embedded in the frozen exe (PyInstaller stores it as icon resource 1)."""
+    import ctypes
+    from ctypes import wintypes
+
+    class MSGBOXPARAMSW(ctypes.Structure):
+        _fields_ = [
+            ("cbSize", wintypes.UINT), ("hwndOwner", wintypes.HWND), ("hInstance", wintypes.HINSTANCE),
+            ("lpszText", wintypes.LPCWSTR), ("lpszCaption", wintypes.LPCWSTR), ("dwStyle", wintypes.DWORD),
+            ("lpszIcon", ctypes.c_void_p), ("dwContextHelpId", ctypes.c_size_t),
+            ("lpfnMsgBoxCallback", ctypes.c_void_p), ("dwLanguageId", wintypes.DWORD),
+        ]
+
+    get_module = ctypes.windll.kernel32.GetModuleHandleW
+    get_module.restype = wintypes.HMODULE
+    MB_USERICON = 0x80
+    params = MSGBOXPARAMSW(ctypes.sizeof(MSGBOXPARAMSW), None, get_module(None),
+                           message, title, MB_USERICON, 1, 0, None, 0)
+    if not ctypes.windll.user32.MessageBoxIndirectW(ctypes.byref(params)):
+        raise OSError("MessageBoxIndirectW failed")
+
+
 def show_message(title, message, kind="info"):
-    """Show a blocking native message box. kind: "info", "warning" or "error"."""
+    """Show a blocking native message box. kind: "info", "warning" or "error".
+
+    Info messages from the installed app show the SpoTracker logo; warnings and errors keep the system icon.
+    """
     if is_headless():
         print(f"[{kind}] {title}: {message}")
         return
     try:
         if IS_WINDOWS:
             import ctypes
+            if kind == "info" and getattr(sys, "frozen", False):
+                try:
+                    _win_logo_message_box(title, message)
+                    return
+                except Exception:
+                    pass  # fall back to the standard box
             ctypes.windll.user32.MessageBoxW(0, message, title, _WIN_ICONS.get(kind, 0x40))
             return
     except Exception:
@@ -193,6 +237,7 @@ def _tk_message(title, message, kind):
     from tkinter import messagebox
     root = tk.Tk()
     root.withdraw()
+    set_window_icon(root)
     {"warning": messagebox.showwarning, "error": messagebox.showerror}.get(kind, messagebox.showinfo)(
         title, message, parent=root
     )
