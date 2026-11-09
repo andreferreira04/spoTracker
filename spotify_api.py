@@ -10,6 +10,11 @@ the user still has to log in, otherwise we store the token on disk and close
 the window. When the token expires it is refreshed the same way, in a headless
 browser that reuses the saved Spotify session.
 
+The persisted-query hashes of the web player's API change from time to time.
+After each login, and whenever Spotify answers 412 (outdated hash), a headless
+browser opens an artist page and a search and saves the queries the web player
+sends (spotify_queries.json); DEFAULT_QUERIES are only the starting values.
+
 Local API (started by the tray app on 127.0.0.1:PORT)
 -----------------------------------------------------
 GET  /api/status          logged in? token expired? profile confirmed?
@@ -46,12 +51,24 @@ PORT = 47815
 TOKEN_URL_MARK = "open.spotify.com/api/token"
 PATHFINDER_URL = "https://api-partner.spotify.com/pathfinder/v2/query"
 
-# Persisted-query hashes used by the web player. Spotify changes them now and
-# then (an outdated one answers HTTP 412); the current ones show up in the
-# browser's DevTools, in the body of the pathfinder requests.
-PROFILE_HASH = "08ffb4730af3746e04a8301396f20875dbbce10c75243803091a9274eacc8ac0"
-ARTIST_HASH = "eafb1620d783ece118e72fbfede2b0064483e029d3c1aafafa1c2de0e25a89e7"
-SEARCH_HASH = "eef7cc54888d91bdd6802623477873caa3948ae173a0c34fd86827b267e94c03"
+# Persisted queries: the web player sends the SHA-256 of a GraphQL query instead
+# of the query itself. The hashes are public and the same for everyone, but they
+# change when Spotify edits a query (an outdated one answers HTTP 412). Then the
+# current ones are read from the web player itself (_discover_queries) and saved
+# in the data folder; these are only the starting values.
+DEFAULT_QUERIES = {
+    "profileAttributes": ("08ffb4730af3746e04a8301396f20875dbbce10c75243803091a9274eacc8ac0", {}),
+    "queryArtistOverview": ("eafb1620d783ece118e72fbfede2b0064483e029d3c1aafafa1c2de0e25a89e7", {
+        "uri": "", "locale": "", "preReleaseV2": False, "includeMusicVideoPreviews": False,
+    }),
+    "searchDesktop": ("eef7cc54888d91bdd6802623477873caa3948ae173a0c34fd86827b267e94c03", {
+        "searchTerm": "", "offset": 0, "limit": 10, "numberOfTopResults": 5,
+        "includeAudiobooks": False, "includeArtistHasConcertsField": False,
+        "includePreReleases": False, "includeAlbumPreReleases": False, "includeAuthors": False,
+        "includeEpisodeContentRatingsV2": False, "isPrefix": None, "sectionFilters": ["GENERIC"],
+    }),
+}
+DISCOVERY_ARTIST_ID = "4gzpq5DPGxSnKTe4SA8HAU"  # Coldplay: any artist page works
 USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
     "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
@@ -61,6 +78,7 @@ _data_dir = pu.get_data_dir()
 _token_file = _data_dir / "spotify_token.json"
 _browser_profile = _data_dir / "spotify-browser"
 _artist_uri_file = _data_dir / "spotify_artists.json"
+_queries_file = _data_dir / "spotify_queries.json"
 
 
 class NotAuthenticated(Exception):
@@ -176,90 +194,121 @@ def _parse_token_body(body):
     return "token", data
 
 
+class _Browser:
+    """A Chromium window (or headless browser) on the SpoTracker profile, driven over DevTools.
+
+    Every tab is attached automatically, including ones opened later (e.g. a
+    login popup), and new tabs stay paused until their network is watched.
+    """
+
+    def __init__(self, headless):
+        import websocket  # websocket-client
+        self._ws_errors = websocket
+
+        exe = pu.find_chromium_browser()
+        if not exe:
+            raise RuntimeError("Spotify login needs Google Chrome, Microsoft Edge, Brave or Chromium installed.")
+        debug_port = _free_port()
+        _browser_profile.mkdir(parents=True, exist_ok=True)
+        args = [
+            exe,
+            f"--remote-debugging-port={debug_port}",
+            f"--user-data-dir={_browser_profile}",
+            "--no-first-run",
+            "--no-default-browser-check",
+            "--window-size=1100,800",
+        ]
+        if headless:
+            args.append("--headless=new")
+        args.append("about:blank")
+        self.proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        self.ws = None
+        self._next_id = 0
+        self.page = None  # session id of the first tab
+        try:
+            # Chrome rejects DevTools websockets that carry an Origin header unless
+            # --remote-allow-origins is set, so the header is suppressed instead.
+            self.ws = websocket.create_connection(_wait_for_devtools(debug_port, self.proc, timeout=15),
+                                                  timeout=1, suppress_origin=True)
+            self.send("Target.setAutoAttach", {"autoAttach": True, "waitForDebuggerOnStart": True, "flatten": True})
+        except Exception:
+            self.close()
+            raise
+
+    def send(self, method, params=None, session=None):
+        self._next_id += 1
+        msg = {"id": self._next_id, "method": method, "params": params or {}}
+        if session:
+            msg["sessionId"] = session
+        self.ws.send(json.dumps(msg))
+        return self._next_id
+
+    def navigate(self, url):
+        self.send("Page.navigate", {"url": url}, session=self.page)
+
+    def messages(self, deadline):
+        """DevTools messages until the deadline. Stops early (returns) if the browser goes away."""
+        while time.time() < deadline:
+            if self.proc.poll() is not None:
+                return
+            try:
+                msg = json.loads(self.ws.recv())
+            except self._ws_errors.WebSocketTimeoutException:
+                yield None  # lets callers act on time passing
+                continue
+            except (self._ws_errors.WebSocketConnectionClosedException, OSError):
+                return
+            if msg.get("method") == "Target.attachedToTarget" and msg["params"]["targetInfo"]["type"] == "page":
+                child = msg["params"]["sessionId"]
+                self.send("Network.enable", session=child)
+                self.send("Runtime.runIfWaitingForDebugger", session=child)
+                if self.page is None:
+                    self.page = child
+            yield msg
+
+    def close(self):
+        if self.ws is not None:
+            try:
+                self.ws.send(json.dumps({"id": 0, "method": "Browser.close"}))
+            except Exception:
+                pass
+            self.ws.close()
+        try:
+            self.proc.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            self.proc.kill()
+
+
 def _capture_token(headless, timeout, state):
     """Open open.spotify.com in a Chromium browser and return the first logged-in token.
 
     Returns None when the window was closed or (headless) the saved session is
     not logged in; raises TimeoutError when the time runs out.
     """
-    import websocket  # websocket-client
-
-    exe = pu.find_chromium_browser()
-    if not exe:
-        raise RuntimeError("Spotify login needs Google Chrome, Microsoft Edge, Brave or Chromium installed.")
-
-    debug_port = _free_port()
-    _browser_profile.mkdir(parents=True, exist_ok=True)
-    args = [
-        exe,
-        f"--remote-debugging-port={debug_port}",
-        f"--user-data-dir={_browser_profile}",
-        "--no-first-run",
-        "--no-default-browser-check",
-        "--window-size=1100,800",
-    ]
-    if headless:
-        args.append("--headless=new")
-    args.append("about:blank")
-    proc = subprocess.Popen(args, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-    ws = None
+    browser = _Browser(headless)
     try:
-        # Chrome rejects DevTools websockets that carry an Origin header unless
-        # --remote-allow-origins is set, so the header is suppressed instead.
-        ws = websocket.create_connection(_wait_for_devtools(debug_port, proc, timeout=15),
-                                         timeout=1, suppress_origin=True)
-        next_id = [0]
-
-        def send(method, params=None, session=None):
-            next_id[0] += 1
-            msg = {"id": next_id[0], "method": method, "params": params or {}}
-            if session:
-                msg["sessionId"] = session
-            ws.send(json.dumps(msg))
-            return next_id[0]
-
-        # Attach to every tab (including ones opened later, e.g. a login popup),
-        # pausing new ones until their network is being watched.
-        send("Target.setAutoAttach", {"autoAttach": True, "waitForDebuggerOnStart": True, "flatten": True})
-
-        navigated = False
-        token_requests = {}  # (session, requestId) awaiting loadingFinished
-        body_calls = {}      # our message id -> (session, requestId)
+        token_requests = set()  # (session, requestId) awaiting loadingFinished
+        body_calls = set()      # our message ids for Network.getResponseBody
         deadline = time.time() + timeout
-
-        while time.time() < deadline:
-            if proc.poll() is not None:
-                return None  # the user closed the window
-            try:
-                msg = json.loads(ws.recv())
-            except websocket.WebSocketTimeoutException:
+        for msg in browser.messages(deadline):
+            if msg is None:
                 continue
-            except (websocket.WebSocketConnectionClosedException, OSError):
-                return None  # browser went away
-
             method, params, session = msg.get("method"), msg.get("params", {}), msg.get("sessionId")
 
-            if method == "Target.attachedToTarget" and params.get("targetInfo", {}).get("type") == "page":
-                child = params["sessionId"]
-                send("Network.enable", session=child)
-                send("Runtime.runIfWaitingForDebugger", session=child)
-                if not navigated:
-                    navigated = True
-                    send("Page.navigate", {"url": "https://open.spotify.com/"}, session=child)
-                    if not headless:
-                        state.set("waiting", "Waiting for the Spotify window…")
+            if method == "Target.attachedToTarget" and session is None and params["sessionId"] == browser.page:
+                browser.navigate("https://open.spotify.com/")
+                if not headless:
+                    state.set("waiting", "Waiting for the Spotify window…")
 
             elif method == "Network.responseReceived" and TOKEN_URL_MARK in params.get("response", {}).get("url", ""):
-                token_requests[(session, params["requestId"])] = True
+                token_requests.add((session, params["requestId"]))
 
             elif method == "Network.loadingFinished" and (session, params.get("requestId")) in token_requests:
-                del token_requests[(session, params["requestId"])]
-                call = send("Network.getResponseBody", {"requestId": params["requestId"]}, session=session)
-                body_calls[call] = (session, params["requestId"])
+                token_requests.discard((session, params["requestId"]))
+                body_calls.add(browser.send("Network.getResponseBody", {"requestId": params["requestId"]}, session=session))
 
             elif msg.get("id") in body_calls:
-                body_calls.pop(msg["id"])
+                body_calls.discard(msg["id"])
                 result = msg.get("result")
                 if not result:
                     continue
@@ -275,18 +324,90 @@ def _capture_token(headless, timeout, state):
                     state.set("anonymous", "You are not logged in to Spotify. Log in in the window that opened.")
                 else:
                     state.set("waiting", f"Spotify returned an error: {data}. Still waiting…")
+        if browser.proc.poll() is not None or time.time() < deadline:
+            return None  # the user closed the window
         raise TimeoutError
     finally:
-        if ws is not None:
-            try:
-                ws.send(json.dumps({"id": 0, "method": "Browser.close"}))
-            except Exception:
-                pass
-            ws.close()
-        try:
-            proc.wait(timeout=5)
-        except subprocess.TimeoutExpired:
-            proc.kill()
+        browser.close()
+
+
+# ── Persisted queries, kept up to date from the web player ────────────────────
+def _query(operation):
+    """(hash, variables template) for a pathfinder operation: discovered ones first, then the defaults."""
+    with _store_lock:
+        found = _read_json(_queries_file, {}).get(operation)
+    if found:
+        return found["hash"], found["variables"]
+    return DEFAULT_QUERIES[operation]
+
+
+def _parse_pathfinder_request(request):
+    """(operation, {"hash", "variables"}) from a web-player pathfinder request, or None."""
+    if PATHFINDER_URL not in request.get("url", "") or not request.get("postData"):
+        return None
+    try:
+        body = json.loads(request["postData"])
+        operation = body["operationName"]
+        sha = body["extensions"]["persistedQuery"]["sha256Hash"]
+    except (ValueError, KeyError, TypeError):
+        return None
+    if operation not in DEFAULT_QUERIES or not re.fullmatch(r"[0-9a-f]{64}", sha):
+        return None
+    return operation, {"hash": sha, "variables": body.get("variables") or {}}
+
+
+def _discover_queries(timeout=45):
+    """Browse an artist page and a search in a headless browser and save the queries the web player sends.
+
+    Works logged out too, except for profileAttributes (only sent when logged in),
+    which then keeps its previous hash. Returns the operations found.
+    """
+    # The pages to visit, each moving on once its query was seen (or after 12 s).
+    # The web player sends profileAttributes on every page when logged in, so by
+    # the last step it has usually been seen already.
+    steps = [
+        (f"https://open.spotify.com/artist/{DISCOVERY_ARTIST_ID}", "queryArtistOverview"),
+        ("https://open.spotify.com/search/coldplay", "searchDesktop"),
+        ("https://open.spotify.com/", "profileAttributes"),
+    ]
+    found = {}
+    browser = _Browser(headless=True)
+    try:
+        step, step_started = -1, 0.0
+        for msg in browser.messages(time.time() + timeout):
+            if found.keys() >= DEFAULT_QUERIES.keys():
+                break
+            if browser.page and (step < 0 or steps[step][1] in found or time.time() - step_started > 12):
+                step += 1
+                if step == len(steps):
+                    break
+                browser.navigate(steps[step][0])
+                step_started = time.time()
+            if msg and msg.get("method") == "Network.requestWillBeSent":
+                parsed = _parse_pathfinder_request(msg["params"].get("request", {}))
+                if parsed:
+                    found[parsed[0]] = parsed[1]
+    finally:
+        browser.close()
+
+    if found:
+        with _store_lock:
+            saved = _read_json(_queries_file, {})
+            saved.update(found)
+            _queries_file.write_text(json.dumps(saved, indent=2), encoding="utf-8")
+    return set(found)
+
+
+def _rediscover_queries():
+    """Refresh the saved queries (one browser at a time). True if any was found."""
+    if not _login_lock.acquire(timeout=60):
+        return False
+    try:
+        return bool(_discover_queries())
+    except Exception:
+        return False
+    finally:
+        _login_lock.release()
 
 
 def _store_captured(data):
@@ -314,6 +435,7 @@ def start_login():
             if data:
                 _store_captured(data)
                 _login_state.set("success", "Logged in.")
+                threading.Thread(target=_rediscover_queries, daemon=True).start()
             else:
                 _login_state.set("cancelled", "The Spotify window was closed before logging in.")
         except TimeoutError:
@@ -363,6 +485,11 @@ class SpotifyError(Exception):
         self.status = status
 
 
+class OutdatedQuery(SpotifyError):
+    def __init__(self):
+        super().__init__(502, "Spotify changed its web API and SpoTracker couldn't adapt. Try again later.")
+
+
 def _request(url, access_token, body=None):
     data = json.dumps(body).encode("utf-8") if body is not None else None
     req = Request(url, data=data, method="POST" if body is not None else "GET")
@@ -383,27 +510,38 @@ def _request(url, access_token, body=None):
         if e.code == 429:
             raise SpotifyError(429, "Spotify is rate-limiting requests. Try again in a minute.")
         if e.code == 412:
-            raise SpotifyError(502, "Spotify changed its web API (outdated query hash). SpoTracker needs an update.")
+            raise OutdatedQuery()
         raise SpotifyError(502, f"Spotify returned HTTP {e.code}.")
     except (URLError, OSError) as e:
         raise SpotifyError(502, f"Could not reach Spotify: {e}")
 
 
-def _pathfinder(access_token, operation, sha256, variables):
-    data = _request(PATHFINDER_URL, access_token, {
-        "variables": variables,
-        "operationName": operation,
-        "extensions": {"persistedQuery": {"version": 1, "sha256Hash": sha256}},
-    })
-    if data.get("errors") and not data.get("data"):
-        raise SpotifyError(502, data["errors"][0].get("message", "Spotify query failed."))
-    return data.get("data") or {}
+def _pathfinder(access_token, operation, variables=None):
+    """Run a persisted query, overriding some of its variables (e.g. the artist uri).
+
+    On an outdated hash, reads the current queries from the web player and retries once.
+    """
+    for attempt in (1, 2):
+        sha, template = _query(operation)
+        try:
+            data = _request(PATHFINDER_URL, access_token, {
+                "variables": {**template, **(variables or {})},
+                "operationName": operation,
+                "extensions": {"persistedQuery": {"version": 1, "sha256Hash": sha}},
+            })
+        except OutdatedQuery:
+            if attempt == 2 or not _rediscover_queries() or _query(operation)[0] == sha:
+                raise
+            continue
+        if data.get("errors") and not data.get("data"):
+            raise SpotifyError(502, data["errors"][0].get("message", "Spotify query failed."))
+        return data.get("data") or {}
 
 
 def fetch_profile():
     """The logged-in user's profile (get-spotify-profile.md), cached with the token."""
     token = get_access_token()
-    data = _pathfinder(token, "profileAttributes", PROFILE_HASH, {})
+    data = _pathfinder(token, "profileAttributes")
     p = (data.get("me") or {}).get("profile")
     if not p:
         raise SpotifyError(502, "Spotify returned no profile.")
@@ -432,12 +570,7 @@ def resolve_artist_uri(access_token, name):
 
     # api.spotify.com/v1/search answers 429 to web-player tokens, so search the
     # way the web player does. Results come ordered by relevance.
-    data = _pathfinder(access_token, "searchDesktop", SEARCH_HASH, {
-        "searchTerm": name, "offset": 0, "limit": 10, "numberOfTopResults": 5,
-        "includeAudiobooks": False, "includeArtistHasConcertsField": False,
-        "includePreReleases": False, "includeAlbumPreReleases": False, "includeAuthors": False,
-        "includeEpisodeContentRatingsV2": False, "isPrefix": None, "sectionFilters": ["GENERIC"],
-    })
+    data = _pathfinder(access_token, "searchDesktop", {"searchTerm": name})
     items = [i.get("data") or {} for i in ((data.get("searchV2") or {}).get("artists") or {}).get("items") or []]
     items = [a for a in items if a.get("uri", "").startswith("spotify:artist:")]
     exact = [a for a in items if _norm((a.get("profile") or {}).get("name", "")) == _norm(name)]
@@ -528,8 +661,7 @@ def fetch_artist(name):
     uri, approximate = resolve_artist_uri(token, name)
     if not uri:
         raise SpotifyError(404, f"Couldn't find “{name}” on Spotify.")
-    data = _pathfinder(token, "queryArtistOverview", ARTIST_HASH,
-                       {"uri": uri, "locale": "", "preReleaseV2": False, "includeMusicVideoPreviews": False})
+    data = _pathfinder(token, "queryArtistOverview", {"uri": uri})
     artist = data.get("artistUnion")
     if not artist or artist.get("__typename") != "Artist":
         raise SpotifyError(404, f"Spotify has no artist page for “{name}”.")

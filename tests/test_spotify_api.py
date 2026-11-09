@@ -100,3 +100,32 @@ def test_artist_needs_login(server):
     spotify_api.clear_login()
     status, data = _get(f"{server}/api/artist?name=Slow%20J", origin="null")
     assert status == 401
+
+
+# ── Persisted queries read from the web player ────────────────────────────────
+def _pathfinder_request(operation, sha="a" * 64, variables=None):
+    body = {"variables": variables or {}, "operationName": operation,
+            "extensions": {"persistedQuery": {"version": 1, "sha256Hash": sha}}}
+    return {"url": spotify_api.PATHFINDER_URL, "postData": json.dumps(body)}
+
+
+def test_parse_pathfinder_request():
+    op, query = spotify_api._parse_pathfinder_request(_pathfinder_request("searchDesktop", variables={"limit": 10}))
+    assert op == "searchDesktop" and query == {"hash": "a" * 64, "variables": {"limit": 10}}
+
+
+def test_parse_pathfinder_request_ignores_other_traffic():
+    assert spotify_api._parse_pathfinder_request(_pathfinder_request("fetchPlaylist")) is None  # not one we use
+    assert spotify_api._parse_pathfinder_request(_pathfinder_request("searchDesktop", sha="xyz")) is None
+    assert spotify_api._parse_pathfinder_request({"url": "https://open.spotify.com/api/token"}) is None
+
+
+def test_query_prefers_discovered_hash():
+    spotify_api._queries_file.unlink(missing_ok=True)
+    assert spotify_api._query("searchDesktop") == spotify_api.DEFAULT_QUERIES["searchDesktop"]
+    spotify_api._queries_file.write_text(json.dumps({"searchDesktop": {"hash": "b" * 64, "variables": {"x": 1}}}))
+    try:
+        assert spotify_api._query("searchDesktop") == ("b" * 64, {"x": 1})
+        assert spotify_api._query("profileAttributes") == spotify_api.DEFAULT_QUERIES["profileAttributes"]
+    finally:
+        spotify_api._queries_file.unlink()
