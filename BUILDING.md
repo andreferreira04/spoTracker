@@ -68,7 +68,7 @@ This checks that the built app loads all its modules, generates reports, keeps a
 & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" SpoTracker.iss
 ```
 
-Output: `output/SpoTrackerInstaller.exe`
+Output: `output/SpoTrackerInstaller-<version>.exe` (`SpoTrackerInstaller-0.0.0.exe` for local builds)
 
 Local builds keep version `0.0.0` (in `version.py` and `SpoTracker.iss`), so the installer, tray icon, dialogs and reports are all labelled **SpoTracker (Dev)**. Only the CI workflow sets a real version.
 
@@ -76,7 +76,7 @@ Local builds keep version `0.0.0` (in `version.py` and `SpoTracker.iss`), so the
 
 ## CI (`.github/workflows/main.yml`)
 
-Runs only when a version tag (`v*`) is pushed: runs the tests, then builds and smoke-tests the app, builds the installer and publishes a GitHub Release with `SpoTrackerInstaller.exe`.
+Runs only when a version tag (`v*`) is pushed: runs the tests, then builds and smoke-tests the app, builds the installer and publishes a GitHub Release with `SpoTrackerInstaller-<version>.exe` plus an identical `SpoTrackerInstaller.exe` copy, which the landing page's `releases/latest/download/` links rely on.
 
 ## Release
 
