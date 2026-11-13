@@ -113,12 +113,39 @@ def is_tracking_enabled(_=None):
     return _tracking_enabled
 
 
+TOOLTIP_MAX = 127  # Windows limits tray tooltips to 128 characters
+
+
+def tray_status(enabled, state, error=False):
+    """Tooltip text for the tray icon: what is being tracked right now."""
+    if not enabled:
+        text = "Tracking paused"
+    elif error:
+        text = "Can't read Spotify"
+    elif state is None:
+        text = "Spotify is not open"
+    elif not state.playing or not state.title:
+        text = "Spotify paused"
+    else:
+        text = f"{state.artist} – {state.title}" if state.artist else f"{state.title}"
+    full = f"{APP_NAME}\n{text}"
+    return full if len(full) <= TOOLTIP_MAX else full[:TOOLTIP_MAX - 1] + "…"
+
+
+def set_tray_status(text):
+    """Update the tray tooltip, only when it changed (the loop calls this every second)."""
+    if _tray_icon is not None and _tray_icon.title != text:
+        _tray_icon.title = text
+
+
 def toggle_tracking(icon=None, _=None):
     """Turn tracking on/off from the tray. The loop saves the current song on its next tick."""
     global _tracking_enabled
     _tracking_enabled = not _tracking_enabled
     if icon is not None:
-        icon.title = APP_NAME if _tracking_enabled else f"{APP_NAME} (tracking paused)"
+        icon.icon = create_tray_icon(grey=not _tracking_enabled)
+        if not _tracking_enabled:
+            icon.title = tray_status(False, None)
         icon.update_menu()
 
 
@@ -127,11 +154,14 @@ def tracking_tick(now):
     if not _tracking_enabled:
         # Save what was playing up to the moment tracking was turned off, then stay idle
         _tracker.stop(now)
+        set_tray_status(tray_status(False, None))
         return
+    error = False
     try:
         state = pu.get_now_playing()
     except Exception:
-        state = None
+        state, error = None, True
+    set_tray_status(tray_status(True, state, error))
     if _tracker.update(state, now):
         print("Artist: " + _tracker.artist)
         print("Music: " + _tracker.music)
@@ -145,13 +175,21 @@ def tracking_loop():
 
 
 # ── System Tray Icon ─────────────────────────────────────────────────────────
-def create_tray_icon():
-    """Load the SpoTracker logo (assets/icon.ico, bundled by PyInstaller) for the system tray."""
+def create_tray_icon(grey=False):
+    """Load the SpoTracker logo (assets/icon.ico, bundled by PyInstaller) for the system tray.
+
+    grey=True returns a faded greyscale version, shown while tracking is paused.
+    """
     from PIL import Image
 
     img = Image.open(pu.app_icon_path())
     img.size = (64, 64)  # pick the 64px frame of the .ico
-    return img.convert("RGBA")
+    img = img.convert("RGBA")
+    if grey:
+        lum = img.convert("L")
+        alpha = img.getchannel("A").point(lambda v: v * 6 // 10)
+        img = Image.merge("RGBA", (lum, lum, lum, alpha))
+    return img
 
 
 def run_tray():
