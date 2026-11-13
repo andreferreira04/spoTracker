@@ -107,6 +107,8 @@ The release will appear at `https://github.com/<user>/<repo>/releases`.
 | `feats.py` | Featured-artist detection and merging of song variants for the reports |
 | `spotify_api.py` | Spotify login (token captured from a Chrome/Edge window) and the localhost API the reports use for the profile, artist pages and playlists; started by the tray |
 | `clear_data.py` | Clear Data window |
+| `settings.py` | User settings (`settings.json` in the data folder): defaults, validation, safe writes |
+| `settings_window.py` | Settings window |
 | `music-register.spec` | PyInstaller config |
 | `smoke_test.py` | Checks a built app |
 | `tests/` | pytest suite |
