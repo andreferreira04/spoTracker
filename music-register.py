@@ -106,16 +106,41 @@ def check_for_updates():
 
 
 # ── Tracking loop (runs in background thread) ────────────────────────────────
+_tracking_enabled = True
+
+
+def is_tracking_enabled(_=None):
+    return _tracking_enabled
+
+
+def toggle_tracking(icon=None, _=None):
+    """Turn tracking on/off from the tray. The loop saves the current song on its next tick."""
+    global _tracking_enabled
+    _tracking_enabled = not _tracking_enabled
+    if icon is not None:
+        icon.title = APP_NAME if _tracking_enabled else f"{APP_NAME} (tracking paused)"
+        icon.update_menu()
+
+
+def tracking_tick(now):
+    """One iteration of the tracking loop."""
+    if not _tracking_enabled:
+        # Save what was playing up to the moment tracking was turned off, then stay idle
+        _tracker.stop(now)
+        return
+    try:
+        state = pu.get_now_playing()
+    except Exception:
+        state = None
+    if _tracker.update(state, now):
+        print("Artist: " + _tracker.artist)
+        print("Music: " + _tracker.music)
+        print("-" * 40)
+
+
 def tracking_loop():
     while True:
-        try:
-            state = pu.get_now_playing()
-        except Exception:
-            state = None
-        if _tracker.update(state, time.time()):
-            print("Artist: " + _tracker.artist)
-            print("Music: " + _tracker.music)
-            print("-" * 40)
+        tracking_tick(time.time())
         time.sleep(timeSleep)
 
 
@@ -139,6 +164,8 @@ def run_tray():
         pystray.MenuItem("Open Report", open_report, default=True),
         pystray.MenuItem("Generate New Report", generate_report),
         pystray.MenuItem("Clear Data…", open_clear_data),
+        pystray.Menu.SEPARATOR,
+        pystray.MenuItem("Tracking", toggle_tracking, checked=is_tracking_enabled),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Update", lambda _: pu.open_in_browser_url("https://www.spotracker.eu/"), visible=lambda _: _update_available),
         pystray.MenuItem("Exit", quit_app),
