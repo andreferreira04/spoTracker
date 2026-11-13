@@ -17,7 +17,7 @@ a = Analysis(
         ('templates/spotify.css', 'templates'),
         ('assets/icon.ico', 'assets'),
     ],
-    hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats', 'clear_data', 'version', 'platform_utils', 'tracker', 'feats', 'spotify_api', 'websocket'],
+    hiddenimports=['pystray', 'pystray._win32', 'PIL', 'PIL.Image', 'PIL.ImageDraw', 'get_stats', 'clear_data', 'settings', 'settings_window', 'version', 'platform_utils', 'tracker', 'feats', 'spotify_api', 'websocket'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

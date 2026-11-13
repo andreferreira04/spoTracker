@@ -11,6 +11,7 @@ from platform_utils import NowPlaying
 @pytest.fixture
 def app(tmp_path, monkeypatch):
     """music-register.py loaded as a module, saving into a list instead of the CSV."""
+    monkeypatch.setenv("SPOTRACKER_DATA_DIR", str(tmp_path))  # settings.json goes here
     spec = importlib.util.spec_from_file_location("music_register", ROOT / "music-register.py")
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -82,3 +83,16 @@ def test_loop_updates_the_tooltip(app, monkeypatch):
     monkeypatch.setattr(app.pu, "get_now_playing", broken)
     app.tracking_tick(1)
     assert "Can't read Spotify" in app._tray_icon.title
+
+
+# ── Remembering the tracking state ────────────────────────────────────────────
+def test_tracking_state_is_saved_and_only_restored_when_remembering(app):
+    import settings
+    assert app.initial_tracking_state() is True
+    app.toggle_tracking()                       # off
+    assert settings.load()["tracking_enabled"] is False
+    assert app.initial_tracking_state() is True  # not remembering: starts on anyway
+    settings.update(remember_tracking_state=True)
+    assert app.initial_tracking_state() is False
+    app.toggle_tracking()                       # back on
+    assert app.initial_tracking_state() is True

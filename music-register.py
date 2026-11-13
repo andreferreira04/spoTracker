@@ -5,6 +5,7 @@ import threading
 import time
 
 import platform_utils as pu
+import settings
 import tracker
 from version import VERSION, APP_NAME
 
@@ -48,6 +49,11 @@ def open_report(_=None):
 def open_clear_data(_=None):
     """Open the Clear Data window in its own process so the tray stays responsive."""
     launch_self("--clear-data", "open Clear Data")
+
+
+def open_settings(_=None):
+    """Open the Settings window in its own process so the tray stays responsive."""
+    launch_self("--settings", "open Settings")
 
 
 _tracker = tracker.Tracker(saveMusic)
@@ -138,10 +144,20 @@ def set_tray_status(text):
         _tray_icon.title = text
 
 
+def initial_tracking_state():
+    """Tracking starts on, unless "remember tracking state" is set and it was off when the app closed."""
+    s = settings.load()
+    return s["tracking_enabled"] or not s["remember_tracking_state"]
+
+
 def toggle_tracking(icon=None, _=None):
     """Turn tracking on/off from the tray. The loop saves the current song on its next tick."""
     global _tracking_enabled
     _tracking_enabled = not _tracking_enabled
+    try:
+        settings.update(tracking_enabled=_tracking_enabled)  # always saved; only used if remembering is on
+    except OSError:
+        pass
     if icon is not None:
         icon.icon = create_tray_icon(grey=not _tracking_enabled)
         if not _tracking_enabled:
@@ -202,6 +218,7 @@ def run_tray():
         pystray.MenuItem("Open Report", open_report, default=True),
         pystray.MenuItem("Generate New Report", generate_report),
         pystray.MenuItem("Clear Data…", open_clear_data),
+        pystray.MenuItem("Settings", open_settings),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem("Tracking", toggle_tracking, checked=is_tracking_enabled),
         pystray.Menu.SEPARATOR,
@@ -209,8 +226,11 @@ def run_tray():
         pystray.MenuItem("Exit", quit_app),
     )
 
-    global _tray_icon
-    icon = pystray.Icon("SpoTracker", icon_image, APP_NAME, menu)
+    global _tray_icon, _tracking_enabled
+    _tracking_enabled = initial_tracking_state()
+    if not _tracking_enabled:
+        icon_image = create_tray_icon(grey=True)
+    icon = pystray.Icon("SpoTracker", icon_image, tray_status(_tracking_enabled, None), menu)
     _tray_icon = icon
 
     # Start the tracking loop in a daemon thread
@@ -223,8 +243,8 @@ def run_tray():
         print(f"Spotify API port {spotify_api.PORT} is busy; Spotify features in the reports are off.")
 
     # Check for updates in a background thread (non-blocking)
-    update_thread = threading.Thread(target=check_for_updates, daemon=True)
-    update_thread.start()
+    if settings.load()["check_for_updates"]:
+        threading.Thread(target=check_for_updates, daemon=True).start()
 
     # Run the tray icon on the main thread (blocks until icon.stop())
     icon.run()
@@ -236,6 +256,7 @@ def self_test():
     import tkinter
     import get_stats
     import clear_data
+    import settings_window
     print("tray backend:", pystray.Icon.__module__)
     print("tray icon:", create_tray_icon().size)  # fails if assets/icon.ico was not bundled
     print("now playing:", pu.get_now_playing())
@@ -250,6 +271,13 @@ if __name__ == "__main__":
         # Called from the tray or a Start Menu shortcut — just generate the report and exit
         import get_stats
         get_stats.generate_stats()
+    elif "--settings" in sys.argv:
+        import settings_window
+
+        def regenerate():
+            import get_stats  # imported here: it reads the settings when imported
+            get_stats.generate_stats()
+        settings_window.open_dialog(pu.FileLock(save_dir / "settings-window.lock"), regenerate)
     elif "--clear-data" in sys.argv:
         import clear_data
         clear_data.open_dialog(musicListFile, backupDir, csvLock, pu.FileLock(save_dir / "clear-data.lock"))

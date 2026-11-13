@@ -184,8 +184,8 @@
 					<ul class="combo-list" id="artist-list" role="listbox" hidden></ul>
 				</div>
 			</div>
-			<button class="btn-pill" id="btn-recent" onclick="toggleFilter('recent')">Recent</button>
-			<button class="btn-pill" id="btn-lowperc" onclick="toggleFilter('lowperc')">Low %</button>
+			<button class="btn-pill" id="btn-recent" onclick="toggleFilter('recent')" title="Played in the last {{ recent_days }} days">Recent</button>
+			<button class="btn-pill" id="btn-lowperc" onclick="toggleFilter('lowperc')" title="Less than {{ limiar_baixo }}% of plays listened past {{ min_listen }} s">Low %</button>
 			<button class="page-btn clear-btn" onclick="resetFilters()">Clear</button>
 		</div>
 
@@ -248,6 +248,7 @@
 // ── Data injected by Python ───────────────────────────────────────────────────
 const ALL_TRACKS = {{ tracks_json }};
 const LOW_PERC_THRESHOLD = {{ limiar_baixo }};
+const HIGH_PERC_THRESHOLD = {{ high_perc }};
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let state = { recent: false, lowperc: false, search: "", artist: "", minPerc: 0, minPlays: 0 };
@@ -329,7 +330,7 @@ function renderPage() {
 	const frag   = document.createDocumentFragment();
 
 	slice.forEach(t => {
-		const percClass = t.perc >= 75 ? "perc-high" : t.perc >= LOW_PERC_THRESHOLD ? "perc-mid" : "perc-low";
+		const percClass = t.perc >= HIGH_PERC_THRESHOLD ? "perc-high" : t.perc >= LOW_PERC_THRESHOLD ? "perc-mid" : "perc-low";
 		const badge     = t.recent ? '<span class="badge-recent">Recent</span>' : "";
 		const tr        = document.createElement("tr");
 		tr.innerHTML =

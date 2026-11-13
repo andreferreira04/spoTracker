@@ -9,6 +9,7 @@ import os
 
 import feats
 import platform_utils as pu
+import settings
 import spotify_api
 from version import APP_NAME
 
@@ -18,8 +19,12 @@ save_dir      = pu.get_data_dir()
 csv_file      = save_dir / "music-list.csv"
 output_folder = save_dir / "reports"
 
-MIN_LISTEN_SECONDS = 20   # minimum seconds to count as a valid play
-LOW_PERC_THRESHOLD = 25   # percentage threshold for the "Low %" filter
+# User settings (see settings.py), read once per report generation
+_settings = settings.load()
+MIN_LISTEN_SECONDS  = _settings["min_listen_seconds"]   # a play this short or shorter is a skip
+LOW_PERC_THRESHOLD  = _settings["low_perc_threshold"]   # "Low %" filter and red colour in Tracks
+HIGH_PERC_THRESHOLD = _settings["high_perc_threshold"]  # green colour in Tracks
+RECENT_DAYS         = _settings["recent_days"]          # "Recent" in Tracks and the listening heatmap
 
 data = []
 
@@ -28,6 +33,11 @@ data = []
 def msgbox(title: str, message: str, kind: str = "info"):
     """Show a native message box. kind: "info", "warning" or "error"."""
     pu.show_message(title, message, kind)
+
+
+def is_play(seconds: int) -> bool:
+    """A record counts as a play when it lasted longer than MIN_LISTEN_SECONDS (shorter ones are skips)."""
+    return seconds > MIN_LISTEN_SECONDS
 
 
 def sort_key(text: str) -> str:
@@ -112,8 +122,8 @@ def generate_tracks_report() -> Path:
 
     tracks_by_artist: dict = {}
     today  = datetime.today()
-    window = timedelta(days=30)
-    recent_map: dict = {} # keeps track of recent tracks (30 days by default)
+    window = timedelta(days=RECENT_DAYS)
+    recent_map: dict = {} # (artist, track) -> played in the last RECENT_DAYS days
     first_played: dict = {}  # (artist, track) -> date of the first record (ISO, for sorting)
     last_index: dict = {}    # (artist, track) -> index of its latest valid play
     gap_map: dict = {}       # (artist, track) -> valid plays between its two most recent plays
@@ -133,7 +143,7 @@ def generate_tracks_report() -> Path:
             first_played[key] = date.strftime("%Y-%m-%d")
 
         tracks_by_artist[artist][track]["plays"] += 1
-        if seconds > MIN_LISTEN_SECONDS:
+        if is_play(seconds):
             tracks_by_artist[artist][track]["valid_plays"] += 1
             if date >= today - window:
                 recent_map[key] = True
@@ -169,6 +179,9 @@ def generate_tracks_report() -> Path:
         template
         .replace("{{ tracks_json }}", json.dumps(tracks_list, ensure_ascii=False))
         .replace("{{ limiar_baixo }}", str(LOW_PERC_THRESHOLD))
+        .replace("{{ high_perc }}", str(HIGH_PERC_THRESHOLD))
+        .replace("{{ min_listen }}", str(MIN_LISTEN_SECONDS))
+        .replace("{{ recent_days }}", str(RECENT_DAYS))
     )
 
     out = output_folder / "tracks-by-artist.html"
@@ -239,7 +252,7 @@ def generate_overview() -> Path:
 
         # Track plays (only valid plays)
         key = (entry.artist, entry.track)
-        if sec > MIN_LISTEN_SECONDS:
+        if is_play(sec):
             track_plays[key] = track_plays.get(key, 0) + 1
 
         # Artist aggregation
@@ -294,7 +307,7 @@ def generate_overview() -> Path:
     ]
 
     today = datetime.today()
-    window = timedelta(days=30)
+    window = timedelta(days=RECENT_DAYS)
     heatmap_seconds = [[0] * 24 for _ in range(7)]
 
     for entry in data:
@@ -329,7 +342,7 @@ def generate_overview() -> Path:
             current_hour += 1
 
     weekday_count = [0] * 7
-    for i in range(31):
+    for i in range(RECENT_DAYS + 1):
         d = today - timedelta(days=i)
         weekday_count[d.weekday()] += 1
 
@@ -386,7 +399,7 @@ def generate_stats_page(overview_data: dict) -> Path:
     for entry in data:
         try:
             d = datetime.strptime(entry.date, "%d-%m-%Y").date()
-            if entry.seconds_listened > MIN_LISTEN_SECONDS:
+            if is_play(entry.seconds_listened):
                 listening_dates.add(d)
         except ValueError:
             pass
@@ -439,7 +452,11 @@ def generate_stats_page(overview_data: dict) -> Path:
         "monthlyTrend":     monthly_trend,
     }
 
-    html = template.replace("{{ stats_json }}", json.dumps(stats_data, ensure_ascii=False))
+    html = (
+        template
+        .replace("{{ stats_json }}", json.dumps(stats_data, ensure_ascii=False))
+        .replace("{{ recent_days }}", str(RECENT_DAYS))
+    )
 
     out = output_folder / "stats.html"
     out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")
@@ -487,7 +504,7 @@ def generate_share_page() -> Path:
 
         key = (entry.artist, entry.track)
         sec = entry.seconds_listened
-        valid = sec > MIN_LISTEN_SECONDS
+        valid = is_play(sec)
         for name, _, start in periods:
             if start is not None and (d is None or d < start):
                 continue
@@ -554,7 +571,7 @@ def generate_playlists_page() -> Path:
         total_seconds += sec
         song = songs.setdefault(feats.song_key(entry.artist, entry.track), [entry.artist, entry.track, 0, 0, ""])
         song[2] += sec
-        if sec > MIN_LISTEN_SECONDS:
+        if is_play(sec):
             song[3] += 1
         if day > song[4]:
             song[4] = day
@@ -567,6 +584,8 @@ def generate_playlists_page() -> Path:
     html = (
         template
         .replace("{{ history_json }}", json.dumps(history, ensure_ascii=False, separators=(",", ":")))
+        .replace("{{ forgotten_days }}", str(_settings["forgotten_days"]))
+        .replace("{{ forgotten_min_plays }}", str(_settings["forgotten_min_plays"]))
         .replace("{{ api_port }}", str(spotify_api.PORT))
     )
     out = output_folder / "playlists.html"
