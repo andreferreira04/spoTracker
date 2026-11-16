@@ -6,7 +6,7 @@
 	<title>Tracks — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
 	<link rel="stylesheet" href="spotify.css" />
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600&family=Sofia+Sans+Condensed:wght@700;900&family=Sofia+Sans+Extra+Condensed:wght@700;800;900&display=swap" rel="stylesheet" />
 	<style>
 		:root {
 			--ps-bg: #121212;
@@ -22,37 +22,43 @@
 			--ps-border: #312e2a;
 			--ps-radius: 16px;
 			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+			--ps-ground: #15120e;
+			--ps-rule: #3a332b;
+			--ps-raised: #211d18;
+			--ps-radius-sm: 6px;
+			--ps-radius-md: 12px;
+			--ps-font: "Sofia Sans", system-ui, sans-serif;
+			--ps-font-cond: "Sofia Sans Condensed", system-ui, sans-serif;
+			--ps-font-xcond: "Sofia Sans Extra Condensed", system-ui, sans-serif;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
-		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
-		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+		body { font-family: var(--ps-font); font-size: 15px; background-color: var(--ps-ground); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 56px }
 
 		/* ── Header / Nav ──────────────────────────────── */
-		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 32px; padding: 20px 0; margin-bottom: 56px; border-bottom: 1px solid var(--ps-rule) }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
-		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
-		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
-		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
-		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
-		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
-		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+		.brand-title { font-family: var(--ps-font-xcond); font-size: 28px; font-weight: 900; line-height: 1 }
+		.main-nav { display: flex; align-items: center; gap: 4px 24px; flex-wrap: wrap }
+		.nav-link { font-size: 15px; font-weight: 500; line-height: 1; color: var(--ps-ink-soft); text-decoration: none; padding: 10px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s }
+		.nav-link:hover { color: var(--ps-ink) }
+		.nav-link.active { color: var(--ps-ink); border-bottom-color: var(--ps-accent) }
 
 		/* ── Intro ─────────────────────────────────────── */
-		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
-		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+		.intro { margin-bottom: 40px }
+		.intro-title { font-family: var(--ps-font-xcond); font-size: 56px; font-weight: 800; line-height: .95; letter-spacing: -.28px }
+		.intro-text { max-width: 620px; margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--ps-ink-soft) }
 
 		/* ── Filter bar ────────────────────────────────── */
-		.filter-bar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 16px; margin-bottom: 16px; box-shadow: var(--ps-shadow) }
+		.filter-bar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; background-color: var(--ps-raised); border-radius: var(--ps-radius-md); padding: 16px; margin-bottom: 16px }
 		.filter-group { display: flex; flex-direction: column; gap: 6px }
 		.filter-group.grow { flex: 1; min-width: 180px }
-		.filter-label { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
-		.filter-input, .filter-select { font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 10px; padding: 9px 12px; outline: none }
+		.filter-label { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft) }
+		.filter-input, .filter-select { font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 9px 12px; outline: none }
 		.filter-input:focus, .filter-select:focus { border-color: var(--ps-accent) }
 		.search-field { position: relative; flex: 1; min-width: 220px }
 		.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--ps-ink-soft) }
-		.search-input { width: 100%; font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 11px 16px 11px 38px; outline: none }
+		.search-input { width: 100%; font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 11px 16px 11px 38px; outline: none }
 		.search-input:focus { border-color: var(--ps-accent) }
 
 		/* ── Artist combobox ───────────────────────────── */
@@ -60,9 +66,9 @@
 		.combo-input { width: 100%; padding-right: 32px }
 		.combo-clear { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); font-size: 16px; line-height: 1; color: var(--ps-ink-soft); background: none; border: none; padding: 4px 6px; cursor: pointer }
 		.combo-clear:hover { color: var(--ps-ink) }
-		.combo-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; max-height: 280px; overflow-y: auto; list-style: none; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 10px; box-shadow: var(--ps-shadow); padding: 4px }
+		.combo-list { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; max-height: 280px; overflow-y: auto; list-style: none; background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); box-shadow: var(--ps-shadow); padding: 4px }
 		.combo-option { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; padding: 8px 10px; border-radius: 6px; cursor: pointer }
-		.combo-option.active { background-color: var(--ps-surface-2) }
+		.combo-option.active { background-color: var(--ps-raised) }
 		.combo-option.selected { color: var(--ps-accent) }
 		.combo-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 		.combo-count { font-size: 12px; color: var(--ps-ink-soft) }
@@ -79,65 +85,65 @@
 		.pl-option .combo-name { flex: 1 }
 		.pl-filter-msg { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--ps-ink-soft); padding: 8px 10px }
 		.pl-filter-loading { display: flex; align-items: center; gap: 10px }
-		.pl-spinner { flex-shrink: 0; width: 16px; height: 16px; border: 2px solid var(--ps-border); border-top-color: var(--ps-accent); border-radius: 50%; animation: pl-spin .6s linear infinite }
+		.pl-spinner { flex-shrink: 0; width: 16px; height: 16px; border: 2px solid var(--ps-rule); border-top-color: var(--ps-accent); border-radius: 50%; animation: pl-spin .6s linear infinite }
 		@keyframes pl-spin { to { transform: rotate(360deg) } }
-		.pl-filter-retry { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-surface-2); border: none; border-radius: 999px; padding: 6px 12px; cursor: pointer }
+		.pl-filter-retry { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-raised); border: none; border-radius: var(--ps-radius-sm); padding: 6px 12px; cursor: pointer }
 
 		/* ── Pill buttons ──────────────────────────────── */
-		.btn-pill { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
-		.btn-pill:hover { color: var(--ps-ink); background-color: var(--ps-surface-2) }
-		.btn-pill.active { color: var(--ps-surface); background-color: var(--ps-accent); border-color: var(--ps-accent) }
+		.btn-pill { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
+		.btn-pill:hover { color: var(--ps-ink); background-color: var(--ps-raised) }
+		.btn-pill.active { color: var(--ps-ground); background-color: var(--ps-accent); border-color: var(--ps-accent) }
 
 		/* ── Sliders ───────────────────────────────────── */
 		.sliders-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 4px }
 		.slider-group { display: flex; align-items: center; gap: 14px }
 		.slider-label { font-size: 13px; color: var(--ps-ink-soft); white-space: nowrap }
 		.slider-label span { color: var(--ps-accent); font-weight: 600 }
-		input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: 999px; background: var(--ps-border); outline: none; cursor: pointer }
+		input[type=range] { flex: 1; -webkit-appearance: none; appearance: none; height: 5px; border-radius: var(--ps-radius-sm); background: var(--ps-rule); outline: none; cursor: pointer }
 		input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--ps-accent); cursor: pointer; transition: transform .15s }
 		input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15) }
 		input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 50%; background: var(--ps-accent); border: none; cursor: pointer }
 
 		/* ── Reset button ──────────────────────────────── */
 		.clear-btn { align-self: flex-end }
-		.page-btn { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 10px; padding: 9px 16px; cursor: pointer; transition: background-color .15s, opacity .15s }
-		.page-btn:hover:not(:disabled) { background-color: var(--ps-surface-2) }
+		.page-btn { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 9px 16px; cursor: pointer; transition: background-color .15s, opacity .15s }
+		.page-btn:hover:not(:disabled) { background-color: var(--ps-raised) }
 		.page-btn:disabled { opacity: .45; cursor: not-allowed }
 
 		/* ── Toolbar ───────────────────────────────────── */
 		.toolbar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px }
 		.result-count { font-size: 13px; color: var(--ps-ink-soft) }
 		.result-count strong { color: var(--ps-ink) }
-		.page-size-select { font-family: inherit; font-size: 13px; color: var(--ps-ink-soft); background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 8px; padding: 4px 8px; outline: none; cursor: pointer }
+		.page-size-select { font-family: inherit; font-size: 13px; color: var(--ps-ink-soft); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 4px 8px; outline: none; cursor: pointer }
 		.page-size-select:focus { border-color: var(--ps-accent) }
 
 		/* ── Table ─────────────────────────────────────── */
-		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); box-shadow: var(--ps-shadow); overflow: hidden }
+		.panel { border-bottom: 1px solid var(--ps-rule) }
 		.table-wrap { width: 100%; overflow-x: auto }
-		.data-table { width: 100%; border-collapse: collapse; font-size: 14px }
-		.data-table thead th { text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ps-ink-soft); background-color: var(--ps-surface-2); padding: 14px 18px; white-space: nowrap; cursor: pointer; user-select: none; transition: color .15s }
+		.data-table { width: 100%; border-collapse: collapse; font-size: 15px }
+		.data-table thead th { text-align: left; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); padding: 10px 16px; border-bottom: 1px solid var(--ps-rule); white-space: nowrap; cursor: pointer; user-select: none; transition: color .15s }
 		.data-table thead th:hover { color: var(--ps-ink) }
 		.data-table thead th.sorted { color: var(--ps-accent) }
 		.sort-icon { display: inline-block; margin-left: 4px; opacity: .4; font-style: normal; font-size: 11px; transition: opacity .2s }
 		th.sorted .sort-icon { opacity: 1 }
 		.data-table th.num, .data-table td.num { text-align: right }
-		.data-table tbody td { padding: 13px 18px; border-top: 1px solid var(--ps-border) }
-		.data-table tbody tr:hover { background-color: var(--ps-surface-2) }
-		.cell-strong { font-weight: 500; color: var(--ps-ink) }
-		.badge-recent { display: inline-block; background-color: rgba(79,122,63,.12); color: var(--ps-up); font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; margin-left: 6px; vertical-align: middle }
+		.data-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--ps-rule) }
+		.data-table tbody tr:hover { background-color: var(--ps-raised) }
+		.cell-strong { font-weight: 600; color: var(--ps-ink) }
+		.badge-recent { display: inline-block; color: var(--ps-up); font-size: 13px; font-weight: 500; margin-left: 6px; vertical-align: baseline }
 		.perc-cell { font-weight: 500 }
 		.cell-soft { color: var(--ps-ink-soft); white-space: nowrap }
 		.perc-high { color: var(--ps-up) }
 		.perc-mid { color: var(--ps-warn) }
 		.perc-low { color: var(--ps-down) }
-		.empty-cell { text-align: center; color: var(--ps-ink-soft); padding: 32px 18px }
+		.empty-cell { text-align: center; color: var(--ps-ink-soft); padding: 32px 16px }
 
 		/* ── Pagination ────────────────────────────────── */
 		.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px }
 		.page-status { font-size: 13px; color: var(--ps-ink-soft); min-width: 100px; text-align: center }
 
 		/* ── Footer ────────────────────────────────────── */
-		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+		.footer { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--ps-rule); font-size: 15px; color: var(--ps-ink-soft) }
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (max-width: 700px) {
@@ -147,6 +153,7 @@
 			.sliders-row { grid-template-columns: 1fr }
 			.header { flex-direction: column; align-items: flex-start }
 		}
+		@media (max-width: 640px) { .intro-title { font-size: 40px } .stat-value { font-size: 32px } .panel-title { font-size: 24px } }
 	</style>
 </head>
 <body>
@@ -155,10 +162,8 @@
 	<!-- Header -->
 	<header class="header">
 		<div class="brand">
-			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
 				<h1 class="brand-title">{{ app_name }}</h1>
-				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
 		<div class="header-right">

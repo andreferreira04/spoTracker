@@ -466,8 +466,6 @@ def generate_stats_page(overview_data: dict) -> Path:
 
 # ── Report: shareable summary images ──────────────────────────────────────────
 def generate_share_page() -> Path:
-    import base64
-
     template_path = resource_path("templates/share.html")
     try:
         template = template_path.read_text(encoding="utf-8")
@@ -534,14 +532,7 @@ def generate_share_page() -> Path:
             "topTracks":  [{"artist": k[0], "track": k[1], "plays": v} for k, v in top_tracks],
         })
 
-    # Embedded rather than linked: a canvas that draws a file:// image can't be exported
-    logo = base64.b64encode(resource_path("templates/logo.png").read_bytes()).decode("ascii")
-
-    html = (
-        template
-        .replace("{{ share_json }}", json.dumps(share_data, ensure_ascii=False))
-        .replace("{{ logo_data_uri }}", f"data:image/png;base64,{logo}")
-    )
+    html = template.replace("{{ share_json }}", json.dumps(share_data, ensure_ascii=False))
 
     out = output_folder / "share.html"
     out.write_text(html.replace("{{ app_name }}", APP_NAME).replace("{{ api_port }}", str(spotify_api.PORT)), encoding="utf-8")

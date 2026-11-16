@@ -6,7 +6,7 @@
 	<title>Playlists — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
 	<link rel="stylesheet" href="spotify.css" />
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600&family=Sofia+Sans+Condensed:wght@700;900&family=Sofia+Sans+Extra+Condensed:wght@700;800;900&display=swap" rel="stylesheet" />
 	<style>
 		:root {
 			--ps-bg: #121212;
@@ -18,116 +18,128 @@
 			--ps-accent-soft: #f7a96b;
 			--ps-up: #5fc46b;
 			--ps-down: #ef6f4d;
+			--ps-warn: #d4a017;
 			--ps-border: #312e2a;
 			--ps-radius: 16px;
 			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+			--ps-ground: #15120e;
+			--ps-rule: #3a332b;
+			--ps-raised: #211d18;
+			--ps-radius-sm: 6px;
+			--ps-radius-md: 12px;
+			--ps-font: "Sofia Sans", system-ui, sans-serif;
+			--ps-font-cond: "Sofia Sans Condensed", system-ui, sans-serif;
+			--ps-font-xcond: "Sofia Sans Extra Condensed", system-ui, sans-serif;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
-		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
-		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+		body { font-family: var(--ps-font); font-size: 15px; background-color: var(--ps-ground); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 56px }
 		button { font-family: inherit }
 
 		/* ── Header / Nav ──────────────────────────────── */
-		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 32px; padding: 20px 0; margin-bottom: 56px; border-bottom: 1px solid var(--ps-rule) }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
-		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
-		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
-		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
-		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
-		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
-		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+		.brand-title { font-family: var(--ps-font-xcond); font-size: 28px; font-weight: 900; line-height: 1 }
+		.main-nav { display: flex; align-items: center; gap: 4px 24px; flex-wrap: wrap }
+		.nav-link { font-size: 15px; font-weight: 500; line-height: 1; color: var(--ps-ink-soft); text-decoration: none; padding: 10px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s }
+		.nav-link:hover { color: var(--ps-ink) }
+		.nav-link.active { color: var(--ps-ink); border-bottom-color: var(--ps-accent) }
 
 		/* ── Intro ─────────────────────────────────────── */
-		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
-		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+		.intro { margin-bottom: 40px }
+		.intro-title { font-family: var(--ps-font-xcond); font-size: 56px; font-weight: 800; line-height: .95; letter-spacing: -.28px }
+		.intro-text { max-width: 620px; margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--ps-ink-soft) }
 
 		/* ── Cards & panels ────────────────────────────── */
-		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px }
-		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
-		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
-		.stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
-		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
-		.content-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px }
-		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 22px; box-shadow: var(--ps-shadow) }
-		.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px }
-		.panel-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 18px; font-weight: 600 }
-		.panel-sub { font-size: 13px; color: var(--ps-ink-soft); margin-top: 2px }
-		.panel-tag { font-size: 12px; font-weight: 500; color: var(--ps-accent); background-color: var(--ps-surface-2); padding: 4px 10px; border-radius: 999px; white-space: nowrap }
+		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px; margin-bottom: 48px }
+		.stat-card { display: flex; flex-direction: column; gap: 6px; padding: 16px 0; border-top: 1px solid var(--ps-rule) }
+		.stat-label { font-size: 15px; color: var(--ps-ink-soft) }
+		.stat-value { font-family: var(--ps-font-cond); font-size: 40px; font-weight: 900; line-height: 1 }
+		.stat-trend { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft) }
+		.content-grid { display: grid; grid-template-columns: 1fr; gap: 56px 48px; margin-top: 16px }
+		.panel { min-width: 0; padding-top: 24px; border-top: 1px solid var(--ps-rule) }
+		.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 20px }
+		.panel-title { font-family: var(--ps-font-cond); font-size: 28px; font-weight: 700; line-height: 1.1 }
+		.panel-sub { font-size: 15px; color: var(--ps-ink-soft); margin-top: 4px }
+		.panel-tag { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); white-space: nowrap }
 		.empty { font-size: 14px; color: var(--ps-ink-soft) }
 
 		/* ── Locked / loading ──────────────────────────── */
 		.locked { max-width: 640px }
-		.locked h3 { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 600; margin-bottom: 8px }
-		.locked p { color: var(--ps-ink-soft); font-size: 15px }
+		.locked h3 { font-family: var(--ps-font-xcond); font-size: 34px; font-weight: 700; line-height: 1.05; margin-bottom: 12px }
+		.locked p { color: var(--ps-ink-soft); font-size: 17px; line-height: 1.55 }
 		.locked ul { margin: 16px 0 18px 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px }
 		.locked .privacy { font-size: 13px; margin-top: 14px }
 		.locked .spotify-login-btn { padding: 11px 22px; font-size: 15px }
 		.loading { display: flex; align-items: center; gap: 14px; color: var(--ps-ink-soft) }
-		.spinner { flex-shrink: 0; width: 24px; height: 24px; border: 3px solid var(--ps-border); border-top-color: var(--ps-accent); border-radius: 50%; animation: spin .6s linear infinite }
+		.spinner { flex-shrink: 0; width: 24px; height: 24px; border: 3px solid var(--ps-rule); border-top-color: var(--ps-accent); border-radius: 50%; animation: spin .6s linear infinite }
 		@keyframes spin { to { transform: rotate(360deg) } }
 		[hidden] { display: none !important }
 
 		/* ── Playlist chart ────────────────────────────── */
 		.toolbar { display: flex; align-items: center; gap: 10px; font-size: 12px; color: var(--ps-ink-soft) }
-		.refresh-btn { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--ps-border); background: none; color: var(--ps-ink-soft); font-size: 12px; font-weight: 500; cursor: pointer }
-		.refresh-btn:hover:not(:disabled) { color: var(--ps-ink); background-color: var(--ps-surface-2) }
+		.refresh-btn { padding: 6px 12px; border-radius: var(--ps-radius-sm); border: 1px solid var(--ps-rule); background: none; color: var(--ps-ink-soft); font-size: 12px; font-weight: 500; cursor: pointer }
+		.refresh-btn:hover:not(:disabled) { color: var(--ps-ink); background-color: var(--ps-raised) }
 		.refresh-btn:disabled { opacity: .5; cursor: default }
-		.pl-list { list-style: none; display: flex; flex-direction: column; gap: 4px }
-		.pl-row { width: 100%; display: grid; grid-template-columns: 28px 52px minmax(0, 1fr) minmax(90px, 32%) 18px; align-items: center; gap: 14px; padding: 10px 8px; border: none; border-radius: 12px; background: none; color: inherit; text-align: left; cursor: pointer }
-		.pl-row:hover, .pl-row[aria-expanded="true"] { background-color: var(--ps-surface-2) }
-		.rank { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); text-align: center }
-		.pl-cover { width: 52px; height: 52px; border-radius: 8px; object-fit: cover; background-color: var(--ps-surface-2) }
-		.pl-name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.pl-list { list-style: none; display: flex; flex-direction: column }
+		.pl-row { width: 100%; display: grid; grid-template-columns: 32px 52px minmax(0, 1fr) minmax(90px, 32%) 18px; align-items: center; gap: 14px; padding: 10px 8px; border: none; border-bottom: 1px solid var(--ps-rule); background: none; color: inherit; text-align: left; cursor: pointer }
+		.pl-row:hover, .pl-row[aria-expanded="true"] { background-color: var(--ps-raised) }
+		.rank { font-family: var(--ps-font-cond); font-size: 24px; font-weight: 900; line-height: 1; color: var(--ps-ink) }
+		.pl-cover { width: 52px; height: 52px; border-radius: var(--ps-radius-sm); object-fit: cover; background-color: var(--ps-raised) }
+		.pl-name { font-weight: 600; font-size: 17px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 		.pl-meta { font-size: 13px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-		.badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 600; vertical-align: 2px; background-color: #1DB954; color: #08240f }
-		.badge.follow { background-color: var(--ps-surface-2); color: var(--ps-ink-soft) }
+		.badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: var(--ps-radius-sm); font-size: 11px; font-weight: 600; vertical-align: 2px; background-color: #1DB954; color: #08240f }
+		.badge.follow { background-color: var(--ps-raised); color: var(--ps-ink-soft) }
 		.pl-bar { display: flex; flex-direction: column; gap: 6px }
-		.pl-time { font-size: 13px; font-weight: 600; text-align: right }
-		.meter { height: 8px; background-color: var(--ps-surface-2); border-radius: 999px; overflow: hidden }
-		.pl-row:hover .meter, .pl-row[aria-expanded="true"] .meter { background-color: var(--ps-surface) }
-		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent); border-radius: 999px }
+		.pl-time { font-family: var(--ps-font-cond); font-size: 17px; font-weight: 700; text-align: right }
+		.meter { height: 6px; background-color: var(--ps-raised); overflow: hidden }
+		.pl-row:hover .meter, .pl-row[aria-expanded="true"] .meter { background-color: var(--ps-ground) }
+		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent) }
 		.chevron { color: var(--ps-ink-soft); transition: transform .15s; font-size: 12px }
 		.pl-row[aria-expanded="true"] .chevron { transform: rotate(90deg) }
 
 		/* ── Track chart (inside a playlist) ───────────── */
-		.tracks { margin: 4px 0 14px 42px; padding: 6px 0 4px 14px; border-left: 2px solid var(--ps-border) }
+		.tracks { margin: 4px 0 14px 42px; padding: 6px 0 4px 14px; border-left: 2px solid var(--ps-rule) }
 		.tracks-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: var(--ps-ink-soft); margin: 4px 0 8px }
 		.tracks-head a { color: #1DB954; font-weight: 600; text-decoration: none }
 		.tracks-head a:hover { text-decoration: underline }
 		.track-list { list-style: none; display: flex; flex-direction: column; gap: 2px }
-		.track { display: grid; grid-template-columns: 26px 40px minmax(0, 1fr) 72px minmax(80px, 24%); align-items: center; gap: 12px; padding: 7px 6px; border-radius: 8px }
-		.track:hover { background-color: var(--ps-surface-2) }
-		.track .rank { font-size: 13px }
-		.track-cover { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background-color: var(--ps-surface-2) }
-		.track-name { font-weight: 500; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
-		.track-sub { font-size: 12px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.track { display: grid; grid-template-columns: 26px 40px minmax(0, 1fr) 72px minmax(80px, 24%); align-items: center; gap: 12px; padding: 7px 6px; border-radius: var(--ps-radius-sm) }
+		.track:hover { background-color: var(--ps-raised) }
+		.track-list > .track:first-child { background-color: var(--ps-accent); border-bottom-color: var(--ps-accent); color: var(--ps-ground) }
+		.track-list > .track:first-child:hover { background-color: var(--ps-accent) }
+		.track-list > .track:first-child .track-sub, .track-list > .track:first-child .track-plays, .track-list > .track:first-child .track-time, .track-list > .track:first-child .rank, .track-list > .track:first-child .artist-link:hover { color: var(--ps-ground) }
+		.track-list > .track:first-child .meter { background-color: var(--ps-accent-soft) }
+		.track-list > .track:first-child .meter-fill { background-color: var(--ps-ground) }
+		.track .rank { font-size: 17px }
+		.track-cover { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background-color: var(--ps-raised) }
+		.track-name { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
+		.track-sub { font-size: 13px; color: var(--ps-ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 		.track-plays { font-size: 13px; color: var(--ps-ink-soft); text-align: right; white-space: nowrap }
 		.track-bar { display: flex; flex-direction: column; gap: 4px }
 		.track-time { font-size: 12px; text-align: right; color: var(--ps-ink-soft) }
 		.track.unplayed { opacity: .55 }
-		.show-all { margin: 8px 0 0 6px; padding: 6px 12px; border-radius: 999px; border: none; background-color: var(--ps-surface-2); color: var(--ps-ink); font-size: 13px; cursor: pointer }
+		.show-all { margin: 8px 0 0 6px; padding: 6px 12px; border-radius: var(--ps-radius-sm); border: none; background-color: var(--ps-raised); color: var(--ps-ink); font-size: 13px; cursor: pointer }
 		.show-all:hover { color: var(--ps-accent) }
 		.artist-link { color: inherit }
 
 		/* ── Insight lists ─────────────────────────────── */
 		.mini-list { list-style: none; display: flex; flex-direction: column; gap: 2px }
-		.mini { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 7px 6px; border-radius: 8px }
-		.mini:hover { background-color: var(--ps-surface-2) }
+		.mini { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 7px 6px; border-radius: var(--ps-radius-sm) }
+		.mini:hover { background-color: var(--ps-raised) }
 		.mini.no-cover { grid-template-columns: minmax(0, 1fr) auto }
 		.mini-value { font-size: 13px; color: var(--ps-ink-soft); text-align: right; white-space: nowrap }
 		.mini-value strong { color: var(--ps-ink); font-weight: 600 }
 
 		.footnote { margin-top: 20px; font-size: 13px; color: var(--ps-ink-soft) }
-		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+		.footer { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--ps-rule); font-size: 15px; color: var(--ps-ink-soft) }
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr) } }
 		@media (min-width: 860px) { .content-grid { grid-template-columns: 1fr 1fr } }
 		@media (max-width: 700px) {
 			.header { flex-direction: column; align-items: flex-start }
-			.page { padding: 24px 16px 40px }
+			.page { padding: 0 16px 40px }
 			.pl-row { grid-template-columns: 22px 44px minmax(0, 1fr) 16px; gap: 10px }
 			.pl-row .pl-bar { grid-column: 3 / 4 }
 			.pl-cover { width: 44px; height: 44px }
@@ -135,6 +147,7 @@
 			.track { grid-template-columns: 22px 36px minmax(0, 1fr) auto; gap: 10px }
 			.track .track-bar { grid-column: 3 / 5 }
 		}
+		@media (max-width: 640px) { .intro-title { font-size: 40px } .stat-value { font-size: 32px } .panel-title { font-size: 24px } }
 	</style>
 </head>
 <body>
@@ -143,10 +156,8 @@
 	<!-- Header -->
 	<header class="header">
 		<div class="brand">
-			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
 				<h1 class="brand-title">{{ app_name }}</h1>
-				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
 		<div class="header-right">

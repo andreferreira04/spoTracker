@@ -6,7 +6,7 @@
 	<title>Overview — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
 	<link rel="stylesheet" href="spotify.css" />
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600&family=Sofia+Sans+Condensed:wght@700;900&family=Sofia+Sans+Extra+Condensed:wght@700;800;900&display=swap" rel="stylesheet" />
 	<style>
 		:root {
 			--ps-bg: #121212;
@@ -18,95 +18,105 @@
 			--ps-accent-soft: #f7a96b;
 			--ps-up: #5fc46b;
 			--ps-down: #ef6f4d;
+			--ps-warn: #d4a017;
 			--ps-border: #312e2a;
 			--ps-radius: 16px;
 			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+			--ps-ground: #15120e;
+			--ps-rule: #3a332b;
+			--ps-raised: #211d18;
+			--ps-radius-sm: 6px;
+			--ps-radius-md: 12px;
+			--ps-font: "Sofia Sans", system-ui, sans-serif;
+			--ps-font-cond: "Sofia Sans Condensed", system-ui, sans-serif;
+			--ps-font-xcond: "Sofia Sans Extra Condensed", system-ui, sans-serif;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
-		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
-		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+		body { font-family: var(--ps-font); font-size: 15px; background-color: var(--ps-ground); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 56px }
 
 		/* ── Header / Nav ──────────────────────────────── */
-		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 32px; padding: 20px 0; margin-bottom: 56px; border-bottom: 1px solid var(--ps-rule) }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
-		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
-		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
-		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
-		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
-		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
-		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+		.brand-title { font-family: var(--ps-font-xcond); font-size: 28px; font-weight: 900; line-height: 1 }
+		.main-nav { display: flex; align-items: center; gap: 4px 24px; flex-wrap: wrap }
+		.nav-link { font-size: 15px; font-weight: 500; line-height: 1; color: var(--ps-ink-soft); text-decoration: none; padding: 10px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s }
+		.nav-link:hover { color: var(--ps-ink) }
+		.nav-link.active { color: var(--ps-ink); border-bottom-color: var(--ps-accent) }
 
 		/* ── Intro ─────────────────────────────────────── */
-		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
-		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+		.intro { margin-bottom: 40px }
+		.intro-title { font-family: var(--ps-font-xcond); font-size: 56px; font-weight: 800; line-height: .95; letter-spacing: -.28px }
+		.intro-text { max-width: 620px; margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--ps-ink-soft) }
 
 		/* ── Stats Grid ────────────────────────────────── */
-		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 32px }
-		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
-		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
-		.stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
-		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
+		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px; margin-bottom: 48px }
+		.stat-card { display: flex; flex-direction: column; gap: 6px; padding: 16px 0; border-top: 1px solid var(--ps-rule) }
+		.stat-label { font-size: 15px; color: var(--ps-ink-soft) }
+		.stat-value { font-family: var(--ps-font-cond); font-size: 40px; font-weight: 900; line-height: 1 }
+		.stat-trend { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft) }
 
 		/* ── Content Grid ──────────────────────────────── */
-		.content-grid { display: grid; grid-template-columns: 1fr; gap: 16px }
+		.content-grid { display: grid; grid-template-columns: 1fr; gap: 56px 48px }
 
 		/* ── Panel ─────────────────────────────────────── */
-		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 22px; box-shadow: var(--ps-shadow) }
-		.panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px }
-		.panel-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 18px; font-weight: 600 }
-		.panel-tag { font-size: 12px; font-weight: 500; color: var(--ps-accent); background-color: var(--ps-surface-2); padding: 4px 10px; border-radius: 999px }
+		.panel { min-width: 0; padding-top: 24px; border-top: 1px solid var(--ps-rule) }
+		.panel-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 20px }
+		.panel-title { font-family: var(--ps-font-cond); font-size: 28px; font-weight: 700; line-height: 1.1 }
+		.panel-tag { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); white-space: nowrap }
 
 		/* ── Track List ────────────────────────────────── */
-		.track-list { list-style: none; display: flex; flex-direction: column; gap: 4px }
-		.track { display: flex; align-items: center; gap: 14px; padding: 10px 8px; border-radius: 10px }
-		.track:hover { background-color: var(--ps-surface-2) }
-		.track-rank { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); width: 20px; text-align: center }
-		.track-info { display: flex; flex-direction: column; flex: 1 }
-		.track-name { font-weight: 500; font-size: 15px }
-		.track-artist { font-size: 13px; color: var(--ps-ink-soft) }
-		.track-plays { font-size: 13px; color: var(--ps-ink-soft) }
+		.track-list { list-style: none; display: flex; flex-direction: column }
+		.track { display: flex; align-items: center; gap: 16px; min-height: 64px; padding: 8px 16px; border-bottom: 1px solid var(--ps-rule) }
+		.track:hover { background-color: var(--ps-raised) }
+		.track-list > .track:first-child { background-color: var(--ps-accent); border-bottom-color: var(--ps-accent); color: var(--ps-ground) }
+		.track-list > .track:first-child:hover { background-color: var(--ps-accent) }
+		.track-list > .track:first-child .track-artist, .track-list > .track:first-child .artist-link:hover { color: var(--ps-ground) }
+		.track-rank { font-family: var(--ps-font-cond); font-size: 32px; font-weight: 900; line-height: 1; width: 36px; flex-shrink: 0 }
+		.track-info { display: flex; flex-direction: column; flex: 1; min-width: 0 }
+		.track-name { font-weight: 600; font-size: 17px; line-height: 1.4 }
+		.track-artist { font-size: 15px; color: var(--ps-ink-soft) }
+		.track-plays { font-family: var(--ps-font-cond); font-size: 20px; font-weight: 700; white-space: nowrap }
 
 		/* ── Bar Chart ─────────────────────────────────── */
 		.chart { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; height: 240px }
 		.bar-group { display: flex; flex-direction: column; align-items: center; gap: 8px; flex: 1; height: 100%; justify-content: flex-end }
-		.bar { width: 100%; max-width: 36px; height: var(--h); background: linear-gradient(180deg, var(--ps-accent-soft), var(--ps-accent)); border-radius: 8px 8px 4px 4px; transition: opacity .2s }
+		.bar { width: 100%; max-width: 40px; height: var(--h); background-color: var(--ps-accent); transition: opacity .2s }
 		.bar:hover { opacity: .8 }
-		.bar-label { font-size: 12px; color: var(--ps-ink-soft) }
-		.bar-value { font-size: 11px; font-weight: 500; color: var(--ps-ink-soft) }
+		.bar-label { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft) }
+		.bar-value { font-family: var(--ps-font-cond); font-size: 15px; font-weight: 700; color: var(--ps-ink) }
 
 		/* ── Highlight Panel (Artist Spotlight) ─────────── */
-		.panel.highlight { background-color: var(--ps-accent); border-color: var(--ps-accent); color: #1a0f07 }
-		.panel.highlight .panel-title { color: #1a0f07 }
-		.panel.highlight .panel-tag { color: var(--ps-accent); background-color: #1a0f07 }
+		.panel.highlight { align-self: start; padding: 24px; background-color: var(--ps-accent); border-top-color: var(--ps-accent); color: var(--ps-ground) }
+		.panel.highlight .panel-title { color: var(--ps-ground) }
+		.panel.highlight .panel-tag { color: var(--ps-ground) }
 		.artist-spotlight { display: flex; align-items: center; gap: 18px }
-		.artist-photo { width: 72px; height: 72px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: "Space Grotesk", system-ui, sans-serif; font-size: 24px; font-weight: 700; color: var(--ps-accent); background-color: #1a0f07; border-radius: 16px }
+		.artist-photo { width: 80px; height: 80px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: var(--ps-font-cond); font-size: 32px; font-weight: 900; color: var(--ps-accent); background-color: var(--ps-ground); border-radius: var(--ps-radius-sm) }
 		.artist-meta { display: flex; flex-direction: column; gap: 4px }
-		.artist-name { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 20px; font-weight: 600 }
-		.artist-stat { font-size: 13px; font-weight: 600; color: #1a0f07 }
-		.artist-note { font-size: 13px; color: rgba(26, 15, 7, 0.7); margin-top: 4px }
+		.artist-name { font-family: var(--ps-font-xcond); font-size: 34px; font-weight: 800; line-height: 1.05 }
+		.artist-stat { font-size: 15px; font-weight: 600; color: var(--ps-ground) }
+		.artist-note { font-size: 15px; color: var(--ps-ground); opacity: .75; margin-top: 4px }
 
 		/* ── Genre / meter bars ─────────────────────────── */
 		.genre-list { list-style: none; display: flex; flex-direction: column; gap: 16px }
-		.genre-top { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 6px }
-		.genre-name { font-weight: 500 }
+		.genre-top { display: flex; justify-content: space-between; gap: 12px; font-size: 15px; margin-bottom: 8px }
+		.genre-name { font-weight: 600 }
 		.genre-pct { color: var(--ps-ink-soft) }
-		.meter { height: 8px; background-color: var(--ps-surface-2); border-radius: 999px; overflow: hidden }
-		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent); border-radius: 999px }
+		.meter { height: 6px; background-color: var(--ps-raised); overflow: hidden }
+		.meter-fill { display: block; height: 100%; width: var(--w); background-color: var(--ps-accent) }
 
 		/* ── Recent Activity ────────────────────────────── */
-		.recent-table { width: 100%; border-collapse: collapse; font-size: 14px }
-		.recent-table thead th { text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ps-ink-soft); background-color: var(--ps-surface-2); padding: 12px 16px; white-space: nowrap }
+		.recent-table { width: 100%; border-collapse: collapse; font-size: 15px }
+		.recent-table thead th { text-align: left; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); padding: 10px 16px; border-bottom: 1px solid var(--ps-rule); white-space: nowrap }
 		.recent-table th.num, .recent-table td.num { text-align: right }
-		.recent-table tbody td { padding: 11px 16px; border-top: 1px solid var(--ps-border); vertical-align: middle }
-		.recent-table tbody tr:hover { background-color: var(--ps-surface-2) }
-		.recent-date { font-size: 13px; color: var(--ps-ink-soft); white-space: nowrap }
-		.recent-artist { font-weight: 500 }
-		.recent-duration { font-size: 13px; color: var(--ps-ink-soft); white-space: nowrap }
+		.recent-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--ps-rule); vertical-align: middle }
+		.recent-table tbody tr:hover { background-color: var(--ps-raised) }
+		.recent-date { color: var(--ps-ink-soft); white-space: nowrap }
+		.recent-artist { font-weight: 600 }
+		.recent-duration { color: var(--ps-ink-soft); white-space: nowrap }
 
 		/* ── Footer ────────────────────────────────────── */
-		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+		.footer { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--ps-rule); font-size: 15px; color: var(--ps-ink-soft) }
 
 		.artist-photo.has-image { background-size: cover; background-position: center; color: transparent }
 
@@ -114,6 +124,7 @@
 		@media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr) } }
 		@media (min-width: 860px) { .content-grid { grid-template-columns: 1fr 1fr } }
 		@media (max-width: 700px) { .header { flex-direction: column; align-items: flex-start } }
+		@media (max-width: 640px) { .intro-title { font-size: 40px } .stat-value { font-size: 32px } .panel-title { font-size: 24px } }
 	</style>
 </head>
 <body>
@@ -122,10 +133,8 @@
 	<!-- Header -->
 	<header class="header">
 		<div class="brand">
-			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
 				<h1 class="brand-title">{{ app_name }}</h1>
-				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
 		<div class="header-right">
@@ -218,14 +227,14 @@
 			<section class="panel" style="grid-column: 1 / -1">
 				<div class="panel-head">
 					<h3 class="panel-title">Top Artists by Listening Time</h3>
-					<span class="panel-tag">Top 8</span>
+					<span class="panel-tag">Top 5</span>
 				</div>
 				<ul class="genre-list" id="artist-time-bars"></ul>
 			</section>
 
 			<!-- Recent Activity -->
-			<section class="panel" style="grid-column: 1 / -1; padding: 0; overflow: hidden">
-				<div class="panel-head" style="padding: 18px 22px 0">
+			<section class="panel" style="grid-column: 1 / -1">
+				<div class="panel-head">
 					<h3 class="panel-title">Recent Activity</h3>
 					<span class="panel-tag">Last 10</span>
 				</div>

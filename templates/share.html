@@ -6,7 +6,7 @@
 	<title>Share — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
 	<link rel="stylesheet" href="spotify.css" />
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600&family=Sofia+Sans+Condensed:wght@700;900&family=Sofia+Sans+Extra+Condensed:wght@700;800;900&display=swap" rel="stylesheet" />
 	<style>
 		:root {
 			--ps-bg: #121212;
@@ -16,60 +16,70 @@
 			--ps-ink-soft: #a39b90;
 			--ps-accent: #f0712c;
 			--ps-accent-soft: #f7a96b;
+			--ps-up: #5fc46b;
+			--ps-down: #ef6f4d;
+			--ps-warn: #d4a017;
 			--ps-border: #312e2a;
 			--ps-radius: 16px;
 			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+			--ps-ground: #15120e;
+			--ps-rule: #3a332b;
+			--ps-raised: #211d18;
+			--ps-radius-sm: 6px;
+			--ps-radius-md: 12px;
+			--ps-font: "Sofia Sans", system-ui, sans-serif;
+			--ps-font-cond: "Sofia Sans Condensed", system-ui, sans-serif;
+			--ps-font-xcond: "Sofia Sans Extra Condensed", system-ui, sans-serif;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
-		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
-		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+		body { font-family: var(--ps-font); font-size: 15px; background-color: var(--ps-ground); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 56px }
 
 		/* ── Header / Nav ──────────────────────────────── */
-		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 32px; padding: 20px 0; margin-bottom: 56px; border-bottom: 1px solid var(--ps-rule) }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
-		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
-		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
-		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
-		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
-		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
-		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+		.brand-title { font-family: var(--ps-font-xcond); font-size: 28px; font-weight: 900; line-height: 1 }
+		.main-nav { display: flex; align-items: center; gap: 4px 24px; flex-wrap: wrap }
+		.nav-link { font-size: 15px; font-weight: 500; line-height: 1; color: var(--ps-ink-soft); text-decoration: none; padding: 10px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s }
+		.nav-link:hover { color: var(--ps-ink) }
+		.nav-link.active { color: var(--ps-ink); border-bottom-color: var(--ps-accent) }
 
 		/* ── Intro ─────────────────────────────────────── */
-		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
-		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+		.intro { margin-bottom: 40px }
+		.intro-title { font-family: var(--ps-font-xcond); font-size: 56px; font-weight: 800; line-height: .95; letter-spacing: -.28px }
+		.intro-text { max-width: 620px; margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--ps-ink-soft) }
 
 		/* ── Period picker ─────────────────────────────── */
-		.filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 16px; margin-bottom: 24px; box-shadow: var(--ps-shadow) }
-		.filter-label { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft); margin-right: 6px }
-		.btn-preset { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
-		.btn-preset:hover { color: var(--ps-ink); background-color: var(--ps-surface-2) }
-		.btn-preset.active { color: var(--ps-surface); background-color: var(--ps-accent); border-color: var(--ps-accent) }
+		.filter-bar { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; background-color: var(--ps-raised); border-radius: var(--ps-radius-md); padding: 16px; margin-bottom: 24px }
+		.filter-label { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); margin-right: 6px }
+		.btn-preset { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
+		.btn-preset:hover { color: var(--ps-ink); background-color: var(--ps-raised) }
+		.btn-preset.active { color: var(--ps-ground); background-color: var(--ps-accent); border-color: var(--ps-accent) }
 
 		/* ── Previews ──────────────────────────────────── */
 		/* 4fr / 3fr makes the 3:4 and 9:16 previews the same height */
 		.previews { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start }
 		.preview { display: flex; flex-direction: column; gap: 12px }
 		.preview-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px }
-		.preview-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 18px; font-weight: 600 }
-		.preview-size { font-size: 12px; color: var(--ps-ink-soft) }
-		.card-canvas { display: block; width: 100%; height: auto; border-radius: var(--ps-radius); border: 1px solid var(--ps-border); box-shadow: var(--ps-shadow); background-color: var(--ps-surface) }
-		.download-btn { font-family: inherit; font-size: 14px; font-weight: 600; color: #1a0f07; background-color: var(--ps-accent); border: none; border-radius: 10px; padding: 11px 16px; cursor: pointer; transition: opacity .15s }
+		.preview-title { font-family: var(--ps-font-cond); font-size: 28px; font-weight: 700; line-height: 1.1 }
+		.preview-size { font-size: 13px; color: var(--ps-ink-soft) }
+		.card-canvas { display: block; width: 100%; height: auto; border-radius: var(--ps-radius-md); background-color: var(--ps-raised) }
+		.download-btn { font-family: inherit; font-size: 16px; font-weight: 600; line-height: 1; color: var(--ps-ground); background-color: var(--ps-accent); border: none; border-radius: var(--ps-radius-sm); padding: 16px 24px; cursor: pointer; transition: opacity .15s }
 		.download-btn:hover:not(:disabled) { opacity: .85 }
 		.download-btn:disabled { opacity: .45; cursor: not-allowed }
 		.actions { display: flex; flex-wrap: wrap; gap: 8px }
 		.actions .download-btn { flex: 1 1 auto }
-		.download-btn.secondary { color: var(--ps-ink); background-color: var(--ps-surface-2); border: 1px solid var(--ps-border) }
+		.download-btn.secondary { color: var(--ps-ink); background-color: var(--ps-raised); border: 1px solid var(--ps-rule) }
 		.download-btn[hidden] { display: none }
-		.share-hint { min-height: 1.5em; font-size: 13px; color: var(--ps-ink-soft) }
+		.share-hint { min-height: 1.5em; font-size: 15px; color: var(--ps-ink-soft) }
 
 		/* ── Footer ────────────────────────────────────── */
-		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+		.footer { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--ps-rule); font-size: 15px; color: var(--ps-ink-soft) }
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (min-width: 760px) { .previews { grid-template-columns: 4fr 3fr } }
 		@media (max-width: 700px) { .header { flex-direction: column; align-items: flex-start } }
+		@media (max-width: 640px) { .intro-title { font-size: 40px } .stat-value { font-size: 32px } .panel-title { font-size: 24px } }
 	</style>
 </head>
 <body>
@@ -78,10 +88,8 @@
 	<!-- Header -->
 	<header class="header">
 		<div class="brand">
-			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
 				<h1 class="brand-title">{{ app_name }}</h1>
-				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
 		<div class="header-right">
@@ -150,28 +158,25 @@
 <script>
 // ── Data injected by Python ───────────────────────────────────────────────────
 const PERIODS  = {{ share_json }};
-const LOGO_URI = "{{ logo_data_uri }}";
 
 const COLORS = {
-	bg:       "#121212",
-	surface:  "rgba(255, 255, 255, 0.06)",
-	border:   "rgba(255, 255, 255, 0.09)",
-	ink:      "#f4efe9",
-	inkSoft:  "#a39b90",
-	accent:   "#f0712c",
-	accentSoft: "#f7a96b",
+	ground:  "#15120e",
+	rule:    "#3a332b",
+	ink:     "#f4efe9",
+	inkSoft: "#a39b90",
+	accent:  "#f0712c",
 };
-const DISPLAY = '"Space Grotesk", system-ui, sans-serif';
-const TEXT    = '"Inter", system-ui, sans-serif';
+const TEXT  = '"Sofia Sans", system-ui, sans-serif';
+const COND  = '"Sofia Sans Condensed", system-ui, sans-serif';
+const XCOND = '"Sofia Sans Extra Condensed", system-ui, sans-serif';
 
 // Story layout keeps its content clear of the app overlays at the top and bottom
 const FORMATS = {
-	post:  { w: 1080, h: 1440, pad: 80, top: 80,  hero: 150, columns: 2 },
-	story: { w: 1080, h: 1920, pad: 88, top: 150, hero: 170, columns: 1 },
+	post:  { w: 1080, h: 1440, pad: 80, top: 80,  hero: 210, columns: 2 },
+	story: { w: 1080, h: 1920, pad: 88, top: 150, hero: 200, columns: 1 },
 };
 
 let current = PERIODS.find(p => p.key === "30d") || PERIODS[0];
-const logo = new Image();
 
 // ── Drawing helpers ───────────────────────────────────────────────────────────
 function roundRect(ctx, x, y, w, h, r) {
@@ -184,12 +189,9 @@ function roundRect(ctx, x, y, w, h, r) {
 	ctx.closePath();
 }
 
-function glow(ctx, x, y, radius, color) {
-	const g = ctx.createRadialGradient(x, y, 0, x, y, radius);
-	g.addColorStop(0, color);
-	g.addColorStop(1, "rgba(0, 0, 0, 0)");
-	ctx.fillStyle = g;
-	ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+function rule(ctx, x, y, w) {
+	ctx.fillStyle = COLORS.rule;
+	ctx.fillRect(x, y, w, 2);
 }
 
 /** Draw text cut with an ellipsis so it fits in maxW. */
@@ -220,112 +222,109 @@ function formatRange(p) {
 
 // ── Card sections ─────────────────────────────────────────────────────────────
 function drawHeader(ctx, f, p) {
-	const x = f.pad, y = f.top, size = 76;
-	ctx.save();
-	roundRect(ctx, x, y, size, size, 18);
-	ctx.clip();
-	if (logo.complete && logo.naturalWidth) ctx.drawImage(logo, x, y, size, size);
-	ctx.restore();
-
-	ctx.fillStyle = COLORS.ink;
-	ctx.font = `700 40px ${DISPLAY}`;
+	const x = f.pad, y = f.top, h = 76;
 	ctx.textBaseline = "middle";
-	ctx.fillText("SpoTracker", x + size + 22, y + size / 2);
+	ctx.fillStyle = COLORS.ink;
+	ctx.font = `900 64px ${XCOND}`;
+	ctx.fillText("SpoTracker", x, y + h / 2);
 
-	// Period pill on the right
+	// Period label on the right, styled like the primary button
 	ctx.font = `600 28px ${TEXT}`;
 	const label = p.label;
 	const w = ctx.measureText(label).width + 48;
-	const px = f.w - f.pad - w, ph = 58, py = y + (size - ph) / 2;
-	roundRect(ctx, px, py, w, ph, ph / 2);
+	const px = f.w - f.pad - w, ph = 58, py = y + (h - ph) / 2;
+	roundRect(ctx, px, py, w, ph, 10);
 	ctx.fillStyle = COLORS.accent;
 	ctx.fill();
-	ctx.fillStyle = "#1a0f07";
+	ctx.fillStyle = COLORS.ground;
 	ctx.fillText(label, px + 24, py + ph / 2 + 1);
 	ctx.textBaseline = "alphabetic";
-	return y + size;
+
+	rule(ctx, f.pad, y + h + 36, f.w - 2 * f.pad);
+	return y + h;
 }
 
 function drawHero(ctx, f, p, y) {
 	ctx.fillStyle = COLORS.inkSoft;
-	ctx.font = `600 28px ${TEXT}`;
-	setSpacing(ctx, 5);
-	ctx.fillText("MINUTES LISTENED", f.pad, y);
-	setSpacing(ctx, 0);
+	ctx.font = `500 30px ${TEXT}`;
+	ctx.fillText("Minutes listened", f.pad, y);
 
 	// Shrink the number until it fits the width
 	const text = p.minutes.toLocaleString();
 	let size = f.hero;
-	ctx.font = `700 ${size}px ${DISPLAY}`;
+	ctx.font = `900 ${size}px ${XCOND}`;
 	while (ctx.measureText(text).width > f.w - 2 * f.pad && size > 60) {
 		size -= 8;
-		ctx.font = `700 ${size}px ${DISPLAY}`;
+		ctx.font = `900 ${size}px ${XCOND}`;
 	}
-	const top = y + 28;
-	const baseline = top + size * 0.9;
-	const g = ctx.createLinearGradient(f.pad, top, f.pad + ctx.measureText(text).width, baseline);
-	g.addColorStop(0, COLORS.accentSoft);
-	g.addColorStop(1, COLORS.accent);
-	ctx.fillStyle = g;
+	const baseline = y + 20 + size * 0.82;
+	ctx.fillStyle = COLORS.ink;
+	setSpacing(ctx, -size * 0.01);
 	ctx.fillText(text, f.pad - 4, baseline);
+	setSpacing(ctx, 0);
 
 	const hours = Math.round(p.minutes / 60);
 	ctx.fillStyle = COLORS.ink;
-	ctx.font = `500 32px ${TEXT}`;
-	ctx.fillText(`That's about ${hours.toLocaleString()} ${hours === 1 ? "hour" : "hours"} of music`, f.pad, baseline + 58);
-	return baseline + 58;
+	ctx.font = `400 34px ${TEXT}`;
+	ctx.fillText(`That's about ${hours.toLocaleString()} ${hours === 1 ? "hour" : "hours"} of music`, f.pad, baseline + 64);
+	return baseline + 64;
 }
 
-function drawStatCards(ctx, f, p, y) {
+function drawFacts(ctx, f, p, y) {
 	const gap = 24, h = 150;
 	const w = (f.w - 2 * f.pad - gap) / 2;
 	[["Artists", p.artists], ["Songs", p.tracks]].forEach(([label, value], i) => {
 		const x = f.pad + i * (w + gap);
-		roundRect(ctx, x, y, w, h, 28);
-		ctx.fillStyle = COLORS.surface;
-		ctx.fill();
-		ctx.strokeStyle = COLORS.border;
-		ctx.lineWidth = 2;
-		ctx.stroke();
-
-		ctx.fillStyle = COLORS.ink;
-		ctx.font = `700 72px ${DISPLAY}`;
-		fitText(ctx, value.toLocaleString(), x + 32, y + 86, w - 64);
+		rule(ctx, x, y, w);
 		ctx.fillStyle = COLORS.inkSoft;
 		ctx.font = `500 28px ${TEXT}`;
-		ctx.fillText(label, x + 32, y + 126);
+		ctx.fillText(label, x, y + 50);
+		ctx.fillStyle = COLORS.ink;
+		ctx.font = `900 84px ${COND}`;
+		fitText(ctx, value.toLocaleString(), x, y + 136, w);
 	});
 	return y + h;
 }
 
-/** A top-5 list: title, then rows of rank + two lines (or one line with `sub` on the right). Returns the bottom y. */
+/** A top-5 chart: title, then rows of rank + two lines (or one line with `sub` on the right).
+ *  The #1 row gets the orange band, like the landing page chart. Returns the bottom y. */
 function drawList(ctx, x, y, w, title, rows, oneLine = false) {
 	ctx.fillStyle = COLORS.ink;
-	ctx.font = `600 36px ${DISPLAY}`;
+	ctx.font = `700 40px ${COND}`;
 	ctx.fillText(title, x, y);
 
-	const rowH = oneLine ? 66 : 88, rankW = 58;
-	let ry = y + (oneLine ? 20 : 34);
+	const rowH = oneLine ? 66 : 88, rankW = 60, band = 16;
+	let ry = y + (oneLine ? 20 : 30);
 	rows.forEach((r, i) => {
-		ctx.fillStyle = i === 0 ? COLORS.accent : COLORS.accentSoft;
-		ctx.font = `700 40px ${DISPLAY}`;
-		ctx.fillText(String(i + 1), x, ry + (oneLine ? 46 : 50));
+		const top = i === 0;
+		if (top) {
+			ctx.fillStyle = COLORS.accent;
+			ctx.fillRect(x - band, ry, w + 2 * band, rowH);
+		} else {
+			rule(ctx, x, ry + rowH - 2, w);
+		}
+		const ink = top ? COLORS.ground : COLORS.ink;
+		const soft = top ? COLORS.ground : COLORS.inkSoft;
+
+		ctx.fillStyle = ink;
+		ctx.font = `900 44px ${COND}`;
+		ctx.fillText(String(i + 1), x, ry + (oneLine ? 49 : 60));
 
 		if (oneLine) {
 			ctx.font = `400 28px ${TEXT}`;
 			const subW = ctx.measureText(r.sub).width;
-			ctx.fillStyle = COLORS.inkSoft;
+			ctx.fillStyle = soft;
 			ctx.textAlign = "right";
 			ctx.fillText(r.sub, x + w, ry + 44);
 			ctx.textAlign = "left";
-			ctx.fillStyle = COLORS.ink;
+			ctx.fillStyle = ink;
 			ctx.font = `600 32px ${TEXT}`;
 			fitText(ctx, r.main, x + rankW, ry + 44, w - rankW - subW - 24);
 		} else {
-			ctx.fillStyle = COLORS.ink;
+			ctx.fillStyle = ink;
 			ctx.font = `600 32px ${TEXT}`;
-			fitText(ctx, r.main, x + rankW, ry + 38, w - rankW);
-			ctx.fillStyle = COLORS.inkSoft;
+			fitText(ctx, r.main, x + rankW, ry + 40, w - rankW);
+			ctx.fillStyle = soft;
 			ctx.font = `400 26px ${TEXT}`;
 			fitText(ctx, r.sub, x + rankW, ry + 72, w - rankW);
 		}
@@ -339,10 +338,8 @@ function plays(n) { return `${n.toLocaleString()} ${n === 1 ? "play" : "plays"}`
 function drawCard(canvas, f, p) {
 	const ctx = canvas.getContext("2d");
 	ctx.clearRect(0, 0, f.w, f.h);
-	ctx.fillStyle = COLORS.bg;
+	ctx.fillStyle = COLORS.ground;
 	ctx.fillRect(0, 0, f.w, f.h);
-	glow(ctx, f.w * 0.95, f.h * 0.02, f.w * 0.95, "rgba(240, 113, 44, 0.42)");
-	glow(ctx, 0, f.h, f.w * 0.85, "rgba(247, 169, 107, 0.14)");
 
 	let y = drawHeader(ctx, f, p);
 
@@ -355,28 +352,29 @@ function drawCard(canvas, f, p) {
 		return;
 	}
 
-	y = drawHero(ctx, f, p, y + (f.columns === 1 ? 110 : 100));
-	y = drawStatCards(ctx, f, p, y + (f.columns === 1 ? 44 : 48));
+	y = drawHero(ctx, f, p, y + (f.columns === 1 ? 112 : 116));
+	y = drawFacts(ctx, f, p, y + (f.columns === 1 ? 40 : 48));
 
 	const artists = p.topArtists.map(a => ({ main: a.artist, sub: plays(a.plays) }));
 	const tracks  = p.topTracks.map(t => ({ main: t.track, sub: t.artist }));
 	const listW   = f.w - 2 * f.pad;
 	if (f.columns === 2) {
-		const gap = 48, w = (listW - gap) / 2;
-		drawList(ctx, f.pad, y + 96, w, "Top artists", artists);
-		drawList(ctx, f.pad + w + gap, y + 96, w, "Top songs", tracks);
+		const gap = 56, w = (listW - gap) / 2;
+		drawList(ctx, f.pad, y + 84, w, "Top artists", artists);
+		drawList(ctx, f.pad + w + gap, y + 84, w, "Top songs", tracks);
 	} else {
-		y = drawList(ctx, f.pad, y + 96, listW, "Top artists", artists, true);
-		drawList(ctx, f.pad, y + 76, listW, "Top songs", tracks);
+		y = drawList(ctx, f.pad, y + 80, listW, "Top artists", artists, true);
+		drawList(ctx, f.pad, y + 72, listW, "Top songs", tracks);
 	}
 
 	// Footer
 	const fy = f.h - (f.columns === 1 ? 110 : 72);
+	rule(ctx, f.pad, fy - 52, f.w - 2 * f.pad);
 	ctx.font = `500 26px ${TEXT}`;
 	ctx.fillStyle = COLORS.inkSoft;
 	ctx.fillText(formatRange(p), f.pad, fy);
 	ctx.textAlign = "right";
-	ctx.fillStyle = COLORS.accentSoft;
+	ctx.fillStyle = COLORS.accent;
 	ctx.fillText("spotracker.eu", f.w - f.pad, fy);
 	ctx.textAlign = "left";
 }
@@ -468,10 +466,9 @@ async function init() {
 	});
 
 	// The canvas only uses the web fonts once they are loaded; give up after a few seconds (offline)
-	const fonts = [`700 40px ${DISPLAY}`, `600 40px ${DISPLAY}`, `400 40px ${TEXT}`, `500 40px ${TEXT}`, `600 40px ${TEXT}`];
-	logo.src = LOGO_URI;
+	const fonts = [`900 40px ${XCOND}`, `700 40px ${COND}`, `900 40px ${COND}`, `400 40px ${TEXT}`, `500 40px ${TEXT}`, `600 40px ${TEXT}`];
 	await Promise.race([
-		Promise.all([...fonts.map(f => document.fonts.load(f)), logo.decode()]).catch(() => {}),
+		Promise.all(fonts.map(f => document.fonts.load(f))).catch(() => {}),
 		new Promise(r => setTimeout(r, 3000)),
 	]);
 	render();

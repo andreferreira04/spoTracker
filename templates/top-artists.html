@@ -6,7 +6,7 @@
 	<title>Top Artists — {{ app_name }}</title>
 	<link rel="icon" href="logo.png" type="image/png" />
 	<link rel="stylesheet" href="spotify.css" />
-	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+	<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans:wght@400;500;600&family=Sofia+Sans+Condensed:wght@700;900&family=Sofia+Sans+Extra+Condensed:wght@700;800;900&display=swap" rel="stylesheet" />
 	<style>
 		:root {
 			--ps-bg: #121212;
@@ -18,54 +18,61 @@
 			--ps-accent-soft: #f7a96b;
 			--ps-up: #5fc46b;
 			--ps-down: #ef6f4d;
+			--ps-warn: #d4a017;
 			--ps-border: #312e2a;
 			--ps-radius: 16px;
 			--ps-shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 28px rgba(0,0,0,.35);
+			--ps-ground: #15120e;
+			--ps-rule: #3a332b;
+			--ps-raised: #211d18;
+			--ps-radius-sm: 6px;
+			--ps-radius-md: 12px;
+			--ps-font: "Sofia Sans", system-ui, sans-serif;
+			--ps-font-cond: "Sofia Sans Condensed", system-ui, sans-serif;
+			--ps-font-xcond: "Sofia Sans Extra Condensed", system-ui, sans-serif;
 		}
 		* { box-sizing: border-box; margin: 0; padding: 0 }
-		body { font-family: "Inter", system-ui, sans-serif; background-color: var(--ps-bg); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
-		.page { max-width: 1080px; margin: 0 auto; padding: 32px 24px 48px }
+		body { font-family: var(--ps-font); font-size: 15px; background-color: var(--ps-ground); color: var(--ps-ink); line-height: 1.5; -webkit-font-smoothing: antialiased }
+		.page { max-width: 1200px; margin: 0 auto; padding: 0 clamp(16px, 4vw, 48px) 56px }
 
 		/* ── Header / Nav ──────────────────────────────── */
-		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 40px }
+		.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px 32px; padding: 20px 0; margin-bottom: 56px; border-bottom: 1px solid var(--ps-rule) }
 		.brand { display: flex; align-items: center; gap: 14px }
-		.brand-mark { width: 48px; height: 48px; display: block; object-fit: cover; background-color: var(--ps-accent); border-radius: 12px }
-		.brand-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 22px; font-weight: 700 }
-		.brand-subtitle { font-size: 13px; color: var(--ps-ink-soft) }
-		.main-nav { display: flex; align-items: center; gap: 6px; flex-wrap: wrap }
-		.nav-link { font-size: 14px; font-weight: 500; color: var(--ps-ink-soft); text-decoration: none; padding: 8px 14px; border-radius: 999px; transition: background-color .15s, color .15s }
-		.nav-link:hover { color: var(--ps-ink); background-color: var(--ps-surface) }
-		.nav-link.active { color: var(--ps-surface); background-color: var(--ps-accent) }
+		.brand-title { font-family: var(--ps-font-xcond); font-size: 28px; font-weight: 900; line-height: 1 }
+		.main-nav { display: flex; align-items: center; gap: 4px 24px; flex-wrap: wrap }
+		.nav-link { font-size: 15px; font-weight: 500; line-height: 1; color: var(--ps-ink-soft); text-decoration: none; padding: 10px 0; border-bottom: 2px solid transparent; transition: color .15s, border-color .15s }
+		.nav-link:hover { color: var(--ps-ink) }
+		.nav-link.active { color: var(--ps-ink); border-bottom-color: var(--ps-accent) }
 
 		/* ── Intro ─────────────────────────────────────── */
-		.intro { margin-bottom: 28px }
-		.intro-title { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 30px; font-weight: 600 }
-		.intro-text { color: var(--ps-ink-soft); margin-top: 4px }
+		.intro { margin-bottom: 40px }
+		.intro-title { font-family: var(--ps-font-xcond); font-size: 56px; font-weight: 800; line-height: .95; letter-spacing: -.28px }
+		.intro-text { max-width: 620px; margin-top: 16px; font-size: 17px; line-height: 1.55; color: var(--ps-ink-soft) }
 
 		/* ── Stats grid ────────────────────────────────── */
-		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 24px }
-		.stat-card { display: flex; flex-direction: column; gap: 6px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 20px; box-shadow: var(--ps-shadow) }
-		.stat-label { font-size: 13px; color: var(--ps-ink-soft) }
-		.stat-value { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1 }
-		.stat-value.sm { font-size: 22px }
-		.stat-trend { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
+		.stats-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0 24px; margin-bottom: 48px }
+		.stat-card { display: flex; flex-direction: column; gap: 6px; padding: 16px 0; border-top: 1px solid var(--ps-rule) }
+		.stat-label { font-size: 15px; color: var(--ps-ink-soft) }
+		.stat-value { font-family: var(--ps-font-cond); font-size: 40px; font-weight: 900; line-height: 1 }
+		.stat-value.sm { font-size: 26px; line-height: 1.1 }
+		.stat-trend { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft) }
 
 		/* ── Filter bar ────────────────────────────────── */
-		.filter-bar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); padding: 16px; margin-bottom: 24px; box-shadow: var(--ps-shadow) }
+		.filter-bar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; background-color: var(--ps-raised); border-radius: var(--ps-radius-md); padding: 16px; margin-bottom: 24px }
 		.filter-group { display: flex; flex-direction: column; gap: 6px }
 		.filter-group.grow { flex: 1; min-width: 180px }
-		.filter-label { font-size: 12px; font-weight: 500; color: var(--ps-ink-soft) }
-		.filter-input { font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 10px; padding: 9px 12px; outline: none }
+		.filter-label { font-size: 13px; font-weight: 500; color: var(--ps-ink-soft) }
+		.filter-input { font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 9px 12px; outline: none }
 		.filter-input:focus { border-color: var(--ps-accent) }
 
 		/* ── Preset buttons ────────────────────────────── */
-		.btn-preset { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
-		.btn-preset:hover { color: var(--ps-ink); background-color: var(--ps-surface-2) }
-		.btn-preset.active { color: var(--ps-surface); background-color: var(--ps-accent); border-color: var(--ps-accent) }
+		.btn-preset { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
+		.btn-preset:hover { color: var(--ps-ink); background-color: var(--ps-raised) }
+		.btn-preset.active { color: var(--ps-ground); background-color: var(--ps-accent); border-color: var(--ps-accent) }
 
 		/* ── Buttons ───────────────────────────────────── */
-		.page-btn { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 10px; padding: 9px 16px; cursor: pointer; transition: background-color .15s, opacity .15s }
-		.page-btn:hover:not(:disabled) { background-color: var(--ps-surface-2) }
+		.page-btn { font-family: inherit; font-size: 14px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 9px 16px; cursor: pointer; transition: background-color .15s, opacity .15s }
+		.page-btn:hover:not(:disabled) { background-color: var(--ps-raised) }
 		.page-btn:disabled { opacity: .45; cursor: not-allowed }
 		.clear-btn { align-self: flex-end }
 
@@ -75,40 +82,40 @@
 		.result-count strong { color: var(--ps-ink) }
 		.search-field { position: relative; flex: 1; min-width: 220px }
 		.search-icon { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; color: var(--ps-ink-soft) }
-		.search-input { width: 100%; font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 11px 16px 11px 38px; outline: none }
+		.search-input { width: 100%; font-size: 14px; font-family: inherit; color: var(--ps-ink); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 11px 16px 11px 38px; outline: none }
 		.search-input:focus { border-color: var(--ps-accent) }
-		.page-size-select { font-family: inherit; font-size: 13px; color: var(--ps-ink-soft); background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: 8px; padding: 4px 8px; outline: none; cursor: pointer }
+		.page-size-select { font-family: inherit; font-size: 13px; color: var(--ps-ink-soft); background-color: var(--ps-ground); border: 1px solid var(--ps-rule); border-radius: var(--ps-radius-sm); padding: 4px 8px; outline: none; cursor: pointer }
 		.page-size-select:focus { border-color: var(--ps-accent) }
 
 		/* ── Table ─────────────────────────────────────── */
-		.panel { background-color: var(--ps-surface); border: 1px solid var(--ps-border); border-radius: var(--ps-radius); box-shadow: var(--ps-shadow); overflow: hidden }
+		.panel { border-bottom: 1px solid var(--ps-rule) }
 		.table-wrap { width: 100%; overflow-x: auto }
-		.data-table { width: 100%; border-collapse: collapse; font-size: 14px }
-		.data-table thead th { text-align: left; font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--ps-ink-soft); background-color: var(--ps-surface-2); padding: 14px 18px; white-space: nowrap; cursor: pointer; user-select: none; transition: color .15s }
+		.data-table { width: 100%; border-collapse: collapse; font-size: 15px }
+		.data-table thead th { text-align: left; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); padding: 10px 16px; border-bottom: 1px solid var(--ps-rule); white-space: nowrap; cursor: pointer; user-select: none; transition: color .15s }
 		.data-table thead th:hover { color: var(--ps-ink) }
 		.data-table thead th.sorted { color: var(--ps-accent) }
 		.sort-icon { display: inline-block; margin-left: 4px; opacity: .4; font-style: normal; font-size: 11px; transition: opacity .2s }
 		th.sorted .sort-icon { opacity: 1 }
 		.data-table th.num, .data-table td.num { text-align: right }
-		.data-table tbody td { padding: 13px 18px; border-top: 1px solid var(--ps-border) }
-		.data-table tbody tr:hover { background-color: var(--ps-surface-2) }
-		.cell-strong { font-weight: 500; color: var(--ps-ink) }
+		.data-table tbody td { padding: 14px 16px; border-bottom: 1px solid var(--ps-rule) }
+		.data-table tbody tr:hover { background-color: var(--ps-raised) }
+		.cell-strong { font-weight: 600; color: var(--ps-ink) }
 		.muted-cell { color: var(--ps-ink-soft) }
-		.empty-cell { text-align: center; color: var(--ps-ink-soft); padding: 32px 18px }
+		.empty-cell { text-align: center; color: var(--ps-ink-soft); padding: 32px 16px }
 
 		/* ── Rank ──────────────────────────────────────── */
-		.rank { font-family: "Space Grotesk", system-ui, sans-serif; font-size: 16px; font-weight: 700; color: var(--ps-accent); width: 20px; display: inline-block; text-align: center }
+		.rank { font-family: var(--ps-font-cond); font-size: 24px; font-weight: 900; line-height: 1; color: var(--ps-ink); width: 32px; display: inline-block }
 
 		/* ── Bar in table ──────────────────────────────── */
 		.bar-cell { position: relative; min-width: 120px }
-		.bar-bg { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 8px; border-radius: 999px; background: linear-gradient(90deg, var(--ps-accent-soft), var(--ps-accent)); transition: width .4s ease }
+		.bar-bg { position: absolute; left: 0; top: 50%; transform: translateY(-50%); height: 6px; background-color: var(--ps-accent); transition: width .4s ease }
 
 		/* ── Pagination ────────────────────────────────── */
 		.pagination { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 16px }
 		.page-status { font-size: 13px; color: var(--ps-ink-soft); min-width: 100px; text-align: center }
 
 		/* ── Footer ────────────────────────────────────── */
-		.footer { margin-top: 36px; text-align: center; font-size: 13px; color: var(--ps-ink-soft) }
+		.footer { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--ps-rule); font-size: 15px; color: var(--ps-ink-soft) }
 
 		/* ── Responsive ────────────────────────────────── */
 		@media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(4, 1fr) } }
@@ -117,6 +124,7 @@
 			.header { flex-direction: column; align-items: flex-start }
 			.data-table td:nth-child(6), .data-table th:nth-child(6) { display: none }
 		}
+		@media (max-width: 640px) { .intro-title { font-size: 40px } .stat-value { font-size: 32px } .panel-title { font-size: 24px } }
 	</style>
 </head>
 <body>
@@ -125,10 +133,8 @@
 	<!-- Header -->
 	<header class="header">
 		<div class="brand">
-			<img class="brand-mark" src="logo.png" alt="" aria-hidden="true" />
 			<div>
 				<h1 class="brand-title">{{ app_name }}</h1>
-				<p class="brand-subtitle">Your listening statistics</p>
 			</div>
 		</div>
 		<div class="header-right">
