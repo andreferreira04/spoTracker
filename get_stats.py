@@ -173,6 +173,7 @@ def generate_tracks_report() -> Path:
                 "recent":     recent,
                 "gap":        gap_map.get((artist, track)),
                 "firstPlayed": first_played[(artist, track)],
+                "key":        feats.song_key(artist, track),
             })
 
     html = (

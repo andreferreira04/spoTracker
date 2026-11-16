@@ -68,6 +68,21 @@
 		.combo-count { font-size: 12px; color: var(--ps-ink-soft) }
 		.combo-empty { font-size: 13px; color: var(--ps-ink-soft); padding: 8px 10px }
 
+		/* ── Playlist multi-select ─────────────────────── */
+		.pl-filter-btn { display: block; text-align: left; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis }
+		.pl-filter-btn.active { color: var(--ps-accent); border-color: var(--ps-accent) }
+		.pl-filter-pop { min-width: 280px; max-height: none; overflow: visible; padding: 8px }
+		.pl-filter-search { width: 100%; margin-bottom: 6px }
+		.pl-filter-list { list-style: none; max-height: 260px; overflow-y: auto }
+		.pl-option { align-items: center }
+		.pl-option input { flex-shrink: 0; accent-color: var(--ps-accent); cursor: pointer }
+		.pl-option .combo-name { flex: 1 }
+		.pl-filter-msg { display: flex; flex-direction: column; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--ps-ink-soft); padding: 8px 10px }
+		.pl-filter-loading { display: flex; align-items: center; gap: 10px }
+		.pl-spinner { flex-shrink: 0; width: 16px; height: 16px; border: 2px solid var(--ps-border); border-top-color: var(--ps-accent); border-radius: 50%; animation: pl-spin .6s linear infinite }
+		@keyframes pl-spin { to { transform: rotate(360deg) } }
+		.pl-filter-retry { font-family: inherit; font-size: 12px; font-weight: 500; color: var(--ps-ink); background-color: var(--ps-surface-2); border: none; border-radius: 999px; padding: 6px 12px; cursor: pointer }
+
 		/* ── Pill buttons ──────────────────────────────── */
 		.btn-pill { font-family: inherit; font-size: 13px; font-weight: 500; color: var(--ps-ink-soft); background-color: var(--ps-bg); border: 1px solid var(--ps-border); border-radius: 999px; padding: 8px 14px; cursor: pointer; transition: all .15s; white-space: nowrap }
 		.btn-pill:hover { color: var(--ps-ink); background-color: var(--ps-surface-2) }
@@ -184,6 +199,17 @@
 					<ul class="combo-list" id="artist-list" role="listbox" hidden></ul>
 				</div>
 			</div>
+			<div class="filter-group">
+				<span class="filter-label" id="playlist-label">Playlists</span>
+				<div class="combo" id="playlist-filter">
+					<button type="button" id="playlist-btn" class="filter-input combo-input pl-filter-btn" aria-labelledby="playlist-label playlist-btn" aria-haspopup="true" aria-expanded="false" aria-controls="playlist-pop">All playlists</button>
+					<button type="button" class="combo-clear" id="playlist-clear" aria-label="Clear playlists" hidden>×</button>
+					<div class="combo-list pl-filter-pop" id="playlist-pop" hidden>
+						<input type="search" class="filter-input pl-filter-search" id="playlist-search" placeholder="Search playlists…" aria-label="Search playlists" autocomplete="off" hidden />
+						<div id="playlist-body"></div>
+					</div>
+				</div>
+			</div>
 			<button class="btn-pill" id="btn-recent" onclick="toggleFilter('recent')" title="Played in the last {{ recent_days }} days">Recent</button>
 			<button class="btn-pill" id="btn-lowperc" onclick="toggleFilter('lowperc')" title="Less than {{ limiar_baixo }}% of plays listened past {{ min_listen }} s">Low %</button>
 			<button class="page-btn clear-btn" onclick="resetFilters()">Clear</button>
@@ -251,7 +277,7 @@ const LOW_PERC_THRESHOLD = {{ limiar_baixo }};
 const HIGH_PERC_THRESHOLD = {{ high_perc }};
 
 // ── State ─────────────────────────────────────────────────────────────────────
-let state = { recent: false, lowperc: false, search: "", artist: "", minPerc: 0, minPlays: 0 };
+let state = { recent: false, lowperc: false, search: "", artist: "", minPerc: 0, minPlays: 0, playlistKeys: null };
 let filteredData = [];
 let currentPage  = 0;
 let pageSize     = 50;
@@ -284,6 +310,7 @@ function applyFilters() {
 		if (state.minPerc && t.perc < state.minPerc)           return false;
 		if (state.minPlays && t.validPlays < state.minPlays)   return false;
 		if (state.artist  && t.artist !== state.artist)        return false;
+		if (state.playlistKeys && !state.playlistKeys.has(t.key)) return false;
 		if (q && !normalize(t.artist).includes(q) && !normalize(t.track).includes(q)) return false;
 		return true;
 	});
@@ -502,9 +529,152 @@ artistInput.addEventListener("keydown", e => {
 });
 artistClear.addEventListener("click", () => selectArtist(""));
 
+// ── Playlist filter (playlists come from Spotify, after login) ────────────────
+// Shows the tracks that are in any of the selected playlists.
+const plBtn    = document.getElementById("playlist-btn");
+const plClear  = document.getElementById("playlist-clear");
+const plPop    = document.getElementById("playlist-pop");
+const plSearch = document.getElementById("playlist-search");
+const plBody   = document.getElementById("playlist-body");
+let PLAYLISTS     = null;       // [{ name, liked, keys: Set, count }], in library order
+let plSelected    = new Set();  // indexes into PLAYLISTS
+let plLoading     = false;
+let plError       = "";
+
+const escHtml = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+async function loadPlaylistFilter() {
+	if (plLoading || PLAYLISTS) return;
+	plLoading = true; plError = "";
+	renderPlaylistPop();
+	try {
+		const data = await Spotify.api("/api/playlists");
+		const historyKeys = new Set(ALL_TRACKS.map(t => t.key));
+		PLAYLISTS = data.playlists.map(p => {
+			const keys = new Set();
+			p.tracks.forEach(t => t.keys.forEach(k => keys.add(k)));
+			const count = [...keys].filter(k => historyKeys.has(k)).length;
+			return { name: p.liked ? "Liked Songs" : p.name, liked: !!p.liked, keys, count };
+		});
+		PLAYLISTS.sort((a, b) => b.liked - a.liked);  // Liked Songs first, then library order
+	} catch (e) {
+		if (e.status !== 401) plError = "Couldn't load your playlists: " + e.message;
+	} finally {
+		plLoading = false;
+		renderPlaylistPop();
+	}
+}
+
+function renderPlaylistPop() {
+	const s = Spotify.state;
+	plSearch.hidden = true;
+	if (!s.authenticated || !s.confirmed) {
+		plBody.innerHTML = '<div class="pl-filter-msg">' +
+			(!s.online ? "SpoTracker isn't running. Start it from the Start Menu to filter by playlist."
+			 : s.authenticated ? "Confirm your Spotify account in the menu at the top right to filter by playlist."
+			 : 'Log in with Spotify to filter by playlist.<button type="button" class="spotify-login-btn" id="pl-login">Log in with Spotify</button>') +
+			"</div>";
+		document.getElementById("pl-login")?.addEventListener("click", Spotify.login);
+		return;
+	}
+	if (plLoading) {
+		plBody.innerHTML = '<div class="pl-filter-msg pl-filter-loading"><span class="pl-spinner" aria-hidden="true"></span>Loading your playlists…</div>';
+		return;
+	}
+	if (plError) {
+		plBody.innerHTML = `<div class="pl-filter-msg">${escHtml(plError)}<button type="button" class="pl-filter-retry" id="pl-retry">Try again</button></div>`;
+		document.getElementById("pl-retry").addEventListener("click", loadPlaylistFilter);
+		return;
+	}
+	if (!PLAYLISTS) { loadPlaylistFilter(); return; }
+	if (!PLAYLISTS.length) {
+		plBody.innerHTML = '<div class="pl-filter-msg">No playlists in your library.</div>';
+		return;
+	}
+	plSearch.hidden = false;
+	const q = normalize(plSearch.value.trim());
+	const rows = PLAYLISTS
+		.map((p, i) => ({ p, i }))
+		.filter(({ p }) => !q || normalize(p.name).includes(q))
+		.map(({ p, i }) =>
+			`<li><label class="combo-option pl-option${plSelected.has(i) ? " selected" : ""}" title="${p.count} of your tracks are in this playlist">` +
+				`<input type="checkbox" data-index="${i}"${plSelected.has(i) ? " checked" : ""} />` +
+				`<span class="combo-name" translate="no">${escHtml(p.name)}</span>` +
+				`<span class="combo-count">${p.count}</span>` +
+			`</label></li>`);
+	plBody.innerHTML = `<ul class="pl-filter-list">${rows.join("") || '<li class="combo-empty">No playlists found</li>'}</ul>`;
+}
+
+function applyPlaylistSelection() {
+	if (plSelected.size === 0) {
+		state.playlistKeys = null;
+		plBtn.textContent  = "All playlists";
+	} else {
+		state.playlistKeys = new Set();
+		plSelected.forEach(i => PLAYLISTS[i].keys.forEach(k => state.playlistKeys.add(k)));
+		plBtn.textContent  = plSelected.size === 1 ? PLAYLISTS[[...plSelected][0]].name : `${plSelected.size} playlists`;
+	}
+	plBtn.classList.toggle("active", plSelected.size > 0);
+	plClear.hidden = plSelected.size === 0;
+	applyFilters();
+}
+
+function openPlaylistPop() {
+	plPop.hidden = false;
+	plBtn.setAttribute("aria-expanded", "true");
+	renderPlaylistPop();
+	if (!plSearch.hidden) plSearch.focus();
+}
+
+function closePlaylistPop() {
+	if (plPop.hidden) return;
+	plPop.hidden = true;
+	plBtn.setAttribute("aria-expanded", "false");
+}
+
+function resetPlaylistFilter() {
+	plSelected.clear();
+	plSearch.value = "";
+	plBtn.textContent = "All playlists";
+	plBtn.classList.remove("active");
+	plClear.hidden = true;
+	state.playlistKeys = null;
+}
+
+plBtn.addEventListener("click", () => plPop.hidden ? openPlaylistPop() : closePlaylistPop());
+plSearch.addEventListener("input", renderPlaylistPop);
+plBody.addEventListener("change", e => {
+	const i = e.target.dataset.index;
+	if (i === undefined) return;
+	if (e.target.checked) plSelected.add(+i); else plSelected.delete(+i);
+	e.target.closest(".pl-option").classList.toggle("selected", e.target.checked);
+	applyPlaylistSelection();
+});
+plClear.addEventListener("click", () => { resetPlaylistFilter(); applyFilters(); renderPlaylistPop(); });
+document.addEventListener("click", e => {
+	// isConnected: buttons inside the popup (retry) are replaced while handling the click
+	if (e.target.isConnected && !e.target.closest("#playlist-filter")) closePlaylistPop();
+});
+document.getElementById("playlist-filter").addEventListener("keydown", e => {
+	if (e.key === "Escape") { closePlaylistPop(); plBtn.focus(); }
+});
+
+// Called once spotify.js has loaded (see the script at the end of <body>)
+function onSpotifyChange(s) {
+	if (!s.authenticated || !s.confirmed) {
+		// Logged out: forget this account's playlists
+		const hadSelection = plSelected.size > 0;
+		PLAYLISTS = null; plError = "";
+		resetPlaylistFilter();
+		if (hadSelection) applyFilters();
+	}
+	if (!plPop.hidden) renderPlaylistPop();
+}
+
 // ── Reset ─────────────────────────────────────────────────────────────────────
 function resetFilters() {
-	state = { recent: false, lowperc: false, search: "", artist: "", minPerc: 0, minPlays: 0 };
+	resetPlaylistFilter();
+	state = { recent: false, lowperc: false, search: "", artist: "", minPerc: 0, minPlays: 0, playlistKeys: null };
 	document.getElementById("search-input").value      = "";
 	artistInput.value                                  = "";
 	artistClear.hidden                                 = true;
@@ -526,5 +696,6 @@ init();
 </script>
 <script>window.SPOTRACKER_API_PORT = {{ api_port }};</script>
 <script src="spotify.js"></script>
+<script>Spotify.onChange(onSpotifyChange);</script>
 </body>
 </html>
