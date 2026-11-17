@@ -1,6 +1,7 @@
 """Settings window, opened from the tray in its own process (like Clear Data)."""
+import threading
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import ttk, messagebox, filedialog
 
 import platform_utils as pu
 import settings
@@ -49,18 +50,29 @@ def label_of(name):
     return next(label for _, rows in SECTIONS for n, label, _ in rows if n == name)
 
 
-def open_dialog(dialog_lock, regenerate):
+def open_dialog(dialog_lock, regenerate, import_history=None):
     """Show the Settings window (blocking). dialog_lock keeps a single window open;
-    regenerate() is called when the user asks to rebuild the report after a change."""
+    regenerate() is called when the user asks to rebuild the report after a change.
+    import_history(zip_path) imports a Spotify export and returns a spotify_import.ImportResult."""
     if not dialog_lock.acquire(blocking=False):
         return
     try:
-        _run_dialog(regenerate)
+        _run_dialog(regenerate, import_history)
     finally:
         dialog_lock.release()
 
 
-def _run_dialog(regenerate):
+def import_summary(result):
+    """Text shown after an import."""
+    lines = [f"{result.added:,} plays added from {result.files} file{'s' if result.files != 1 else ''}."]
+    if result.duplicates:
+        lines.append(f"{result.duplicates:,} were already recorded and were skipped.")
+    if result.ignored:
+        lines.append(f"{result.ignored:,} podcasts, videos or entries with no listening time were ignored.")
+    return "\n".join(lines)
+
+
+def _run_dialog(regenerate, import_history=None):
     current = settings.load()
 
     root = tk.Tk()
@@ -73,6 +85,13 @@ def _run_dialog(regenerate):
     frm.grid()
 
     variables = {}
+    busy = {"importing": False}  # the window can't be closed while an import runs
+
+    def close():
+        if not busy["importing"]:
+            root.destroy()
+    root.protocol("WM_DELETE_WINDOW", close)
+
     row = 0
     for section, rows in SECTIONS:
         ttk.Label(frm, text=section, font=("TkDefaultFont", 10, "bold")).grid(
@@ -91,12 +110,88 @@ def _run_dialog(regenerate):
                 ttk.Label(frm, text=unit, foreground="gray").grid(row=row, column=2, sticky="w")
             variables[name] = var
             row += 1
+        if section == "Reports":
+            ttk.Label(
+                frm, text="Report settings apply to all your history the next time the report is generated.",
+                foreground="gray", wraplength=420,
+            ).grid(row=row, column=0, columnspan=3, sticky="w", pady=(6, 0))
+            row += 1
 
-    ttk.Label(
-        frm, text="Report settings apply to all your history the next time the report is generated.",
-        foreground="gray", wraplength=420,
-    ).grid(row=row, column=0, columnspan=3, sticky="w", pady=(12, 0))
-    row += 1
+    if import_history:
+        ttk.Label(frm, text="Spotify history", font=("TkDefaultFont", 10, "bold")).grid(
+            row=row, column=0, columnspan=3, sticky="w", pady=(14, 6))
+        row += 1
+        ttk.Label(
+            frm, wraplength=420, foreground="gray",
+            text="Add your past listening from the \"Extended streaming history\" you can request "
+                 "from Spotify (Account → Privacy settings).",
+        ).grid(row=row, column=0, columnspan=3, sticky="w")
+        row += 1
+        import_btn = ttk.Button(frm, text="Import Spotify history (.zip)…")
+        import_btn.grid(row=row, column=0, sticky="w", pady=(8, 0))
+        row += 1
+        # Progress bar + step text, shown only while importing
+        import_progress = ttk.Frame(frm)
+        import_progress.grid(row=row, column=0, columnspan=3, sticky="we", pady=(8, 0))
+        import_progress.columnconfigure(0, weight=1)
+        progress_value = tk.DoubleVar()
+        progress_text = tk.StringVar()
+        ttk.Progressbar(import_progress, variable=progress_value, maximum=1.0).grid(row=0, column=0, sticky="we")
+        ttk.Label(import_progress, textvariable=progress_text, foreground="gray").grid(
+            row=1, column=0, sticky="w", pady=(4, 0))
+        import_progress.grid_remove()
+        row += 1
+
+        def run_import():
+            path = filedialog.askopenfilename(
+                parent=root, title="Choose your Spotify data (.zip)",
+                filetypes=[("Spotify data", "*.zip"), ("All files", "*.*")])
+            if not path:
+                return
+            busy["importing"] = True
+            import_btn.state(["disabled"])
+            progress_value.set(0)
+            progress_text.set("Opening the file…")
+            import_progress.grid()
+            outcome = {"progress": (0.0, "Opening the file…")}
+
+            def report(fraction, text):
+                # Runs in the worker thread: only store it, poll() updates the window
+                outcome["progress"] = (fraction, text)
+
+            def work():
+                try:
+                    outcome["result"] = import_history(path, report)
+                except Exception as e:  # shown to the user below
+                    outcome["error"] = e
+
+            def poll():
+                fraction, text = outcome["progress"]
+                progress_value.set(fraction)
+                progress_text.set(text)
+                if worker.is_alive():
+                    root.after(150, poll)
+                    return
+                busy["importing"] = False
+                import_btn.state(["!disabled"])
+                import_progress.grid_remove()
+                if "error" in outcome:
+                    messagebox.showerror(f"{APP_NAME} — Import", f"Import failed:\n\n{outcome['error']}", parent=root)
+                    return
+                result = outcome["result"]
+                if not result.added:
+                    messagebox.showinfo(f"{APP_NAME} — Import", import_summary(result), parent=root)
+                elif messagebox.askyesno(
+                        f"{APP_NAME} — Import",
+                        import_summary(result) + "\n\nGenerate a new report now?", parent=root):
+                    root.destroy()
+                    regenerate()
+
+            worker = threading.Thread(target=work, daemon=True)
+            worker.start()
+            poll()
+
+        import_btn.configure(command=run_import)
 
     error = tk.StringVar()
     ttk.Label(frm, textvariable=error, foreground="#c0392b", wraplength=420).grid(
@@ -113,6 +208,8 @@ def _run_dialog(regenerate):
         error.set("")
 
     def save():
+        if busy["importing"]:
+            return
         values, message = parse_form({name: var.get() for name, var in variables.items()})
         if message:
             error.set(message)
@@ -134,8 +231,8 @@ def _run_dialog(regenerate):
 
     ttk.Button(buttons, text="Restore defaults", command=restore_defaults).grid(row=0, column=0, sticky="w")
     ttk.Button(buttons, text="Save", command=save).grid(row=0, column=1, padx=(0, 8))
-    ttk.Button(buttons, text="Cancel", command=root.destroy).grid(row=0, column=2)
+    ttk.Button(buttons, text="Cancel", command=close).grid(row=0, column=2)
 
     root.bind("<Return>", lambda _: save())
-    root.bind("<Escape>", lambda _: root.destroy())
+    root.bind("<Escape>", lambda _: close())
     root.mainloop()

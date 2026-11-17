@@ -115,6 +115,19 @@
 		.recent-artist { font-weight: 600 }
 		.recent-duration { color: var(--ps-ink-soft); white-space: nowrap }
 
+		/* ── History notice ─────────────────────────────── */
+		.notice { position: relative; margin-bottom: 40px; padding: 20px 56px 20px 24px; background-color: var(--ps-raised); border: 2px solid var(--ps-accent); border-radius: var(--ps-radius-sm) }
+		.notice[hidden] { display: none }
+		.notice-title { font-family: var(--ps-font-cond); font-size: 22px; font-weight: 700; line-height: 1.15 }
+		.notice-text { max-width: 720px; margin-top: 6px; color: var(--ps-ink-soft) }
+		.notice-steps { max-width: 720px; margin: 12px 0 0 20px; display: flex; flex-direction: column; gap: 4px }
+		.notice-steps li::marker { font-family: var(--ps-font-cond); font-weight: 700; color: var(--ps-accent) }
+		.notice-steps strong { font-weight: 600 }
+		.notice a { color: var(--ps-accent-soft) }
+		.notice-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; background: none; border: 0; border-radius: var(--ps-radius-sm); color: var(--ps-ink-soft); cursor: pointer; transition: background-color .15s, color .15s }
+		.notice-close:hover { background-color: var(--ps-ground); color: var(--ps-ink) }
+		.notice-close svg { width: 16px; height: 16px }
+
 		/* ── Footer ────────────────────────────────────── */
 		.footer { margin-top: 72px; padding-top: 32px; border-top: 1px solid var(--ps-rule); font-size: 15px; color: var(--ps-ink-soft) }
 
@@ -159,6 +172,22 @@
 		</section>
 
 		<p class="spotify-status" id="auth-status" role="status"></p>
+
+		<!-- Short history: suggest importing the Spotify export (shown by JS) -->
+		<section class="notice" id="history-notice" aria-labelledby="history-notice-title" hidden>
+			<h3 class="notice-title" id="history-notice-title">Only a few days of history so far</h3>
+			<p class="notice-text">You can bring in years of past listening by importing your full Spotify history. Plays {{ app_name }} already recorded are not counted twice.</p>
+			<ol class="notice-steps">
+				<li>Open <a href="https://www.spotify.com/account/privacy/" target="_blank" rel="noopener">Spotify → Account → Privacy settings</a> and sign in.</li>
+				<li>Under <strong>Download your data</strong>, select <strong>Extended streaming history</strong> and click <strong>Request data</strong>.</li>
+				<li>Confirm the request in the email Spotify sends you.</li>
+				<li>Wait for the email with your data (Spotify says it can take up to 30 days, usually less) and download the <strong>.zip</strong>.</li>
+				<li>In {{ app_name }}, open <strong>Settings</strong> from the tray icon menu, click <strong>Import Spotify history (.zip)…</strong> and pick the file.</li>
+			</ol>
+			<button type="button" class="notice-close" id="history-notice-close" aria-label="Dismiss">
+				<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+			</button>
+		</section>
 
 		<!-- Stats Cards -->
 		<section class="stats-grid" aria-label="Key metrics">
@@ -387,6 +416,22 @@ function init() {
 			`<td class="num recent-duration">${duration}</td>`;
 		recentTbody.appendChild(tr);
 	});
+
+	// ── Short history: suggest importing the Spotify export ─────
+	const NOTICE_KEY = "spotracker-history-notice-dismissed";
+	let noticeDismissed = false;
+	try { noticeDismissed = localStorage.getItem(NOTICE_KEY) === "1"; } catch (e) {}
+	if (OVERVIEW.historyNotice && !noticeDismissed) {
+		const notice = document.getElementById("history-notice");
+		const days = Math.max(OVERVIEW.historyDays, 1);
+		document.getElementById("history-notice-title").textContent =
+			`Only ${formatNumber(days)} day${days === 1 ? "" : "s"} of history so far`;
+		notice.hidden = false;
+		document.getElementById("history-notice-close").addEventListener("click", () => {
+			notice.hidden = true;
+			try { localStorage.setItem(NOTICE_KEY, "1"); } catch (e) {}
+		});
+	}
 
 	// ── Spotify: the spotlight gets the artist's photo once connected ─
 	Spotify.onChange(s => { if (s.confirmed) loadSpotlightPhoto(); });

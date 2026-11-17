@@ -257,6 +257,7 @@ def self_test():
     import get_stats
     import clear_data
     import settings_window
+    import spotify_import
     print("tray backend:", pystray.Icon.__module__)
     print("tray icon:", create_tray_icon().size)  # fails if assets/icon.ico was not bundled
     print("now playing:", pu.get_now_playing())
@@ -277,7 +278,10 @@ if __name__ == "__main__":
         def regenerate():
             import get_stats  # imported here: it reads the settings when imported
             get_stats.generate_stats()
-        settings_window.open_dialog(pu.FileLock(save_dir / "settings-window.lock"), regenerate)
+        def import_history(zip_path, progress):
+            import spotify_import
+            return spotify_import.import_history(zip_path, musicListFile, backupDir, csvLock, progress)
+        settings_window.open_dialog(pu.FileLock(save_dir / "settings-window.lock"), regenerate, import_history)
     elif "--clear-data" in sys.argv:
         import clear_data
         clear_data.open_dialog(musicListFile, backupDir, csvLock, pu.FileLock(save_dir / "clear-data.lock"))

@@ -25,11 +25,30 @@ MIN_LISTEN_SECONDS  = _settings["min_listen_seconds"]   # a play this short or s
 LOW_PERC_THRESHOLD  = _settings["low_perc_threshold"]   # "Low %" filter and red colour in Tracks
 HIGH_PERC_THRESHOLD = _settings["high_perc_threshold"]  # green colour in Tracks
 RECENT_DAYS         = _settings["recent_days"]          # "Recent" in Tracks and the listening heatmap
+SHORT_HISTORY_DAYS  = 90   # below this, the Overview suggests importing the Spotify history
 
 data = []
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
+def history_days(entries, today=None) -> int:
+    """Days from the first recorded play to today (0 with no valid dates)."""
+    first = None
+    for e in entries:
+        parts = e.date.split("-")
+        if len(parts) == 3 and all(p.isdigit() for p in parts):
+            key = (int(parts[2]), int(parts[1]), int(parts[0]))
+            if first is None or key < first:
+                first = key
+    if first is None:
+        return 0
+    try:
+        start = datetime(*first).date()
+    except ValueError:
+        return 0
+    return ((today or datetime.today().date()) - start).days
+
+
 def msgbox(title: str, message: str, kind: str = "info"):
     """Show a native message box. kind: "info", "warning" or "error"."""
     pu.show_message(title, message, kind)
@@ -79,7 +98,7 @@ def load_data():
         msgbox(
             f"{APP_NAME} — Warning",
             "No recorded tracks yet.\n\n"
-            "Listen to some music on Spotify and try again.",
+            "Listen to some music on Spotify or import your data on Settings and try again.",
             "warning",
         )
         return False
@@ -98,7 +117,7 @@ def load_data():
         msgbox(
             f"{APP_NAME} — Warning",
             "No recorded tracks yet.\n\n"
-            "Listen to some music on Spotify and try again.",
+            "Listen to some music on Spotify or import your data on Settings and try again.",
             "warning",
         )
         return False
@@ -357,6 +376,7 @@ def generate_overview() -> Path:
             row.append(avg_min)
         heatmap.append(row)
 
+    days_recorded = history_days(data)
     overview = {
         "totalMinutes":   round(total_seconds / 60),
         "totalSeconds":   total_seconds,
@@ -368,6 +388,8 @@ def generate_overview() -> Path:
         "weekdayActivity": weekday_activity,
         "recentActivity":  recent_activity,
         "heatmap":         heatmap,
+        "historyDays":     days_recorded,
+        "historyNotice":   days_recorded < SHORT_HISTORY_DAYS,
     }
 
     html = (
