@@ -76,7 +76,7 @@ Local builds keep version `0.0.0` (in `version.py` and `SpoTracker.iss`), so the
 
 ## CI (`.github/workflows/main.yml`)
 
-Runs only when a version tag (`v*`) is pushed: runs the tests, then builds and smoke-tests the app, builds the installer and publishes a GitHub Release with `SpoTrackerInstaller-<version>.exe` plus an identical `SpoTrackerInstaller.exe` copy, which the landing page's `releases/latest/download/` links rely on.
+Runs only when a version tag (`v*`) is pushed: runs the tests, then builds and smoke-tests the app, builds the installer and publishes a GitHub Release with `SpoTrackerInstaller-<version>.exe`. The landing page's download buttons find that asset through the GitHub API (`releases/latest`) and fall back to the latest release page.
 
 ## Release
 

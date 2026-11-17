@@ -50,7 +50,7 @@
 		"name": "SpoTracker",
 		"description": "A tiny desktop app that tracks every song you play on Spotify, stores data locally, and generates beautiful reports with top artists, top tracks, listening patterns and playlist charts - whenever you want.",
 		"url": "https://www.spotracker.eu/",
-		"downloadUrl": "https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe",
+		"downloadUrl": "https://github.com/andreferreira04/spoTracker/releases/latest",
 		"operatingSystem": "Windows 10, Windows 11",
 		"applicationCategory": "MultimediaApplication",
 		"applicationSubCategory": "Music Statistics Tracker",
@@ -79,7 +79,7 @@
 			"Exportable listening history"
 		],
 		"isAccessibleForFree": true,
-		"installUrl": "https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe"
+		"installUrl": "https://github.com/andreferreira04/spoTracker/releases/latest"
 	}
 	</script>
 
@@ -173,13 +173,13 @@
 				<p class="hero-lead" data-i18n="heroLead">Every day, not just in December.</p>
 				<p class="hero-body" data-i18n="heroBody">SpoTracker runs on your Windows PC, logs every song you play on Spotify and turns it into charts you can open whenever you like. It is free and open source.</p>
 				<div class="hero-actions">
-					<a href="https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe" class="btn btn-primary" id="cta-download-hero">
+					<a href="https://github.com/andreferreira04/spoTracker/releases/latest" class="btn btn-primary" id="cta-download-hero">
 						<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 						<span data-i18n="heroCta">Download for Windows</span>
 					</a>
 					<a href="https://github.com/andreferreira04/spoTracker" class="btn btn-quiet" target="_blank" rel="noopener noreferrer" data-i18n="heroSource">View the code on GitHub</a>
 				</div>
-				<p class="hero-note" data-i18n="heroNote">For Windows 10 and 11. No account needed to start tracking.</p>
+				<p class="hero-note" data-i18n="heroNote">For Windows 10 and 11. No account needed.</p>
 			</div>
 
 			<figure class="chart" aria-labelledby="chart-title">
@@ -241,7 +241,6 @@
 						</tr>
 					</tbody>
 				</table>
-				<figcaption class="chart-note" data-i18n="chartNote">Example chart. Yours is built from what you actually play.</figcaption>
 			</figure>
 		</div>
 	</section>
@@ -421,7 +420,7 @@
 		<div class="page">
 			<h2 id="cta-heading" data-i18n="ctaTitle">Start your own chart today.</h2>
 			<p class="download-sub" data-i18n="ctaSub">Free, for Windows 10 and 11. It installs in about 30 seconds and you don’t need an account.</p>
-			<a href="https://github.com/andreferreira04/spoTracker/releases/latest/download/SpoTrackerInstaller.exe" class="btn btn-primary" id="cta-download-bottom">
+			<a href="https://github.com/andreferreira04/spoTracker/releases/latest" class="btn btn-primary" id="cta-download-bottom">
 				<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
 				<span data-i18n="ctaBtn">Download for Windows</span>
 			</a>
@@ -460,6 +459,36 @@
 				if (!dir) return;
 				var next = tabs[(i + dir + tabs.length) % tabs.length];
 				select(next); next.focus();
+			});
+		});
+	})();
+
+	// Download buttons: download the latest versioned installer (SpoTrackerInstaller-x.y.z.exe) directly.
+	// Without JS or if the API fails, the href stays on the latest release page.
+	(function () {
+		var ctas = Array.prototype.slice.call(document.querySelectorAll("#cta-download-hero, #cta-download-bottom"));
+		if (!ctas.length || !window.fetch) return;
+		var direct = null;
+		var lookup = fetch("https://api.github.com/repos/andreferreira04/spoTracker/releases/latest")
+			.then(function (r) { return r.ok ? r.json() : null })
+			.then(function (data) {
+				var asset = data && (data.assets || []).filter(function (a) {
+					return /^SpoTrackerInstaller-.+\.exe$/i.test(a.name);
+				})[0];
+				if (!asset) return null;
+				direct = asset.browser_download_url;
+				ctas.forEach(function (a) { a.href = direct });
+				return direct;
+			})
+			.catch(function () { return null });
+		// Clicked before the API answered: wait for it (max 3s), then go to the installer or the fallback.
+		ctas.forEach(function (a) {
+			a.addEventListener("click", function (e) {
+				if (direct || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+				e.preventDefault();
+				var fallback = a.href;
+				var timeout = new Promise(function (resolve) { setTimeout(function () { resolve(null) }, 3000) });
+				Promise.race([lookup, timeout]).then(function (url) { window.location.href = url || fallback });
 			});
 		});
 	})();

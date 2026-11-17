@@ -113,7 +113,7 @@ section.hero { border-top: none }
 
 /* ── Hero ────────────────────────────────────────── */
 .hero { padding: 96px 0 120px }
-.hero-layout { display: grid; grid-template-columns: minmax(0, 486fr) minmax(0, 690fr); gap: 24px; align-items: start }
+.hero-layout { display: grid; grid-template-columns: minmax(0, 486fr) minmax(0, 690fr); gap: 72px; align-items: start }
 
 .hero h1 {
 	font-family: var(--ps-font-xcond);
@@ -128,25 +128,25 @@ section.hero { border-top: none }
 .chart { min-width: 0 }
 .chart-head {
 	display: flex; align-items: baseline; justify-content: space-between; gap: 16px; flex-wrap: wrap;
-	padding-bottom: 20px;
+	padding-bottom: 14px;
 }
 .chart-title { font-family: var(--ps-font-cond); font-size: 28px; font-weight: 700; line-height: 1.1 }
 .chart-updated { font-size: 15px; line-height: 1.5; color: var(--ps-ink-soft) }
 
 .chart-table { width: 100%; border-collapse: collapse; table-layout: fixed }
 .chart-table th {
-	padding: 10px 0; text-align: left;
+	padding: 8px 0; text-align: left;
 	font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--ps-ink-soft);
 	border-bottom: 1px solid var(--ps-rule);
 }
-.chart-table td { height: 64px; padding: 0; border-bottom: 1px solid var(--ps-rule); vertical-align: middle }
-.chart-table th:first-child, .chart-table td:first-child { padding-left: 20px; width: 76px }
-.chart-table th:last-child, .chart-table td:last-child { padding-right: 20px; width: 92px }
+.chart-table td { height: 52px; padding: 0; border-bottom: 1px solid var(--ps-rule); vertical-align: middle }
+.chart-table th:first-child, .chart-table td:first-child { padding-left: 18px; width: 64px }
+.chart-table th:last-child, .chart-table td:last-child { padding-right: 18px; width: 76px }
 .chart-table .chart-move { width: 56px }
 .chart-table .chart-weeks { width: 72px; text-align: center }
 .chart-table .chart-plays { text-align: right }
 
-td.chart-pos { font-family: var(--ps-font-cond); font-size: 36px; font-weight: 900; line-height: 1 }
+td.chart-pos { font-family: var(--ps-font-cond); font-size: 30px; font-weight: 900; line-height: 1 }
 td.chart-move { font-family: var(--ps-font-cond); font-size: 15px; font-weight: 700; line-height: 1; color: var(--ps-ink-soft) }
 td.chart-up { color: var(--ps-up) }
 td.chart-new { color: var(--ps-accent) }
@@ -155,13 +155,13 @@ td.chart-new { color: var(--ps-accent) }
 .chart-song { font-size: 17px; font-weight: 600; line-height: 1.4 }
 .chart-artist { margin-top: 2px; font-size: 15px; line-height: 1.5; color: var(--ps-ink-soft) }
 td.chart-weeks { font-size: 15px; line-height: 1.5; color: var(--ps-ink-soft) }
-td.chart-plays { font-family: var(--ps-font-cond); font-size: 22px; font-weight: 700; line-height: 1 }
+td.chart-plays { font-family: var(--ps-font-cond); font-size: 20px; font-weight: 700; line-height: 1 }
 
 .chart-top { background-color: var(--ps-accent); color: var(--ps-ground) }
 .chart-top td { border-bottom-color: var(--ps-accent) }
 .chart-top td.chart-move, .chart-top .chart-artist, .chart-top td.chart-weeks { color: var(--ps-ground) }
 
-.chart-note { padding: 16px 0 0 20px; font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--ps-ink-soft) }
+.chart-note { padding: 12px 0 0 18px; font-size: 13px; font-weight: 500; line-height: 1.4; color: var(--ps-ink-soft) }
 
 /* ── What you get ────────────────────────────────── */
 .feature-groups { display: flex; flex-direction: column; gap: 40px }
